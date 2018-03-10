@@ -67,6 +67,8 @@
 .globl int_2D_asm
 .globl int_2E_asm
 .globl int_2F_asm
+/* Handler for system call */
+.globl int_80_asm
 
 
 /*
@@ -359,6 +361,15 @@ int_1F_asm:
   pushl %esp
   pushl %ebp
   call int_1F_c
+  popl %ebp
+  popl %esp
+  iret
+
+/* Interrupt 128 - System Call */
+int_80_asm:
+  pushl %esp
+  pushl %ebp
+  call int_80_c
   popl %ebp
   popl %esp
   iret

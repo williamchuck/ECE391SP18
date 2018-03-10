@@ -146,3 +146,7 @@ void int_1F_c()
 {
   printf("Interrupt 31 - Reserved by Shintel.\n");
 }
+void int_80_c()
+{
+  printf("Interrupt 128 - System Call.\n");
+}

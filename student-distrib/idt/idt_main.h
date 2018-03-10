@@ -20,6 +20,8 @@
 
 #define IDT_ENTRY_SIZE        0x100
 #define IDT_EXCEPTION_SIZE    0x20
+#define IDT_SYSTEM_CALL       0x80
+
 #define INTEL_RESERVED_9      0x9
 #define INTEL_RESERVED_15     0xF
 #define INTEL_RESERVED_OTHER  0x14

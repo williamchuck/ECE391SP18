@@ -58,5 +58,7 @@ extern void int_1C_c();
 extern void int_1D_c();
 extern void int_1E_c();
 extern void int_1F_c();
+/* Handler for system call */
+extern void int_80_c();
 
 #endif
