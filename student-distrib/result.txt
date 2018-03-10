@@ -1,0 +1,1 @@
+make: `bootimg' is up to date.

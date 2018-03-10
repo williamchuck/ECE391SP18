@@ -9,6 +9,10 @@
 #include "debug.h"
 #include "tests.h"
 
+#include "idt/idt_main.h"
+#include "idt/idt_handler_c.h"
+#include "idt/idt_handler_asm.h"
+
 #define RUN_TESTS
 
 /* Macros. */
@@ -136,6 +140,8 @@ void entry(unsigned long magic, unsigned long addr) {
         ltr(KERNEL_TSS);
     }
 
+    idt_set_all();
+
     /* Init the PIC */
     i8259_init();
 
@@ -146,8 +152,9 @@ void entry(unsigned long magic, unsigned long addr) {
     /* Do not enable the following until after you have set up your
      * IDT correctly otherwise QEMU will triple fault and simple close
      * without showing you any output */
-    /*printf("Enabling Interrupts\n");
-    sti();*/
+    cli();
+    printf("Enabling Interrupts\n");
+    sti();
 
 #ifdef RUN_TESTS
     /* Run tests */
