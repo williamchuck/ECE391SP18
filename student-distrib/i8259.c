@@ -31,8 +31,8 @@ void i8259_init(void) {
   outb(ICW3_SLAVE, SLAVE_8259_PORT + 1);
 
   /* Enable All on slave and master (Can be changed to other value after testing)*/
-  master_mask = 0xFF;
-  slave_mask = 0xFF;
+  master_mask = 0x00;
+  slave_mask = 0x00;
 
   /* Restore master IRQ mask */
   outb(master_mask, MASTER_8259_PORT + 1);
@@ -86,13 +86,21 @@ void send_eoi(uint32_t irq_num) {
   if (irq_num < 0x28 && irq_num >= 0x20)
   {
     /* Send EOI command (OCW2) to PIC */
-    outb(EOI, MASTER_8259_PORT);
+    /* Calculate IR level (L2 to L0) in OCW2 (EOI command) for master */
+    irq_num = irq_num - 0x20;
+    outb(EOI | irq_num, MASTER_8259_PORT);
   }
   /* If irq_num is between 0x28 and 0x2F, it is using slave PIC. */
   if (irq_num >= 0x28 && irq_num <= 0x2F)
   {
     /* Send EOI command (OCW2) to PIC */
-    outb(EOI, SLAVE_8259_PORT);
+    /* Calculate IR level (L2 to L0) in OCW2 (EOI command) for slave*/
+    irq_num = irq_num - 0x28;
+    /* Send first EOI to master, IR level = ICW3_SLAVE */
+    outb(EOI | ICW3_SLAVE, MASTER_8259_PORT);
+    /* Send second EOI to slave, IR level calculated above. */
+    outb(EOI | irq_num, SLAVE_8259_PORT);
+
   }
   return;
 }
