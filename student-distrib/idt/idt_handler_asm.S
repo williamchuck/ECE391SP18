@@ -1,5 +1,25 @@
-#define ASM 1
+/*
+ * idt/idt_handler_asm.S
+ * Release version - Caffine_Theanine beta 0.0.0.1
+ * Latest revision by Canlin Zhang (canlinz2).
+ * Please maintain a good working habit: Write comments! Update versions! (if applicable, don't use magic numbers.)
+ */
 
+/*
+ * This file contains the implemantation of assembly linkage for interrupt (or exception) handlers.
+ * More entries can be added in these steps:
+ * add a .global variable in format int_(num)_asm in this file.
+ * add a function definition of the interrupt handler (x86) in idt_handler_asm.h
+ * add a function definition of the interrupt handler (c) in idt_handler_c.h
+ * add implementation of the interrupt handler (x86) in idt_handler_asm.c
+ * add implementation of the interrupt handler (c) in idt_handler_c.h
+ * add the interrupt entry to idt_table.
+ */
+
+/*
+ * Handler address of each interrupt/exception.
+ * Made global to be used by idt_main.c to initialize idt entry.
+ */
 .globl int_0_asm
 .globl int_1_asm
 .globl int_2_asm
@@ -48,7 +68,11 @@
 .globl int_2E_asm
 .globl int_2F_asm
 
-.align 4
+
+/*
+ * Implementation of interrupts' assembly linkage:
+ * Just callee save and call correspoding c functions.
+ */
 
 /* Interrupt 0 - Divide Error Exception (#DE) */
 int_0_asm:

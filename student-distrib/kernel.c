@@ -139,7 +139,7 @@ void entry(unsigned long magic, unsigned long addr) {
         tss.esp0 = 0x800000;
         ltr(KERNEL_TSS);
     }
-
+    /* Init IDT */
     idt_set_all();
 
     /* Init the PIC */

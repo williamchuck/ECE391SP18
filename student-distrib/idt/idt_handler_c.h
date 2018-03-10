@@ -1,9 +1,31 @@
 #ifndef IDT_HANDLER_C_H
 #define IDT_HANDLER_C_H
 
+/*
+ * idt/idt_handler_c.h
+ * Release version - Caffine_Theanine beta 0.0.0.1
+ * Latest revision by Canlin Zhang (canlinz2).
+ * Please maintain a good working habit: Write comments! Update versions! (if applicable, don't use magic numbers.)
+ */
+
+/*
+ * This file contains the declaration of c functions of interrupt (or exception) handlers.
+ * More entries can be added in these steps:
+ * add a .global variable in format int_(num)_asm in idt_handler_asm.S.
+ * add a function definition of the interrupt handler (x86) in idt_handler_asm.h
+ * add a function definition of the interrupt handler (c) in idt_handler_c.h
+ * add implementation of the interrupt handler (x86) in idt_handler_asm.S
+ * add implementation of the interrupt handler (c) in idt_handler_c.h
+ * add the interrupt entry to idt_table. (by changing idt_set_all in idt_main.c)
+ */
+
+
+/* Include useful functions from c library, however, not entirely necessary. */
 #include "../lib.h"
+/* Include types in stdint.h. Again, not entirely necessary. */
 #include "../types.h"
 
+/* Declarations of interrupt handlers. */
 extern void int_0_c();
 extern void int_1_c();
 extern void int_2_c();
