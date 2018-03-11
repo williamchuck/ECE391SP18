@@ -18,6 +18,8 @@
  * add the interrupt entry to idt_table. (by changing idt_set_all in idt_main.c)
  */
 
+ #include "../i8259.h"
+
 void int_0_c()
 {
   printf("Interrupt 0 - Fault - Divide Error Exception (#DE).\n");

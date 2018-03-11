@@ -44,7 +44,7 @@ void idt_set_all()
   {
     if (i == INTEL_RESERVED_9 || i == INTEL_RESERVED_15 || (i >= INTEL_RESERVED_OTHER && i < IDT_EXCEPTION_SIZE))
     {
-      idt_set_entry(i, INTERRUPT_GATE_MODE, idt_handler_addr[i], KERNEL_CS, 0, 1, 0);
+      idt_set_entry(i, INTERRUPT_GATE_MODE, idt_handler_addr[i], KERNEL_CS, 0, 1, 1);
     }
     if (i < IDT_EXCEPTION_SIZE)
     {
@@ -69,6 +69,7 @@ void idt_set_entry(int idt_index, int mode, uint32_t handler_addr, uint16_t seg_
 {
   if (mode == TASK_GATE_MODE)
   {
+    idt[idt_index].reserved4 = 0;
     idt[idt_index].reserved3 = 1;
     idt[idt_index].reserved2 = 0;
     idt[idt_index].reserved1 = 1;
@@ -76,7 +77,7 @@ void idt_set_entry(int idt_index, int mode, uint32_t handler_addr, uint16_t seg_
   }
   if (mode == INTERRUPT_GATE_MODE)
   {
-    idt[idt_index].reserved4 = idt[idt_index].reserved4 & 0x1F;
+    idt[idt_index].reserved4 = 0;
     idt[idt_index].reserved3 = 0;
     idt[idt_index].reserved2 = 1;
     idt[idt_index].reserved1 = 1;
@@ -84,7 +85,7 @@ void idt_set_entry(int idt_index, int mode, uint32_t handler_addr, uint16_t seg_
   }
   if (mode == TRAP_GATE_MODE)
   {
-    idt[idt_index].reserved4 = idt[idt_index].reserved4 & 0x1F;
+    idt[idt_index].reserved4 = 0;
     idt[idt_index].reserved3 = 1;
     idt[idt_index].reserved2 = 1;
     idt[idt_index].reserved1 = 1;

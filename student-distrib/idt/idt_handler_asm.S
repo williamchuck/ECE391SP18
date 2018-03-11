@@ -70,6 +70,8 @@
 /* Handler for system call */
 .globl int_80_asm
 
+.align 4
+
 
 /*
  * Implementation of interrupts' assembly linkage:
@@ -78,232 +80,232 @@
 
 /* Interrupt 0 - Divide Error Exception (#DE) */
 int_0_asm:
-  pushl %ebp
+  pushal
   call int_0_c
-  leave
+  popal
   iret
 
 /* Interrupt 1 - Debug Exception (#DB)*/
 int_1_asm:
-  pushl %ebp
+  pushal
   call int_1_c
-  leave
+  popal
   iret
 
 /* Interrupt 2 - NMI Interrupt */
 int_2_asm:
-  pushl %ebp
+  pushal
   call int_2_c
-  leave
+  popal
   iret
 
 /* Interrupt 3 - Breakpoint Exception (#BP) */
 int_3_asm:
-  pushl %ebp
+  pushal
   call int_3_c
-  leave
+  popal
   iret
 
 /* Interrupt 4 - Overflow Exception (#OF) */
 int_4_asm:
-  pushl %ebp
+  pushal
   call int_4_c
-  leave
+  popal
   iret
 
 /* Interrupt 5 - BOUND Range Exceeded Exception (#BR) */
 int_5_asm:
-  pushl %ebp
+  pushal
   call int_5_c
-  leave
+  popal
   iret
 
 /* Interrupt 6 - Invalid Opcode Exception (#UD) */
 int_6_asm:
-  pushl %ebp
+  pushal
   call int_6_c
-  leave
+  popal
   iret
 
 /* Interrupt 7 - Device Not Available Exception (#NM) */
 int_7_asm:
-  pushl %ebp
+  pushal
   call int_7_c
-  leave
+  popal
   iret
 
 /* Interrupt 8 - Double Fault Exception (#DF) */
 int_8_asm:
-  pushl %ebp
+  pushal
   call int_8_c
-  leave
+  popal
   iret
 
 /* Interrupt 9 - Coprocessor Segment Overrun */
 /* This Interrupt is reserved by Shintel */
 int_9_asm:
-  pushl %ebp
+  pushal
   call int_9_c
-  leave
+  popal
   iret
 
 /* Interrupt 10 - Invalid TSS Exception (#TS) */
 int_A_asm:
-  pushl %ebp
+  pushal
   call int_A_c
-  leave
+  popal
   iret
 
 /* Interrupt 11 - Segment Not Present (#NP) */
 int_B_asm:
-  pushl %ebp
+  pushal
   call int_B_c
-  leave
+  popal
   iret
 
 /* Interrupt 12 - Stack Fault Exception (#SS) */
 int_C_asm:
-  pushl %ebp
+  pushal
   call int_C_c
-  leave
+  popal
   iret
 
 /* Interrupt 13 - General Protection Exception (#GP) */
 int_D_asm:
-  pushl %ebp
+  pushal
   call int_D_c
-  leave
+  popal
   iret
 
 /* Interrupt 14 - Page Fault Exception (#PF) */
 int_E_asm:
-  pushl %ebp
+  pushal
   call int_E_c
-  leave
+  popal
   iret
 
 /* Interrupt 15 - Reserved by Shintel */
 int_F_asm:
-  pushl %ebp
+  pushal
   call int_F_c
-  leave
+  popal
   iret
 
 /* Interrupt 16 - x87 FPU Floating-Point Error (#MF) */
 int_10_asm:
-  pushl %ebp
+  pushal
   call int_10_c
-  leave
+  popal
   iret
 
 /* Interrupt 17 - Alignment Check Exception (#AC) */
 int_11_asm:
-  pushl %ebp
+  pushal
   call int_11_c
-  leave
+  popal
   iret
 
 /* Interrupt 18 - Machine check exception (#MC) */
 int_12_asm:
-  pushl %ebp
+  pushal
   call int_12_c
-  leave
+  popal
   iret
 
 /* Interrupt 19 - SIMD Floating Point Exception (#XF) */
 int_13_asm:
-  pushl %ebp
+  pushal
   call int_13_c
-  leave
+  popal
   iret
 
 /* Interrupt 20 - Reserved by Shintel */
 int_14_asm:
-  pushl %ebp
+  pushal
   call int_14_c
-  leave
+  popal
   iret
 
 /* Interrupt 21 - Reserved by Shintel */
 int_15_asm:
-  pushl %ebp
+  pushal
   call int_15_c
-  leave
+  popal
   iret
 
 /* Interrupt 22 - Reserved by Shintel */
 int_16_asm:
-  pushl %ebp
+  pushal
   call int_16_c
-  leave
+  popal
   iret
 
 /* Interrupt 23 - Reserved by Shintel */
 int_17_asm:
-  pushl %ebp
+  pushal
   call int_17_c
-  leave
+  popal
   iret
 
 /* Interrupt 24 - Reserved by Shintel */
 int_18_asm:
-  pushl %ebp
+  pushal
   call int_18_c
-  leave
+  popal
   iret
 
 /* Interrupt 25 - Reserved by Shintel */
 int_19_asm:
-  pushl %ebp
+  pushal
   call int_19_c
-  leave
+  popal
   iret
 
 /* Interrupt 26 - Reserved by Shintel */
 int_1A_asm:
-  pushl %ebp
+  pushal
   call int_1A_c
-  leave
+  popal
   iret
 
 /* Interrupt 27 - Reserved by Shintel */
 int_1B_asm:
-  pushl %ebp
+  pushal
   call int_1B_c
-  leave
+  popal
   iret
 
 /* Interrupt 28 - Reserved by Shintel */
 int_1C_asm:
-  pushl %ebp
+  pushal
   call int_1C_c
-  leave
+  popal
   iret
 
 /* Interrupt 29 - Reserved by Shintel */
 int_1D_asm:
-  pushl %ebp
+  pushal
   call int_1D_c
-  leave
+  popal
   iret
 
 /* Interrupt 30 - Reserved by Shintel */
 int_1E_asm:
-  pushl %ebp
+  pushal
   call int_1E_c
-  leave
+  popal
   iret
 
 /* Interrupt 31 - Reserved by Shintel */
 int_1F_asm:
-  pushl %ebp
+  pushal
   call int_1F_c
-  leave
+  popal
   iret
 
 /* Interrupt 128 - System Call */
 int_80_asm:
-  pushl %ebp
+  pushal
   call int_80_c
-  leave
+  popal
   iret
