@@ -56,7 +56,15 @@ void idt_set_all()
     }
   }
 }
-
+/*
+ * idt_index: index
+ * mode: gate type
+ * handler_addr:
+ * seg_selector:
+ * dpl: Descriptor privilege level
+ * size:
+ * present: handler present
+ */
 void idt_set_entry(int idt_index, int mode, uint32_t handler_addr, uint16_t seg_selector, uint32_t dpl, uint32_t size, uint32_t present)
 {
   if (mode == TASK_GATE_MODE)
