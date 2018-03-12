@@ -159,6 +159,7 @@ void entry(unsigned long magic, unsigned long addr) {
 	/* Set up paging */
 	setup_page();
 
+	*((unsigned int *) 0)=1;
     /* Initialize devices, memory, filesystem, enable device interrupts on the
      * PIC, any other initialization stuff... */
 
