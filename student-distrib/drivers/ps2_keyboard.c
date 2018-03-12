@@ -105,7 +105,8 @@ void ps2_keyboard_init() {
     numl_flag = 0x00;
     scroll_flag = 0x00;
 
-    enable_irq(KBD_IRQ);
+    //enable_irq(KBD_IRQ);
+    request_irq(KBD_IRQ,&int_ps2kbd_c);
 }
 
 void int_ps2kbd_c() {
@@ -120,7 +121,7 @@ void int_ps2kbd_c() {
     {
       printf("%c", currentchar);
     }
-    send_eoi(KBD_IRQ);
+    //send_eoi(KBD_IRQ);
 }
 
 unsigned char ps2_keyboard_getscancode() {

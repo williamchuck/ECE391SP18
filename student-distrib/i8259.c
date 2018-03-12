@@ -11,6 +11,7 @@ uint8_t slave_mask;  /* IRQs 8-15 */
 
 /* Initialize the 8259 PIC */
 void i8259_init(void) {
+  //mask all interrupt when setting up
   outb(0xFF, MASTER_8259_DATA);
   outb(0xFF, SLAVE_8259_DATA);
 
@@ -24,11 +25,10 @@ void i8259_init(void) {
   outb(ICW3_SLAVE, SLAVE_8259_DATA);
   outb(ICW4, SLAVE_8259_DATA);
 
-  master_mask = 0xFF;
-  slave_mask = 0xFF;
 
   outb(0xFF, MASTER_8259_DATA);
   outb(0xFF, SLAVE_8259_DATA);
+  enable_irq(2);//enable slave cascade
 
 }
 
