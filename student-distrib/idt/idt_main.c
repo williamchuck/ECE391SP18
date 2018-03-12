@@ -72,11 +72,11 @@ void idt_set_all() {
                     KERNEL_CS, 0, 1, 1);
         }
     }
-
     //apic irqs not present
     for (i = 0x30; i <= 0x7F; i++) {
         idt[i].present = 0;
     }
+    idt_set_entry(0x80, TRAP_GATE_MODE, idt_system_call_addr, KERNEL_CS, 3, 1, 1);
     //everything else apic not present
     for (i = 0x81; i <= 0xFF; i++) {
         idt[i].present = 0;
@@ -90,7 +90,6 @@ void idt_set_all() {
         //set keyboard interrupt
         idt_set_entry(i, INTERRUPT_GATE_MODE, irq_handler_addr[i-0x20], KERNEL_CS, 0, 1, 1);
     }
-
 }
 /*
  * idt_index: index
