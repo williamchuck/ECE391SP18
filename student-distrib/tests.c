@@ -1,6 +1,7 @@
 #include "tests.h"
 #include "x86_desc.h"
 #include "lib.h"
+#include "kernel.h"
 
 #define PASS 1
 #define FAIL 0
@@ -21,7 +22,7 @@ static inline void assertion_failure(){
 /* Checkpoint 1 tests */
 
 /* IDT Test - Example
- * 
+ *
  * Asserts that first 10 IDT entries are not NULL
  * Inputs: None
  * Outputs: PASS/FAIL
@@ -35,7 +36,7 @@ int idt_test(){
 	int i;
 	int result = PASS;
 	for (i = 0; i < 10; ++i){
-		if ((idt[i].offset_15_00 == NULL) && 
+		if ((idt[i].offset_15_00 == NULL) &&
 			(idt[i].offset_31_16 == NULL)){
 			assertion_failure();
 			result = FAIL;
@@ -69,7 +70,7 @@ int valid_page_test(){
 	}
 
 	/* Print out message */
-	printf("4MB test passed\n");	
+	printf("4MB test passed\n");
 
 	/* Test on 4KB video memory Page*/
 	addr = (unsigned long*)0xb8000;
@@ -100,7 +101,7 @@ int invalid_page_test(){
 
 	/* Dereference invalid addr to cause Page Fault */
 	temp = *addr;
-	
+
 	return PASS;
 }
 /* Checkpoint 2 tests */
