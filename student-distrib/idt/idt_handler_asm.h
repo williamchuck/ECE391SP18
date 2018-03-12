@@ -56,7 +56,23 @@ extern void int_1E_asm();
 extern void int_1F_asm();
 /* Handler for system call */
 extern void int_80_asm();
-/* Handler for keyboard */
+/* IRQ handler stubs*/
+extern void int_20_asm();
 extern void int_21_asm();
+extern void int_22_asm();
+extern void int_23_asm();
+extern void int_24_asm();
+extern void int_25_asm();
+extern void int_26_asm();
+extern void int_27_asm();
+extern void int_28_asm();
+extern void int_29_asm();
+extern void int_2A_asm();
+extern void int_2B_asm();
+extern void int_2C_asm();
+extern void int_2D_asm();
+extern void int_2E_asm();
+extern void int_2F_asm();
+
 
 #endif

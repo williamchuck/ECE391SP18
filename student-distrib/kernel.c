@@ -12,6 +12,7 @@
 #include "idt/idt_main.h"
 #include "idt/idt_handler_c.h"
 #include "idt/idt_handler_asm.h"
+#include "idt/interrupt.h"
 
 #include "drivers/ps2_keyboard.h"
 #include "drivers/ps2_controller.h"
