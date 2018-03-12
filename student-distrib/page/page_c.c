@@ -73,7 +73,7 @@ void set_4KB(uint32_t phys_mem, uint32_t virt_mem){
 	/* Get first 10-bits of virtual memory as the index into page directory */
 	pde_idx = virt_mem >> 22;
 	/* Get next 10-bits of virtual memory as the index into page table */
-	pte_idx = (virt_mem << 10) >> 22;
+	pte_idx = (virt_mem & 0x003FFFFF) >> 12;
 
 	/* Set PDE points to page table addr */
 	page_dir[pde_idx] = ((uint32_t)page_table & 0xFFFFF000) | EN_P | EN_R;

@@ -57,21 +57,27 @@ int idt_test(){
 int valid_page_test(){
 	TEST_HEADER;
 
+	/* Define local variables */
 	int i;
 	int result = PASS;
+
+	/* Test on 4MB Kernel Page*/
 	unsigned long* addr = (unsigned long*)0x400000;
 	unsigned long temp;
 	for(i = 0; i < 0x100000; ++i){
 		temp = *(addr + i);
 	}
 
+	/* Print out message */
 	printf("4MB test passed\n");	
 
+	/* Test on 4KB video memory Page*/
 	addr = (unsigned long*)0xb8000;
 	for(i = 0; i <0x400; i++){
 		temp = *(addr + i);
 	}
 
+	/* Print out message */
 	printf("4KB test passed\n");
 
 	return result;
@@ -88,9 +94,11 @@ int valid_page_test(){
 int invalid_page_test(){
 	TEST_HEADER;
 
+	/* Initialize addr to 0x0 as an invalid addr */
 	unsigned long* addr = (unsigned long*)0x0;
 	unsigned long temp;
 
+	/* Dereference invalid addr to cause Page Fault */
 	temp = *addr;
 	
 	return PASS;
