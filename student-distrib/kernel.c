@@ -184,7 +184,7 @@ void entry(unsigned long magic, unsigned long addr) {
     printf("Enabling Interrupts\n");
     sti();
 
-#ifdef RUN_TESTS
+#if RUN_TESTS
     /* Run tests */
     launch_tests();
 #endif

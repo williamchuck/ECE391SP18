@@ -47,6 +47,39 @@ int idt_test(){
 
 // add more tests here
 
+int valid_page_test(){
+	TEST_HEADER;
+
+	int i;
+	int result = PASS;
+	unsigned long* addr = (unsigned long*)0x400000;
+	unsigned long temp;
+	for(i = 0; i < 0x100000; ++i){
+		temp = *(addr + i);
+	}
+
+	printf("4MB test passed\n");	
+
+	addr = (unsigned long*)0xb8000;
+	for(i = 0; i <0x400; i++){
+		temp = *(addr + i);
+	}
+
+	printf("4KB test passed\n");
+
+	return result;
+}
+
+int invalid_page_test(){
+	TEST_HEADER;
+
+	unsigned long* addr = (unsigned long*)0x0;
+	unsigned long temp;
+
+	temp = *addr;
+	
+	return PASS;
+}
 /* Checkpoint 2 tests */
 /* Checkpoint 3 tests */
 /* Checkpoint 4 tests */
@@ -56,5 +89,9 @@ int idt_test(){
 /* Test suite entry point */
 void launch_tests(){
 	TEST_OUTPUT("idt_test", idt_test());
+	TEST_OUTPUT("valid_page_test", valid_page_test());
+#if INVALID_ADDR_TEST
+	TEST_OUTPUT("invalid_page_test", invalid_page_test());
+#endif
 	// launch your tests here
 }
