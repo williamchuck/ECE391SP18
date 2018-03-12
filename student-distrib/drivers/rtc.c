@@ -9,9 +9,12 @@
 #include "rtc.h"
 #include "../lib.h"
 #include "../idt/interrupt.h"
+#include "../kernel.h"
 extern void test_interrupts(void);
 void rtc_isr(){
+#if RTC_TEST
     test_interrupts();
+#endif
     outb(0x0C, 0x70);   //select register C
     inb(0x71);          //read register to clear interrupt
 }

@@ -11,6 +11,7 @@
 #include "i8259.h"
 #include "debug.h"
 #include "tests.h"
+#include "kernel.h"
 
 /* IDT loader, c handler, x86 wrappers */
 #include "idt/idt_main.h"
@@ -23,8 +24,6 @@
 #include "drivers/ps2_keyboard.h"
 #include "drivers/ps2_controller.h"
 #include "drivers/rtc.h"
-
-#define RUN_TESTS
 
 /* Macros. */
 /* Check if the bit BIT in FLAGS is set. */
@@ -151,6 +150,9 @@ void entry(unsigned long magic, unsigned long addr) {
         ltr(KERNEL_TSS);
     }
 
+	/* Set up paging */
+	setup_page();
+
     /* Init IDT */
     idt_set_all();
 
@@ -160,11 +162,10 @@ void entry(unsigned long magic, unsigned long addr) {
     /* Init the PIC */
     i8259_init();
 
-	  /* Set up paging */
-	  setup_page();
-
+#if NOT_SHOW_MESSAGE
     /* Clear screen for better testing. */
     clear();
+#endif
 
     /* Initialize devices, memory, filesystem, enable device interrupts on the
      * PIC, any other initialization stuff... */
