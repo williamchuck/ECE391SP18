@@ -1,1 +1,1 @@
-git update-index --assume-unchanged bootimg mp3.img
+git checkout bootimg mp3.img
