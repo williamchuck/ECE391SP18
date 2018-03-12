@@ -12,6 +12,7 @@ irq_struct_t irqs[NUM_IRQ]={{0}};
 
 unsigned int do_IRQ(unsigned int irq){
     if(irqs[irq].handler==NULL){
+        //somehow irq0 keeps firing
         if(irq)printf("do_IRQ: no handler installed for IRQ%d",irq);
         send_eoi(irq);
         return -1;
