@@ -130,9 +130,6 @@ void launch_tests(){
 #if DIV_0_TEST
 	TEST_OUTPUT("div_by_0_test", div_by_0_test());
 #endif
-#if INVALID_OPCODE_TEST
-    TEST_OUTPUT("invalid_opcode_test", invalid_opcode_test());
-#endif
 #if INVALID_ADDR_TEST
 	TEST_OUTPUT("invalid_page_test", invalid_page_test());
 #endif
