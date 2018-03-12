@@ -23,6 +23,8 @@
 void int_0_c()
 {
   printf("Interrupt 0 - Fault - Divide Error Exception (#DE).\n");
+  //send_eoi(8);
+  send_eoi(0);
 }
 void int_1_c()
 {

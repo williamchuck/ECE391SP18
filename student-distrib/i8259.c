@@ -29,8 +29,7 @@ void i8259_init(void) {
 
   outb(master_mask, MASTER_8259_DATA);
   outb(slave_mask, SLAVE_8259_DATA);
-  enable_irq(2);//enable slave cascade
-
+  enable_irq(2);
 }
 
 /* Enable (unmask) the specified IRQ */
