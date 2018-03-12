@@ -17,6 +17,7 @@
 #include "page/page.h"
 #include "drivers/ps2_keyboard.h"
 #include "drivers/ps2_controller.h"
+#include "drivers/rtc.h"
 
 #define RUN_TESTS
 
