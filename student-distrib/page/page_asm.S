@@ -2,6 +2,7 @@
 
 .global loadPageDir
 .global enablePage
+.global flush_TLB
 
 loadPageDir:
 
@@ -26,4 +27,13 @@ enablePage:
 	leave
 	ret
 
+flush_TLB:
+	pushl %ebp
+	movl %esp, %ebp
+
+	mov %cr3, %eax
+	mov %eax, %cr3
+
+	leave
+	ret
 .end

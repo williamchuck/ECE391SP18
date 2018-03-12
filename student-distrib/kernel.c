@@ -13,6 +13,8 @@
 #include "idt/idt_handler_c.h"
 #include "idt/idt_handler_asm.h"
 
+#include "page/page.h"
+
 #define RUN_TESTS
 
 /* Macros. */
@@ -145,6 +147,9 @@ void entry(unsigned long magic, unsigned long addr) {
 
     /* Init the PIC */
     i8259_init();
+
+	/* Set up paging */
+	setup_page();
 
     /* Initialize devices, memory, filesystem, enable device interrupts on the
      * PIC, any other initialization stuff... */
