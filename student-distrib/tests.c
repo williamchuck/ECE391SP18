@@ -117,20 +117,6 @@ int invalid_page_test(){
 
 	return FAIL;
 }
-/*
- * invalid_opcode_test:
- * Description: Test invalid opcode handler
- * Input: None
- * Output: Invalid opcode handler triggered on success, will return FAIL if not triggered
- */
-int invalid_opcode_test(){
-    TEST_HEADER;
-    unsigned long op=0xC8C70FF0;
-    void (*invalop)()=&op;
-    invalop();
-
-    return FAIL;
-}
 /* Checkpoint 2 tests */
 /* Checkpoint 3 tests */
 /* Checkpoint 4 tests */

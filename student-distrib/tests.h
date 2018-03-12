@@ -11,8 +11,6 @@
 #define INVALID_ADDR_TEST 0
 /* Enable division by 0 test (Will trigger div by 0 handler) */
 #define DIV_0_TEST 1
-/* Enable invalid opcode test (will trigger invalid opcode handler) */
-#define INVALID_OPCODE_TEST 0
 // test launcher
 void launch_tests();
 
