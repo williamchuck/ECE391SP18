@@ -18,8 +18,6 @@ typedef struct irq_struct{
     void (*handler)();
 } irq_struct_t;
 
-/* Array of IRQ handlers. */
-extern irq_struct_t irqs[NUM_IRQ];
 
 /*
  * IRQ handler implementation.

@@ -11,7 +11,6 @@
 #include "i8259.h"
 #include "debug.h"
 #include "tests.h"
-#include "kernel.h"
 
 /* IDT loader, c handler, x86 wrappers */
 #include "idt/idt_main.h"
@@ -173,9 +172,10 @@ void entry(unsigned long magic, unsigned long addr) {
     /* Init keyboard */
     ps2_keyboard_init();
 
+#if RTC_TEST
     /* Enable rtc periodic interrupt*/
     rtc_enable_interrupt();
-
+#endif
     /* Enable interrupts */
     /* Do not enable the following until after you have set up your
      * IDT correctly otherwise QEMU will triple fault and simple close

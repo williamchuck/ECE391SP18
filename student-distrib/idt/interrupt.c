@@ -15,7 +15,7 @@ irq_struct_t irqs[NUM_IRQ]={{0}};
 /*
  * do_IRQ
  *   DESCRIPTION: execute irq handler given irq number.
- *   ARGUMENTS: irq - irq number.
+ *   INPUT: irq - irq number.
  *   OUTPUT: none.
  *   RETURN VALUE: -1 on failure. (No handler present.)
  *                  0 on success.
@@ -24,9 +24,8 @@ irq_struct_t irqs[NUM_IRQ]={{0}};
 unsigned int do_IRQ(unsigned int irq){
     if(irqs[irq].handler==NULL){
         /* Error handling for non-existant irq handler */
-        /* Previously used to supress irq0 request. (Solved) */
         printf("do_IRQ: no handler installed for IRQ%d",irq);
-        /* Still send EOI for error handling, but return -1. */
+        /* Send EOI so other interrupts doesn't get blocked but return -1. */
         send_eoi(irq);
         return -1;
     }
@@ -40,12 +39,14 @@ unsigned int do_IRQ(unsigned int irq){
 /*
  * request_IRQ
  *   DESCRIPTION: install irq handler, given irq number
- *   ARGUMENTS: irq - irq number.
+ *   INPUT: irq - irq number.
  *              handler - pointer to handler function to be installed.
  *   OUTPUT: none.
  *   RETURN VALUE: -1 on failure. (Handler already present / Invalid IRQ number.)
  *                  0 on success.
- *   SIDE EFFECTS: handler for designated IRQ is installed. Pointer stored in irq array.
+ *   SIDE EFFECTS: Handler for designated IRQ is installed.
+ *                 Pointer to handler stored in irq struct array.
+ *                 Corresponding IRQ pin on PIC is unmasked.
  */
 int request_irq(unsigned int irq,
                 void (*handler)()){
@@ -75,11 +76,12 @@ int request_irq(unsigned int irq,
 /*
  * free_IRQ
  *   DESCRIPTION: uninstall irq handler, given irq number
- *   ARGUMENTS: irq - irq number.
+ *   INPUT: irq - irq number.
  *   OUTPUT: none.
  *   RETURN VALUE: -1 on failure. (Handler already deleted / Invalid IRQ number.)
  *                  0 on success.
- *   SIDE EFFECTS: handler for designated IRQ is uninstalled. Pointer to original handler deleted in irq array.
+ *   SIDE EFFECTS: Hanlder pointer in the corresponding entry in irq struct array is set to null.
+ *                 Corresponding IRQ pin on PIC is masked.
  */
 int free_irq(unsigned int irq){
     unsigned long flags;
