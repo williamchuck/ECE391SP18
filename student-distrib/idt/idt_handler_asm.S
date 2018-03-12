@@ -53,8 +53,24 @@
 .globl int_1F_asm
 /* Handler for system call */
 .globl int_80_asm
-/* Handler for keyboard call */
+
+/* irq handler stubs */
+.globl int_20_asm
 .globl int_21_asm
+.globl int_22_asm
+.globl int_23_asm
+.globl int_24_asm
+.globl int_25_asm
+.globl int_26_asm
+.globl int_27_asm
+.globl int_28_asm
+.globl int_29_asm
+.globl int_2A_asm
+.globl int_2B_asm
+.globl int_2C_asm
+.globl int_2D_asm
+.globl int_2E_asm
+.globl int_2F_asm
 
 .align 4
 
@@ -296,9 +312,67 @@ int_80_asm:
   popal
   iret
 
-/* Interrupt 33 - Keyboard Call */
+/* irq handler stub */
+int_20_asm:
+	pushl $0
+	jmp common_interrupt
+
 int_21_asm:
-  pushal
-  call int_ps2kbd_c
-  popal
-  iret
+	pushl $1
+	jmp common_interrupt
+
+int_22_asm:
+	pushl $2
+	jmp common_interrupt
+
+int_23_asm:
+	pushl $3
+	jmp common_interrupt
+
+int_24_asm:
+	pushl $4
+	jmp common_interrupt
+
+int_25_asm:
+	pushl $5
+	jmp common_interrupt
+
+int_26_asm:
+	pushl $6
+	jmp common_interrupt
+
+int_27_asm:
+	pushl $7
+	jmp common_interrupt
+
+int_28_asm:
+	pushl $8
+	jmp common_interrupt
+
+int_29_asm:
+	pushl $9
+	jmp common_interrupt
+
+int_2A_asm:
+	pushl $10
+	jmp common_interrupt
+
+int_2B_asm:
+	pushl $11
+	jmp common_interrupt
+
+int_2C_asm:
+	pushl $12
+	jmp common_interrupt
+
+int_2D_asm:
+	pushl $13
+	jmp common_interrupt
+
+int_2E_asm:
+	pushl $14
+	jmp common_interrupt
+
+int_2F_asm:
+	pushl $15
+	jmp common_interrupt
