@@ -14,6 +14,8 @@
 
 #include "idt_handler_asm.h"
 
+#include "../drivers/ps2_keyboard.h"
+
 #define TASK_GATE_MODE      0x01
 #define INTERRUPT_GATE_MODE 0x02
 #define TRAP_GATE_MODE      0x03
@@ -21,6 +23,8 @@
 #define IDT_ENTRY_SIZE        0x100
 #define IDT_EXCEPTION_SIZE    0x20
 #define IDT_SYSTEM_CALL       0x80
+#define IDT_PS2KBD_CALL       0x21
+#define IDT_RTC_CALL          0x28
 
 #define INTEL_RESERVED_9      0x9
 #define INTEL_RESERVED_15     0xF

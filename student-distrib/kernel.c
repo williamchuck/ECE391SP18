@@ -13,6 +13,9 @@
 #include "idt/idt_handler_c.h"
 #include "idt/idt_handler_asm.h"
 
+#include "drivers/ps2_keyboard.h"
+#include "drivers/ps2_controller.h"
+
 #define RUN_TESTS
 
 /* Macros. */
@@ -139,6 +142,10 @@ void entry(unsigned long magic, unsigned long addr) {
         tss.esp0 = 0x800000;
         ltr(KERNEL_TSS);
     }
+
+    /* Clear screen for better testing. */
+    clear();
+
     /* Init IDT */
     idt_set_all();
     lidt(idt_desc_ptr);
@@ -148,6 +155,9 @@ void entry(unsigned long magic, unsigned long addr) {
 
     /* Initialize devices, memory, filesystem, enable device interrupts on the
      * PIC, any other initialization stuff... */
+
+    /* Init keyboard */
+    ps2_keyboard_init();
 
     /* Enable interrupts */
     /* Do not enable the following until after you have set up your

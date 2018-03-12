@@ -19,6 +19,8 @@
  * add the interrupt entry to idt_table. (by changing idt_set_all in idt_main.c)
  */
 
+#include "../drivers/ps2_keyboard.h"
+
 /* Declarations of interrupt assembly linage functions. */
 extern void int_0_asm();
 extern void int_1_asm();
@@ -54,5 +56,7 @@ extern void int_1E_asm();
 extern void int_1F_asm();
 /* Handler for system call */
 extern void int_80_asm();
+/* Handler for keyboard */
+extern void int_21_asm();
 
 #endif

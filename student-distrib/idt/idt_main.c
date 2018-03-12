@@ -37,6 +37,9 @@ uint32_t idt_handler_addr[IDT_ENTRY_SIZE] = {
 /* Handler address for system call */
 uint32_t idt_system_call_addr = (uint32_t)int_80_asm;
 
+/* Handler address for keyboard call */
+uint32_t idt_ps2kbd_call_addr = (uint32_t)int_21_asm;
+
 void idt_set_all()
 {
   int i;
@@ -44,15 +47,23 @@ void idt_set_all()
   {
     if (i == INTEL_RESERVED_9 || i == INTEL_RESERVED_15 || (i >= INTEL_RESERVED_OTHER && i < IDT_EXCEPTION_SIZE))
     {
+      printf("Set Entry %d \n", i);
       idt_set_entry(i, INTERRUPT_GATE_MODE, idt_handler_addr[i], KERNEL_CS, 0, 1, 1);
     }
     if (i < IDT_EXCEPTION_SIZE)
     {
+      printf("Set Entry %d \n", i);
       idt_set_entry(i, INTERRUPT_GATE_MODE, idt_handler_addr[i], KERNEL_CS, 0, 1, 1);
     }
     if (i == IDT_SYSTEM_CALL)
     {
+      printf("Set Entry %d \n", i);
       idt_set_entry(i, TRAP_GATE_MODE, idt_system_call_addr, KERNEL_CS, 3, 1, 1);
+    }
+    if (i == IDT_PS2KBD_CALL)
+    {
+      printf("Set Entry %d \n", i);
+      idt_set_entry(i, INTERRUPT_GATE_MODE, idt_ps2kbd_call_addr, KERNEL_CS, 0, 1, 1);
     }
   }
 }
