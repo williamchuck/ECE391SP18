@@ -51,24 +51,10 @@
 .globl int_1C_asm
 .globl int_1D_asm
 .globl int_1F_asm
-.globl int_20_asm
-.globl int_21_asm
-.globl int_22_asm
-.globl int_23_asm
-.globl int_24_asm
-.globl int_25_asm
-.globl int_26_asm
-.globl int_27_asm
-.globl int_28_asm
-.globl int_29_asm
-.globl int_2A_asm
-.globl int_2B_asm
-.globl int_2C_asm
-.globl int_2D_asm
-.globl int_2E_asm
-.globl int_2F_asm
 /* Handler for system call */
 .globl int_80_asm
+/* Handler for keyboard call */
+.globl int_21_asm
 
 .align 4
 
@@ -307,5 +293,12 @@ int_1F_asm:
 int_80_asm:
   pushal
   call int_80_c
+  popal
+  iret
+
+/* Interrupt 33 - Keyboard Call */
+int_21_asm:
+  pushal
+  call int_ps2kbd_c
   popal
   iret
