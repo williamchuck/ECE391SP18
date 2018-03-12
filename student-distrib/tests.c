@@ -89,7 +89,13 @@ int valid_page_test(){
 int div_by_0_test(){
     TEST_HEADER;
     int i=7;
-    i=i/0;
+    int j=2;
+    int k;
+    for(k=0;k<2;k++){
+        j=j/2;
+    }
+    //j should b 0 here
+    i=i/j;
     return FAIL;
 }
 /*
@@ -111,6 +117,20 @@ int invalid_page_test(){
 
 	return FAIL;
 }
+/*
+ * invalid_opcode_test:
+ * Description: Test invalid opcode handler
+ * Input: None
+ * Output: Invalid opcode handler triggered on success, will return FAIL if not triggered
+ */
+int invalid_opcode_test(){
+    TEST_HEADER;
+    unsigned long op=0xC8C70FF0;
+    void (*invalop)()=&op;
+    invalop();
+
+    return FAIL;
+}
 /* Checkpoint 2 tests */
 /* Checkpoint 3 tests */
 /* Checkpoint 4 tests */
@@ -123,6 +143,9 @@ void launch_tests(){
 	TEST_OUTPUT("valid_page_test", valid_page_test());
 #if DIV_0_TEST
 	TEST_OUTPUT("div_by_0_test", div_by_0_test());
+#endif
+#if INVALID_OPCODE_TEST
+    TEST_OUTPUT("invalid_opcode_test", invalid_opcode_test());
 #endif
 #if INVALID_ADDR_TEST
 	TEST_OUTPUT("invalid_page_test", invalid_page_test());
