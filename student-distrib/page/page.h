@@ -13,10 +13,27 @@
 #define EN_S 0x00000080
 #define EN_G 0x00000100
 
-extern void fill_page_dir_table();
-extern void set_4MB(uint32_t phys_mem, uint32_t virt_mem);
+/* Define table and page size for paging */
+#define PAGE_SIZE 4096
+#define TABLE_SIZE 1024
+
+/* Define start of video and kernel page */
+#define KERNEL_MEM 0x400000
+#define VIDEO_MEM 0xb8000
+
+/* Fill page directory table with zeros */
+extern void fill_page_dir();
+/* Fill page table with zeros */
 extern void fill_page_table();
+/* Set a 4MB page */
+extern void set_4MB(uint32_t phys_mem, uint32_t virt_mem);
+/* Set a 4KB page */
 extern void setPTE(uint32_t phys_mem, uint32_t virt_mem);
-extern flush_TLB();
+/* Load in new page directory table addr */
+extern void flush_TLB();
+/* Enable paging */
+extern void enablePage();
+/* Setup paging */
+extern void setup_page();
 
 #endif

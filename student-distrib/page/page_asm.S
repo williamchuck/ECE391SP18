@@ -1,39 +1,44 @@
 .text
-
-.global loadPageDir
+#Set global functions
 .global enablePage
 .global flush_TLB
 
-loadPageDir:
-
-	pushl %ebp
-	movl %esp, %ebp
-
-	mov 8(%esp), %eax
-	mov %eax, %cr3
-
-	leave
-	ret
-
+#Write to cr0,cr3,cr4 register 
 enablePage:
-	
+	#Set up Frame
 	pushl %ebp
-	movl %esp, %ebp
+	movl %ebp, %esp
 
-	mov %cr0, %eax
+	#Load addr of page directory to cr3
+	leal page_dir, %eax
+	movl %eax, %cr3
+
+	#Enable large paging
+	movl %cr4, %eax
+	orl 0x10, %eax
+	movl %eax, %cr4
+
+	#Enable paging
+	movl %cr0, %eax
 	orl $0x80000000, %eax
-	mov %eax, %cr0
+	movl %eax, %cr0
 
+	#Restore frame and return
 	leave
 	ret
 
+#Write addr of page diectory to TLB for cache
 flush_TLB:
+
+	#Set up Frame
 	pushl %ebp
-	movl %esp, %ebp
+	movl %ebp, %esp
 
-	mov %cr3, %eax
-	mov %eax, %cr3
+	#Reload addr of page dirctory to cr3 to flush TLB
+	leal page_dir, %eax
+	movl %eax, %cr3
 
+	#Restore frame and return
 	leave
 	ret
 .end
