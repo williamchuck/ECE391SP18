@@ -5,9 +5,10 @@
 #include "i8259.h"
 #include "lib.h"
 
+//interrupt mask state
 /* Interrupt masks to determine which interrupts are enabled and disabled */
-uint8_t master_mask; /* IRQs 0-7  */
-uint8_t slave_mask;  /* IRQs 8-15 */
+uint8_t master_mask=0xFF; /* IRQs 0-7  */
+uint8_t slave_mask=0xFF;  /* IRQs 8-15 */
 
 /* Initialize the 8259 PIC */
 void i8259_init(void) {
@@ -25,8 +26,6 @@ void i8259_init(void) {
   outb(ICW3_SLAVE, SLAVE_8259_DATA);
   outb(ICW4, SLAVE_8259_DATA);
 
-  master_mask = 0xFF;
-  slave_mask = 0xFF;
 
   outb(master_mask, MASTER_8259_DATA);
   outb(slave_mask, SLAVE_8259_DATA);

@@ -1,0 +1,1 @@
+git update-index --assume-unchanged bootimg mp3.img
