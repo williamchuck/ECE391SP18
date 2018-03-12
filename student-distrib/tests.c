@@ -82,13 +82,21 @@ int valid_page_test(){
 
 	return result;
 }
-
-
+/*  div_by_0_test
+ *  Test division by 0 will trigger div by 0 handler
+ *  If successful will be stuck in handler and not return
+ */
+int div_by_0_test(){
+    TEST_HEADER;
+    int i=7;
+    i=i/0;
+    return FAIL;
+}
 /*
  * invalid_page_test:
  * Description: Test paging for invalid address
  * Input: None
- * Output: Page Fault on success, return PASS on fail
+ * Output: Page Fault on success, will return FAIL if page fault not triggered
  * Effect: Test paing on invalid address 0x0
  */
 int invalid_page_test(){
@@ -101,7 +109,7 @@ int invalid_page_test(){
 	/* Dereference invalid addr to cause Page Fault */
 	temp = *addr;
 
-	return PASS;
+	return FAIL;
 }
 /* Checkpoint 2 tests */
 /* Checkpoint 3 tests */
@@ -113,6 +121,9 @@ int invalid_page_test(){
 void launch_tests(){
 	TEST_OUTPUT("idt_test", idt_test());
 	TEST_OUTPUT("valid_page_test", valid_page_test());
+#if DIV_0_TEST
+	TEST_OUTPUT("div_by_0_test", div_by_0_test());
+#endif
 #if INVALID_ADDR_TEST
 	TEST_OUTPUT("invalid_page_test", invalid_page_test());
 #endif
