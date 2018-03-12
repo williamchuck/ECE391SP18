@@ -1,6 +1,9 @@
 /* kernel.c - the C part of the kernel
  * vim:ts=4 noexpandtab
  */
+/* Team Caffine_Theanine */
+/* Hongxuan Li, Yichi Zhang, Linz Chiang, Canlin Zhang */
+/* Current checkpoint 3.1 */
 
 #include "multiboot.h"
 #include "x86_desc.h"
@@ -9,11 +12,13 @@
 #include "debug.h"
 #include "tests.h"
 
+/* IDT loader, c handler, x86 wrappers */
 #include "idt/idt_main.h"
 #include "idt/idt_handler_c.h"
 #include "idt/idt_handler_asm.h"
 #include "idt/interrupt.h"
 
+/* Page implementation, device drivers (keyboard, rtc) */
 #include "page/page.h"
 #include "drivers/ps2_keyboard.h"
 #include "drivers/ps2_controller.h"
@@ -146,20 +151,21 @@ void entry(unsigned long magic, unsigned long addr) {
         ltr(KERNEL_TSS);
     }
 
-    /* Clear screen for better testing. */
-    clear();
-
     /* Init IDT */
     idt_set_all();
+
+    /* Load IDT */
     lidt(idt_desc_ptr);
 
     /* Init the PIC */
     i8259_init();
 
-	/* Set up paging */
-	setup_page();
+	  /* Set up paging */
+	  setup_page();
 
-	*((unsigned int *) 0)=1;
+    /* Clear screen for better testing. */
+    clear();
+
     /* Initialize devices, memory, filesystem, enable device interrupts on the
      * PIC, any other initialization stuff... */
 
@@ -168,6 +174,7 @@ void entry(unsigned long magic, unsigned long addr) {
 
     /* Enable rtc periodic interrupt*/
     rtc_enable_interrupt();
+
     /* Enable interrupts */
     /* Do not enable the following until after you have set up your
      * IDT correctly otherwise QEMU will triple fault and simple close

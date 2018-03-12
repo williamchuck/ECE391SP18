@@ -6,6 +6,20 @@
  * Also, further use of ps2 drivers would be implemented here, so don't delete this.
  */
 
+ /*
+  * ps2_controller.c
+  * Initialization and (future) functionalites of PS2 controller.
+  * Author: Canlin Zhang
+  */
+
+/*
+ * ps2_controller_init
+ *   DESCRIPTION: initialize ps2 controller
+ *   ARGUMENTS: none.
+ *   OUTPUT: none.
+ *   RETURN VALUE: 0 for success, -1 for failure.
+ *   SIDE EFFECTS: Initializes ps2 controller.
+ */
 int ps2_controller_init() {
     uint8_t temp;
     uint8_t dualchannel;
@@ -16,7 +30,7 @@ int ps2_controller_init() {
 
     /* Flush Output Buffer */
     temp = 0x01;
-    while (temp & 0x01 != 0x00)
+    while ((temp & 0x01) != 0x00)
     {
       temp = inb(PS2_STATUS_PORT);
     }
@@ -40,7 +54,7 @@ int ps2_controller_init() {
     outb(PS2_ENABLE_TWO, PS2_CMD_PORT);
     outb(PS2_READ_CONFIG, PS2_CMD_PORT);
     temp = inb(PS2_DATA_PORT);
-    if (temp & PS2_DUAL_CHANNEL == 0)
+    if ((temp & PS2_DUAL_CHANNEL) == 0)
     {
       dualchannel = 0x01;
     }

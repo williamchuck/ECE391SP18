@@ -19,7 +19,8 @@ int rtc_enable_interrupt(){
     //referenced from https://wiki.osdev.org/RTC
     unsigned long flags;
     cli_and_save(flags);
-
+    outb(0x8A, 0x70);
+    outb(0x2F, 0x71);
     outb(0x8B, 0x70);   //select register B, disable NMI
     char regB=inb(0x71);//store current value
     outb(0x8B, 0x70);   //select register B, disable NMI
@@ -29,4 +30,3 @@ int rtc_enable_interrupt(){
     restore_flags(flags);
     return request_irq(8, &rtc_isr);
 }
-

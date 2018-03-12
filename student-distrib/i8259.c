@@ -1,6 +1,10 @@
 /* i8259.c - Functions to interact with the 8259 interrupt controller
  * vim:ts=4 noexpandtab
  */
+/*
+ * i8259.c - Driver for 8259A PIC
+ * Implementation by Canlin Zhang.
+ */
 
 #include "i8259.h"
 #include "lib.h"

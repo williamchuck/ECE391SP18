@@ -4,8 +4,7 @@
 /*
  * idt/idt_handler_asm.h
  * Release version - Caffine_Theanine beta 0.0.0.1
- * Latest revision by Canlin Zhang (canlinz2).
- * Please maintain a good working habit: Write comments! Update versions! (if applicable, don't use magic numbers.)
+ * Author: Canlin Zhang, Hongxuan Li.
  */
 
 /*

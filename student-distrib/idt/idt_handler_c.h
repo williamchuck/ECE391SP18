@@ -3,9 +3,8 @@
 
 /*
  * idt/idt_handler_c.h
- * Release version - Caffine_Theanine beta 0.0.0.1
- * Latest revision by Canlin Zhang (canlinz2).
- * Please maintain a good working habit: Write comments! Update versions! (if applicable, don't use magic numbers.)
+ * Definitions of c implementation of system exception handler.
+ * Author: Canlin Zhang, Hongxuan Li.
  */
 
 /*

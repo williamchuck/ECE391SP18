@@ -1,3 +1,8 @@
+/*
+ * page.c
+ * Implementations of paging functions.
+ * Author: Yichi Zhang.
+ */
 #include "page.h"
 
 /* Page directory table */
@@ -57,7 +62,7 @@ void set_4MB(uint32_t phys_mem, uint32_t virt_mem){
 /*
  * set_4KB:
  * Description: Set up 4KB page
- * Input: 4KB aligned physical memory we want to map to and a virtual memory 
+ * Input: 4KB aligned physical memory we want to map to and a virtual memory
  *     we want to map from
  * Output: None
  * Effect: A 4KB page only accessable by kernel is setuped
@@ -76,14 +81,14 @@ void set_4KB(uint32_t phys_mem, uint32_t virt_mem){
 	page_table[pte_idx] = (phys_mem & 0xFFFFF000) | EN_P | EN_R;
 	/* Flush TLB for cache */
 	flush_TLB();
-} 
+}
 
 /*
  * setup_page:
  * Description: Set up paging for kernel page and video memory
  * Input: None
  * Output: None
- * Effect: Two page is setup: One for kernel which is 4MB, 
+ * Effect: Two page is setup: One for kernel which is 4MB,
  *     one for video memory which is 4KB
  */
 void setup_page(){

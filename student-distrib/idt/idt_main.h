@@ -1,5 +1,17 @@
+/*
+ * idt_main.h
+ * header files of implementation of idt initialization
+ * Authors: Hongxuan Li, Canlin Zhang
+ */
+
 #ifndef IDT_MAIN_H
 #define IDT_MAIN_H
+
+/*
+ * Attention! Current IRQ handlers are defined in interrupt.h
+ * and implemented in interrupt.c and interrupt_asm.S
+ * Built-in interrupt handlers in ../drivers will not be used. (Unless needed in future.)
+ */
 
 /* Include types.h in student-distrib folder */
 #include "../types.h"
@@ -10,10 +22,11 @@
 /* Include file IDT descriptions, data structure and global variable definitions */
 #include "../x86_desc.h"
 
+/* Include c implementation and x86 wrappers of idt handlers. */
 #include "idt_handler_c.h"
-
 #include "idt_handler_asm.h"
 
+/* Include interrupt handling for keyboard. (Not currently in use.) */
 #include "../drivers/ps2_keyboard.h"
 
 #define TASK_GATE_MODE      0x01

@@ -1,6 +1,7 @@
 #include "ps2_keyboard.h"
 
 /* Keycode set 1. Only for displaying the asciis. */
+/* Further functionalites and keycode toggling will be implmented otherwise */
 static unsigned char ps2kbd_set1_keycode[90] = {
     0, 27, '1', '2', '3', '4', '5', '6', '7', '8', '9', '0',
     '-', '=', 8, 9, 'q', 'w', 'e', 'r', 't', 'y', 'u', 'i', 'o', 'p', '[', ']',
@@ -10,7 +11,7 @@ static unsigned char ps2kbd_set1_keycode[90] = {
     '1', '2', '3', '0', '.', 0, 0, 0, 0, 0, 0,
 };
 
-/* Unused keycode set */
+/* Unused keycode set - Set 2 and 3 */
 /* static unsigned char ps2kbd_set2_keycode[512] = {
 	  0, 67, 65, 63, 61, 59, 60, 88,  0, 68, 66, 64, 62, 15, 41,117,
 	  0, 56, 42, 93, 29, 16,  2,  0,  0,  0, 44, 31, 30, 17,  3,  0,
@@ -60,10 +61,13 @@ static unsigned char ps2kbd_unxlate_table[128] = {
          19, 25, 57, 81, 83, 92, 95, 98, 99,100,101,103,104,106,109,110
 }; */
 
+/* Command port and data port for ps2 keyboard (and controller, in fact) */
 #define PS2_DATA_PORT                 0x60
 #define PS2_CMD_PORT                  0x64
 #define PS2_STATUS_PORT               0x64
 
+/* Common return values from ps2 keyboard after given command */
+/* Mainly for Debugging purposes. */
 #define PS2KBD_RET_ACK                0xFA
 #define PS2KBD_RET_STPASS             0xAA
 #define PS2KBD_RET_STFAIL1            0xFC
@@ -73,6 +77,9 @@ static unsigned char ps2kbd_unxlate_table[128] = {
 #define PS2KBD_RET_DETECTION_UNKNOWN  0xFF
 #define PS2KBD_RET_RESEND             0xFE
 
+/* Common command bytes for ps2 keyboard */
+/* Mainly for debugging and experiments. */
+/* Attention! GETSETCODE DOES NOT WORK */
 #define PS2KBD_CMD_LED                0xED
 #define PS2KBD_CMD_ECHO               0xEE
 #define PS2KBD_CMD_GETSETCODE         0xF0
@@ -90,53 +97,97 @@ static unsigned char ps2kbd_unxlate_table[128] = {
 #define PS2KBD_CMD_RESEND_LAST        0xFD
 #define PS2KBD_CMD_RESET_TEST         0xFF
 
-
+/* Flag for toggling keys. Alt - Ctrl - CAPSL - NUML - SCRL */
 static uint8_t alt_flag;
 static uint8_t shift_flag;
 static uint8_t capsl_flag;
 static uint8_t numl_flag;
 static uint8_t scroll_flag;
 
+/*
+ * ps2_keyboard_init
+ *   DESCRIPTION: Initialize PS2 keyboard.
+ *   ARGUMENTS: none.
+ *   OUTPUT: none.
+ *   RETURN VALUE: none.
+ *   SIDE EFFECTS: Enable keyboard interrupt, reset key toggle flags.
+ */
 void ps2_keyboard_init() {
-    /* Clear flags */
+    /* Clear key toggle flags */
     alt_flag = 0x00;
     shift_flag = 0x00;
     capsl_flag = 0x00;
     numl_flag = 0x00;
     scroll_flag = 0x00;
 
+    /* enable_irq unused, use reques_irq for installation and enabling. */
     //enable_irq(KBD_IRQ);
     request_irq(KBD_IRQ,&int_ps2kbd_c);
 }
 
+/*
+ * int_ps2kbd_c
+ *   DESCRIPTION: C implementation for keyboard interrupt handling.
+ *   ARGUMENTS: none.
+ *   OUTPUT: none.
+ *   RETURN VALUE: none.
+ *   SIDE EFFECTS: Read current keycode and echo it onto screen (if possible).
+ */
 void int_ps2kbd_c() {
+    /* variables for current keycode and ascii (if applicable) */
     unsigned char currentcode;
     unsigned char currentchar;
+    /* Get current scan code */
     currentcode = ps2_keyboard_getscancode();
+    /* If a key IS pressed, get its ascii code */
     if (currentcode != 0)
     {
       currentchar = ps2_keyboard_getchar(currentcode);
     }
+    /* If this key has displable ascii code, print it out! */
     if (currentchar != 0)
     {
       printf("%c", currentchar);
     }
+    /* EOI is handled by general irq handler. Hence send_eoi is NOT needed */
     //send_eoi(KBD_IRQ);
 }
 
+/*
+ * ps2_keyboard_getscancode
+ *   DESCRIPTION: Get current scan code from keyboard
+ *   ARGUMENTS: none.
+ *   OUTPUT: none.
+ *   RETURN VALUE: current scan code
+ *   SIDE EFFECTS: Get current scan code from keyboard.
+ */
 unsigned char ps2_keyboard_getscancode() {
     unsigned char c1 = 0;
+    /* ONLY READ FROM KEYBOARD REG. ONCE! */
+    /* Used code on osdev wiki, but... */
+    /* "The PS/2 keyboard code on OSDev is garbage." -- Andrew Sun, 3/12/2018. */
     c1 = inb(PS2_DATA_PORT);
+    /* If a key is pressed, return its value */
     if (c1 > 0) {
       return c1;
   }
   return 0;
 }
 
+/*
+ * ps2_keyboard_getchar
+ *   DESCRIPTION: Get current ascii char from keyboard
+ *   ARGUMENTS: scancode - current scancode
+ *   OUTPUT: none.
+ *   RETURN VALUE: current ascii char (if applicable) or NULL char (if no displable char for the key)
+ *   SIDE EFFECTS: Get current ascii char from keyboard
+ */
 unsigned char ps2_keyboard_getchar(unsigned char scancode) {
+    /* If the key pressed has a corresponding value, return it */
     if (scancode <= 90) {
         return ps2kbd_set1_keycode[scancode];
     }
+    /* Else, return a NULL char. */
     else {
       return 0;
     }

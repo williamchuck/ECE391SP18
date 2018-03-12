@@ -1,3 +1,9 @@
+/*
+ * page.h
+ * Definitions for implementations of paging functions.
+ * Author: Yichi Zhang.
+ */
+
 #ifndef PAGE_H_
 #define PAGE_H_
 

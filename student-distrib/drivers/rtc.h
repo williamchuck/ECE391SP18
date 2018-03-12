@@ -2,7 +2,7 @@
  * rtc.h
  *
  *  Created on: Mar 11, 2018
- *      Author: Dennis
+ *  Author: Hongxuan Li.
  */
 
 #ifndef RTC_H

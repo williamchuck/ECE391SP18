@@ -2,6 +2,10 @@
  * controller
  * vim:ts=4 noexpandtab
  */
+/*
+ * i8259.c - Driver for 8259A PIC
+ * Implementation by Canlin Zhang.
+ */
 
 #ifndef _I8259_H
 #define _I8259_H

@@ -1,8 +1,7 @@
 /*
  * idt/idt_handler_asm.S
- * Release version - Caffine_Theanine beta 0.0.0.1
- * Latest revision by Canlin Zhang (canlinz2).
- * Please maintain a good working habit: Write comments! Update versions! (if applicable, don't use magic numbers.)
+ * x86 linkage for exception handler functions.
+ * Author: Canlin Zhang, Hongxuan Li.
  */
 
 /*
@@ -51,10 +50,14 @@
 .globl int_1C_asm
 .globl int_1D_asm
 .globl int_1F_asm
-/* Handler for system call */
+
+/* (x86 wrapper for) Handler for system call */
 .globl int_80_asm
 
-/* irq handler stubs */
+/*
+ * irq handler stubs.
+ * Made global to be used by idt_main.c to initialize idt entry.
+ */
 .globl int_20_asm
 .globl int_21_asm
 .globl int_22_asm
@@ -313,14 +316,21 @@ int_80_asm:
   iret
 
 /* irq handler stub */
+/*
+ * Each value pushed onto stack corresponds to a value
+ * in irq handler address array, defined in idt_main.c
+ * For MP3.1, only interrupt 0x21, 0x22 and 0x28 are used.
+ */
 int_20_asm:
 	pushl $0
 	jmp common_interrupt
 
+/* Keyboard Interrupt */
 int_21_asm:
 	pushl $1
 	jmp common_interrupt
 
+/* Slave PIC Interrupt */
 int_22_asm:
 	pushl $2
 	jmp common_interrupt
@@ -345,6 +355,7 @@ int_27_asm:
 	pushl $7
 	jmp common_interrupt
 
+/* RTC Interrupt */
 int_28_asm:
 	pushl $8
 	jmp common_interrupt
