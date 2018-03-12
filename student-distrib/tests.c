@@ -45,8 +45,15 @@ int idt_test(){
 	return result;
 }
 
-// add more tests here
-
+/*
+ * valid_page_test:
+ * Description: Test paging for valid address
+ * Input: None
+ * Output: return PASS on success, Page Fault on fail
+ * Effect: Test paging on valid address:
+ * 	4MB kernel page,
+ * 	4KB video memory page
+ */
 int valid_page_test(){
 	TEST_HEADER;
 
@@ -70,6 +77,14 @@ int valid_page_test(){
 	return result;
 }
 
+
+/*
+ * invalid_page_test:
+ * Description: Test paging for invalid address
+ * Input: None
+ * Output: Page Fault on success, return PASS on fail
+ * Effect: Test paing on invalid address 0x0
+ */
 int invalid_page_test(){
 	TEST_HEADER;
 
@@ -93,5 +108,4 @@ void launch_tests(){
 #if INVALID_ADDR_TEST
 	TEST_OUTPUT("invalid_page_test", invalid_page_test());
 #endif
-	// launch your tests here
 }
