@@ -24,6 +24,9 @@
 #include "drivers/ps2_controller.h"
 #include "drivers/rtc.h"
 
+/* File system */
+#include "fs/fs.h"
+
 /* Macros. */
 /* Check if the bit BIT in FLAGS is set. */
 #define CHECK_FLAG(flags, bit)   ((flags) & (1 << (bit)))
@@ -176,6 +179,7 @@ void entry(unsigned long magic, unsigned long addr) {
     /* Enable rtc periodic interrupt*/
     rtc_enable_interrupt();
 #endif
+	init_fs();
     /* Enable interrupts */
     /* Do not enable the following until after you have set up your
      * IDT correctly otherwise QEMU will triple fault and simple close
