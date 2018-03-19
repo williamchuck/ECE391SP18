@@ -180,9 +180,36 @@ void entry(unsigned long magic, unsigned long addr) {
     rtc_enable_interrupt();
 #endif
 	init_fs();
-	//dentry_t dentry;
-	//int ret,i,j;
-	//ret = read_dentry_by_name(".", &dentry);
+	uint8_t buf[187];
+	int ret,i,j;
+	//dentry_t frame0, frame1, created;
+	
+	//printf("Ret: %d\n", ret);
+
+	//read_dentry_by_name("frame0.txt", &frame0);
+	//read_dentry_by_name("frame1.txt", &frame1);
+	//printf("frame0: %d\n", frame0.inode);
+	//printf("frame1: %d\n", frame1.inode);
+	//read_dentry_by_name("created.txt", &created);
+	
+	ret = read_data(38, 0, (uint8_t*)buf, 187);
+	printf("\n\n\n");
+	
+	for(i = 0; i < ret; i++){
+		printf("%c", buf[i]);
+	}
+	printf("\n");
+	ret = read_data(47, 0, (uint8_t*)buf, 187);
+	for(i = 0; i < ret; i++){
+		printf("%c", buf[i]);
+	}
+	printf("\n");
+	/*
+	ret = read_data(created.inode, 0, (uint8_t*)buf, 187);
+	for(i = 0; i < ret; i++){
+		printf("%d", buf[i]);
+	}
+	printf("\n");*/
 	/*
 	for(j = 0; j < 20; j++){
 		ret = read_dentry_by_index(j, &dentry);

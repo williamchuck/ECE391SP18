@@ -96,3 +96,69 @@ int32_t read_dentry_by_index(uint32_t index, dentry_t* dentry){
 	dentry->inode = *((uint32_t*)addr);
 	return 0;
 }
+
+int32_t read_data(uint32_t inode, uint32_t offset, uint8_t* buf, uint32_t length){
+	if(inode > (inode_count - 1))
+		return -1;
+
+	uint32_t file_size, data_block_number, byte_left;
+	uint32_t* inode_addr, db_addr;
+	uint8_t* data_addr;
+	int i;
+
+	inode_addr = fs_addr + 1024 + 1024 * inode;
+	db_addr = fs_addr + 1024 + 1024 * inode_count;
+	file_size = *inode_addr;
+	if(file_size == 0)
+		return -1;
+
+	inode_addr++;
+	uint32_t* temp = inode_addr;
+//	printf("Size: %d\n", file_size);
+
+	for(i = 0; i <= (file_size/4096); i++){
+		//printf("data_block #: %d\n", *inode_addr);
+		if(*temp > (data_block_count - 1))
+			return -1;
+		temp++;
+	}
+
+	
+	data_block_number = *(inode_addr + (offset/4096));
+	byte_left = file_size - 4096 * (offset/4096);
+	//printf("ByteLeft: %d\n", byte_left);
+
+	data_addr = (uint8_t*)((uint8_t*)db_addr + 4096 * data_block_number + (offset % 4096));
+
+	for(i = 0; i < length; i++){
+		if(((offset % 4096) + i) >= (byte_left - 1))
+			return i;
+
+		buf[i] = *(data_addr + i);
+	}
+
+	return length;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
