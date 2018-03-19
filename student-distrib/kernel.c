@@ -180,8 +180,14 @@ void entry(unsigned long magic, unsigned long addr) {
     rtc_enable_interrupt();
 #endif
 	init_fs();
-	dentry_t den;
-	read_dentry_by_name("fish", &den);
+	dentry_t dentry;
+	read_dentry_by_name("fish", &dentry);
+	int i;
+	printf("Name: ");
+	for(i = 0; i < 32; i++)
+		printf("%c", dentry.file_name[i]);
+	printf(" type: %d", dentry.file_type);
+	printf(" inode: %d\n", dentry.inode);
     /* Enable interrupts */
     /* Do not enable the following until after you have set up your
      * IDT correctly otherwise QEMU will triple fault and simple close
