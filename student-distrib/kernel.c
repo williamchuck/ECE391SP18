@@ -180,49 +180,28 @@ void entry(unsigned long magic, unsigned long addr) {
     rtc_enable_interrupt();
 #endif
 	init_fs();
-
-	if(f_open("hahhahah") == -1)
+	int fd1, fd2, i, ret;
+	uint8_t buf[187];
+/*
+	fd1 = data_open("frame0.txt");
+		if(fd1 == -1)
 			printf("Invalid file name\n");
-	//uint8_t buf[187];
-	//int ret,i,j;
-	//dentry_t frame0, frame1, created;
-	
-	//printf("Ret: %d\n", ret);
+		else
+			printf("fd1: %d\n", fd1);
 
-	//read_dentry_by_name("frame0.txt", &frame0);
-	//read_dentry_by_name("frame1.txt", &frame1);
-	//printf("frame0: %d\n", frame0.inode);
-	//printf("frame1: %d\n", frame1.inode);
-	//read_dentry_by_name("created.txt", &created);
+	data_close(fd1);*/
+	fd2 = data_open("frame1.txt");
 	/*
-	ret = read_data(38, 0, (uint8_t*)buf, 187);
-	printf("\n\n\n");
-	
-	for(i = 0; i < ret; i++){
-		printf("%c", buf[i]);
-	}
-	printf("\n");
+		if(fd2 == -1)
+			printf("Invalid file name\n");
+		else
+			printf("fd2: %d\n", fd2);
+*/
+	//data_read(fd2, buf, 187);
 	ret = read_data(47, 0, (uint8_t*)buf, 187);
-	for(i = 0; i < ret; i++){
+	for(i = 0; i < ret; i++)
 		printf("%c", buf[i]);
-	}
-	printf("\n");*/
-	/*
-	ret = read_data(created.inode, 0, (uint8_t*)buf, 187);
-	for(i = 0; i < ret; i++){
-		printf("%d", buf[i]);
-	}
-	printf("\n");*/
-	/*
-	for(j = 0; j < 20; j++){
-		ret = read_dentry_by_index(j, &dentry);
-		printf("Name: ");
-		for(i = 0; i < 32; i++)
-			printf("%c", dentry.file_name[i]);
-		printf(" type: %d", dentry.file_type);
-		printf(" inode: %d", dentry.inode);
-		printf(" ret: %d\n", ret);
-	}*/
+
     /* Enable interrupts */
     /* Do not enable the following until after you have set up your
      * IDT correctly otherwise QEMU will triple fault and simple close

@@ -7,6 +7,20 @@ static uint32_t data_block_count;
 static uint32_t* fs_addr =(uint32_t*) 0x00410000;
 static file_desc_t file_desc[8];
 
+static file_op_t data_file_op = {
+	.open = data_open,
+	.read = data_read,
+	.write = data_write,
+	.close = data_close
+};
+/*
+static file_op_t dir_file_op = {
+	.open = dir_open,
+	.read = dir_read,
+	.write = dir_write,
+	.close = dir_close
+};*/
+
 /*
  * init_fs:
  * Description: Initialize File system static variables for future use
@@ -17,6 +31,7 @@ static file_desc_t file_desc[8];
 void init_fs(){
 	/* Initialize addr for reading data */
 	uint32_t* addr;
+	int i;
 
 	/* Read dentry count */
 	addr = fs_addr;
@@ -31,6 +46,12 @@ void init_fs(){
 	data_block_count = *addr;
 	
 	//printf("dentry count:0x%x, inode_count:0x%x, data_block_count:0x%x\n", dentry_count, inode_count, data_block_count);
+
+	for(i = 0; i < 8; i++){
+		file_desc[i].inode = 0;
+		file_desc[i].f_pos = 0;
+		file_desc[i].flag = 0;
+	}
 }
 
 int32_t read_dentry_by_name(const int8_t* fname, dentry_t* dentry){
@@ -141,7 +162,7 @@ int32_t read_data(uint32_t inode, uint32_t offset, uint8_t* buf, uint32_t length
 	return length;
 }
 
-int32_t f_open(const int8_t* fname){
+int32_t data_open(const int8_t* fname){
 	int i;
 	dentry_t dentry;
 
@@ -151,32 +172,57 @@ int32_t f_open(const int8_t* fname){
 	if(read_dentry_by_name(fname, &dentry) == -1)
 		return -1;
 
-	if(dentry.file_type == 0){
-		printf("Open rtc, Type: %d, inode: N/A\n", dentry.file_type);
+	//printf("inode: %d\n", dentry.inode);
+/*	
+	printf("Open ");
+	for(i = 0; i < 32; i++){
+		if(dentry.file_name[i] == 0)
+			break;
+		printf("%c", dentry.file_name[i]);
 	}
-	else if(dentry.file_type == 1){
-		printf("Open ");
-		for(i = 0; i < 32; i++){
-			if(dentry.file_name[i] == 0)
-				break;
-			printf("%c", dentry.file_name[i]);
+	printf(", Type: %d, inode: %d\n", dentry.file_type, dentry.inode);*/
+
+	for(i = 2; i < 8; i++){
+		if(file_desc[i].flag == 0){
+			file_desc[i].f_op = &data_file_op;
+			file_desc[i].inode = dentry.inode;
+			file_desc[i].f_pos = 0;
+			file_desc[i].flag = 1;
+			return i;
 		}
-		printf(", Type: %d, inode: N/A\n", dentry.file_type);
 	}
-	else if(dentry.file_type == 2){
-		printf("Open ");
-		for(i = 0; i < 32; i++){
-			if(dentry.file_name[i] == 0)
-				break;
-			printf("%c", dentry.file_name[i]);
-		}
-		printf(", Type: %d, inode: %d\n", dentry.file_type, dentry.inode);
-	}
+	
+	return -1;
+}
+
+int32_t data_read(int32_t fd, void* buf, uint32_t size){
+	if(fd > 7 || fd < 0)
+		return -1;
+
+	int ret;
+	ret = read_data(file_desc[fd].inode, file_desc[fd].f_pos, (uint8_t*)buf, size);
+	file_desc[fd].f_pos += ret;
+	return ret;
+}
+
+int32_t data_write(int32_t fd, const void* buf, int32_t size){
+	return -1;
+}
+
+int32_t data_close(int32_t fd){
+	if(fd < 0 || fd > 7)
+		return -1;
+
+	if(file_desc[fd].flag == 0)
+		return -1;
+	
+	file_desc[fd].f_op = NULL;
+	file_desc[fd].inode = 0;
+	file_desc[fd].f_pos = 0;
+	file_desc[fd].flag = 0;
 
 	return 0;
 }
-
-
 
 
 
