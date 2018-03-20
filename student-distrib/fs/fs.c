@@ -5,6 +5,7 @@ static uint32_t dentry_count;
 static uint32_t inode_count;
 static uint32_t data_block_count;
 static uint32_t* fs_addr =(uint32_t*) 0x00410000;
+static file_desc_t file_desc[8];
 
 /*
  * init_fs:
@@ -117,7 +118,7 @@ int32_t read_data(uint32_t inode, uint32_t offset, uint8_t* buf, uint32_t length
 //	printf("Size: %d\n", file_size);
 
 	for(i = 0; i <= (file_size/4096); i++){
-		//printf("data_block #: %d\n", *inode_addr);
+		//printf("data_block #: %d\n", *temp);
 		if(*temp > (data_block_count - 1))
 			return -1;
 		temp++;
@@ -140,7 +141,40 @@ int32_t read_data(uint32_t inode, uint32_t offset, uint8_t* buf, uint32_t length
 	return length;
 }
 
+int32_t f_open(const int8_t* fname){
+	int i;
+	dentry_t dentry;
 
+	for(i = 0; i < 32; i++)
+		dentry.file_name[i] = 0;
+
+	if(read_dentry_by_name(fname, &dentry) == -1)
+		return -1;
+
+	if(dentry.file_type == 0){
+		printf("Open rtc, Type: %d, inode: N/A\n", dentry.file_type);
+	}
+	else if(dentry.file_type == 1){
+		printf("Open ");
+		for(i = 0; i < 32; i++){
+			if(dentry.file_name[i] == 0)
+				break;
+			printf("%c", dentry.file_name[i]);
+		}
+		printf(", Type: %d, inode: N/A\n", dentry.file_type);
+	}
+	else if(dentry.file_type == 2){
+		printf("Open ");
+		for(i = 0; i < 32; i++){
+			if(dentry.file_name[i] == 0)
+				break;
+			printf("%c", dentry.file_name[i]);
+		}
+		printf(", Type: %d, inode: %d\n", dentry.file_type, dentry.inode);
+	}
+
+	return 0;
+}
 
 
 

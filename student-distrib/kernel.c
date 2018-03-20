@@ -180,8 +180,11 @@ void entry(unsigned long magic, unsigned long addr) {
     rtc_enable_interrupt();
 #endif
 	init_fs();
-	uint8_t buf[187];
-	int ret,i,j;
+
+	if(f_open("hahhahah") == -1)
+			printf("Invalid file name\n");
+	//uint8_t buf[187];
+	//int ret,i,j;
 	//dentry_t frame0, frame1, created;
 	
 	//printf("Ret: %d\n", ret);
@@ -191,7 +194,7 @@ void entry(unsigned long magic, unsigned long addr) {
 	//printf("frame0: %d\n", frame0.inode);
 	//printf("frame1: %d\n", frame1.inode);
 	//read_dentry_by_name("created.txt", &created);
-	
+	/*
 	ret = read_data(38, 0, (uint8_t*)buf, 187);
 	printf("\n\n\n");
 	
@@ -203,7 +206,7 @@ void entry(unsigned long magic, unsigned long addr) {
 	for(i = 0; i < ret; i++){
 		printf("%c", buf[i]);
 	}
-	printf("\n");
+	printf("\n");*/
 	/*
 	ret = read_data(created.inode, 0, (uint8_t*)buf, 187);
 	for(i = 0; i < ret; i++){
