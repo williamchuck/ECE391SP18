@@ -26,7 +26,7 @@ typedef struct file_op{
 extern int32_t read_dentry_by_name (const int8_t* fname, dentry_t* dentry);
 extern int32_t read_dentry_by_index(uint32_t index, dentry_t* dentry);
 extern int32_t read_data(uint32_t inode, uint32_t offset, uint8_t* buf, uint32_t length);
-extern void init_fs();
+extern void init_fs(uint32_t* file_system_addr);
 
 extern int32_t data_open(const int8_t* fname);
 extern int32_t data_read(int32_t fd, void* buf, uint32_t size);

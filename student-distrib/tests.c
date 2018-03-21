@@ -117,7 +117,33 @@ int invalid_page_test(){
 
 	return FAIL;
 }
+
 /* Checkpoint 2 tests */
+int test_data_file(){
+	TEST_HEADER;
+
+	int fd, i;
+	uint8_t buf[187];
+
+	fd = data_open("frame0.txt");
+
+	if(fd < 0 || fd > 7)
+		return FAIL;
+
+	if(data_read(fd, (uint8_t*)buf, 187) != 187)
+		return FAIL;
+
+	if(data_write(fd, (uint8_t*)buf, 187) != -1)
+		return FAIL;
+
+	for(i = 0; i < 187; i++)
+		printf("%c", buf[i]);
+
+	if(data_close(fd) != 0)
+		return FAIL;
+
+	return PASS;
+}
 /* Checkpoint 3 tests */
 /* Checkpoint 4 tests */
 /* Checkpoint 5 tests */
@@ -125,8 +151,9 @@ int invalid_page_test(){
 
 /* Test suite entry point */
 void launch_tests(){
-	TEST_OUTPUT("idt_test", idt_test());
-	TEST_OUTPUT("valid_page_test", valid_page_test());
+	//TEST_OUTPUT("idt_test", idt_test());
+	//TEST_OUTPUT("valid_page_test", valid_page_test());
+	TEST_OUTPUT("Data File Open Read Test", test_data_file());
 #if DIV_0_TEST
 	TEST_OUTPUT("div_by_0_test", div_by_0_test());
 #endif

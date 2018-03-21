@@ -36,6 +36,7 @@
 void entry(unsigned long magic, unsigned long addr) {
 
     multiboot_info_t *mbi;
+	uint32_t* file_system_addr;
 
     /* Clear the screen. */
     clear();
@@ -69,6 +70,8 @@ void entry(unsigned long magic, unsigned long addr) {
         int i;
         module_t* mod = (module_t*)mbi->mods_addr;
         while (mod_count < mbi->mods_count) {
+			if(mod_count == 0)
+				file_system_addr = (uint32_t*)mod->mod_start;
             printf("Module %d loaded at address: 0x%#x\n", mod_count, (unsigned int)mod->mod_start);
             printf("Module %d ends at address: 0x%#x\n", mod_count, (unsigned int)mod->mod_end);
             printf("First few bytes of module:\n");
@@ -164,6 +167,9 @@ void entry(unsigned long magic, unsigned long addr) {
     /* Init the PIC */
     i8259_init();
 
+	/* Initialize file system */
+	init_fs(file_system_addr);
+
 #if NOT_SHOW_MESSAGE
     /* Clear screen for better testing. */
     clear();
@@ -179,28 +185,6 @@ void entry(unsigned long magic, unsigned long addr) {
     /* Enable rtc periodic interrupt*/
     rtc_enable_interrupt();
 #endif
-	init_fs();
-	int fd1, fd2, i, ret;
-	uint8_t buf[187];
-/*
-	fd1 = data_open("frame0.txt");
-		if(fd1 == -1)
-			printf("Invalid file name\n");
-		else
-			printf("fd1: %d\n", fd1);
-
-	data_close(fd1);*/
-	fd2 = data_open("frame1.txt");
-	/*
-		if(fd2 == -1)
-			printf("Invalid file name\n");
-		else
-			printf("fd2: %d\n", fd2);
-*/
-	//data_read(fd2, buf, 187);
-	ret = read_data(47, 0, (uint8_t*)buf, 187);
-	for(i = 0; i < ret; i++)
-		printf("%c", buf[i]);
 
     /* Enable interrupts */
     /* Do not enable the following until after you have set up your

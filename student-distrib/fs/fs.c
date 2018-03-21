@@ -4,7 +4,7 @@
 static uint32_t dentry_count;
 static uint32_t inode_count;
 static uint32_t data_block_count;
-static uint32_t* fs_addr =(uint32_t*) 0x00410000;
+static uint32_t* fs_addr;
 static file_desc_t file_desc[8];
 
 static file_op_t data_file_op = {
@@ -28,10 +28,12 @@ static file_op_t dir_file_op = {
  * Output: None
  * Effects: Fill in three file system static variables for future use
  */
-void init_fs(){
+void init_fs(uint32_t* file_system_addr){
 	/* Initialize addr for reading data */
 	uint32_t* addr;
 	int i;
+
+	fs_addr = file_system_addr;
 
 	/* Read dentry count */
 	addr = fs_addr;
@@ -46,12 +48,6 @@ void init_fs(){
 	data_block_count = *addr;
 	
 	//printf("dentry count:0x%x, inode_count:0x%x, data_block_count:0x%x\n", dentry_count, inode_count, data_block_count);
-
-	for(i = 0; i < 8; i++){
-		file_desc[i].inode = 0;
-		file_desc[i].f_pos = 0;
-		file_desc[i].flag = 0;
-	}
 }
 
 int32_t read_dentry_by_name(const int8_t* fname, dentry_t* dentry){
@@ -153,7 +149,7 @@ int32_t read_data(uint32_t inode, uint32_t offset, uint8_t* buf, uint32_t length
 	data_addr = (uint8_t*)((uint8_t*)db_addr + 4096 * data_block_number + (offset % 4096));
 
 	for(i = 0; i < length; i++){
-		if(((offset % 4096) + i) >= (byte_left - 1))
+		if(((offset % 4096) + i) > (byte_left - 1))
 			return i;
 
 		buf[i] = *(data_addr + i);
@@ -173,14 +169,14 @@ int32_t data_open(const int8_t* fname){
 		return -1;
 
 	//printf("inode: %d\n", dentry.inode);
-/*	
-	printf("Open ");
-	for(i = 0; i < 32; i++){
-		if(dentry.file_name[i] == 0)
-			break;
-		printf("%c", dentry.file_name[i]);
-	}
-	printf(", Type: %d, inode: %d\n", dentry.file_type, dentry.inode);*/
+	
+//	printf("Open ");
+//	for(i = 0; i < 32; i++){
+//		if(dentry.file_name[i] == 0)
+//			break;
+//		printf("%c", dentry.file_name[i]);
+//	}
+//	printf(", Type: %d, inode: %d\n", dentry.file_type, dentry.inode);
 
 	for(i = 2; i < 8; i++){
 		if(file_desc[i].flag == 0){

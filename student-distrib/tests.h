@@ -1,8 +1,9 @@
 #ifndef TESTS_H
 #define TESTS_H
+#include "fs/fs.h"
 
 /* Run tests for paging and IDT table */
-#define RUN_TESTS 0
+#define RUN_TESTS 1
 /* Run tests for RTC */
 #define RTC_TEST 0
 /* Do not show loading message */
