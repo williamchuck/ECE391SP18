@@ -13,13 +13,13 @@ static file_op_t data_file_op = {
 	.write = data_write,
 	.close = data_close
 };
-/*
+
 static file_op_t dir_file_op = {
 	.open = dir_open,
 	.read = dir_read,
 	.write = dir_write,
 	.close = dir_close
-};*/
+};
 
 /*
  * init_fs:
@@ -201,7 +201,7 @@ int32_t data_read(int32_t fd, void* buf, uint32_t size){
 	return ret;
 }
 
-int32_t data_write(int32_t fd, const void* buf, int32_t size){
+int32_t data_write(int32_t fd, const void* buf, uint32_t size){
 	return -1;
 }
 
@@ -220,11 +220,50 @@ int32_t data_close(int32_t fd){
 	return 0;
 }
 
+int32_t dir_open(const int8_t* fname){
+	int i;
+	dentry_t dentry;
 
+	read_dentry_by_name(fname, &dentry);
 
+	if(dentry.file_type != 1)
+		return -1;
 
+	for(i = 2; i < 8; i++){
+		if(file_desc[i].flag == 0){
+			file_desc[i].f_op = &dir_file_op;
+			file_desc[i].inode = 0;
+			file_desc[i].f_pos = 0;
+			file_desc[i].flag = 1;
+			return i;
+		}
+	}
 
+	return -1;
+}
 
+int32_t dir_read(int32_t fd, void* buf, uint32_t size){
+
+}
+
+int32_t dir_write(int32_t fd, const void* buf, uint32_t size){
+	return -1;
+}
+
+int32_t dir_close(int32_t fd){
+	if(fd < 0 || fd > 7)
+		return -1;
+
+	if(file_desc[fd].flag == 0)
+		return -1;
+	
+	file_desc[fd].f_op = NULL;
+	file_desc[fd].inode = 0;
+	file_desc[fd].f_pos = 0;
+	file_desc[fd].flag = 0;
+
+	return 0;	
+}
 
 
 

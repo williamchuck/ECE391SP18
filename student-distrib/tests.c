@@ -144,6 +144,27 @@ int test_data_file(){
 
 	return PASS;
 }
+
+int test_dir_file(){
+	TEST_HEADER;
+
+	int fd;
+	uint8_t buf[10];
+
+	fd = dir_open(".");
+
+	if(fd < 0 || fd > 7)
+		return FAIL;
+
+	if(dir_write(fd, (uint8_t*)buf, 10) != -1)
+		return FAIL;
+
+	if(data_close(fd) != 0)
+		return FAIL;
+
+	return PASS;	
+
+}
 /* Checkpoint 3 tests */
 /* Checkpoint 4 tests */
 /* Checkpoint 5 tests */
@@ -153,7 +174,8 @@ int test_data_file(){
 void launch_tests(){
 	//TEST_OUTPUT("idt_test", idt_test());
 	//TEST_OUTPUT("valid_page_test", valid_page_test());
-	TEST_OUTPUT("Data File Open Read Test", test_data_file());
+	TEST_OUTPUT("Data File Test", test_data_file());
+	TEST_OUTPUT("Directory File Test", test_dir_file());
 #if DIV_0_TEST
 	TEST_OUTPUT("div_by_0_test", div_by_0_test());
 #endif

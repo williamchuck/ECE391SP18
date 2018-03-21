@@ -30,11 +30,11 @@ extern void init_fs(uint32_t* file_system_addr);
 
 extern int32_t data_open(const int8_t* fname);
 extern int32_t data_read(int32_t fd, void* buf, uint32_t size);
-extern int32_t data_write(int32_t fd, const void* buf, int32_t size);
+extern int32_t data_write(int32_t fd, const void* buf, uint32_t size);
 extern int32_t data_close(int32_t fd);
 
 extern int32_t dir_open(const int8_t* fname);
-extern int32_t dir_read(int32_t fd, void* buf, int32_t size);
-extern int32_t dir_write(int32_t fd, const void* buf, int32_t size);
+extern int32_t dir_read(int32_t fd, void* buf, uint32_t size);
+extern int32_t dir_write(int32_t fd, const void* buf, uint32_t size);
 extern int32_t dir_close(int32_t fd);
 #endif
