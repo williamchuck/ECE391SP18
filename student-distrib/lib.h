@@ -15,6 +15,12 @@ int8_t *strrev(int8_t* s);
 uint32_t strlen(const int8_t* s);
 void clear(void);
 
+void scroll_down();
+
+int get_x();
+int get_y();
+void set_xy(int x, int y);
+
 void* memset(void* s, int32_t c, uint32_t n);
 void* memset_word(void* s, int32_t c, uint32_t n);
 void* memset_dword(void* s, int32_t c, uint32_t n);
