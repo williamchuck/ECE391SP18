@@ -19,9 +19,37 @@ static char* video_mem = (char *)VIDEO;
 void clear(void) {
     int32_t i;
     for (i = 0; i < NUM_ROWS * NUM_COLS; i++) {
-        *(uint8_t *)(video_mem + (i << 1)) = ' ';
+        *(uint8_t *)(video_mem + (i << 1)) = 0x00;
         *(uint8_t *)(video_mem + (i << 1) + 1) = ATTRIB;
     }
+}
+
+void scroll_down()
+{
+  int i;
+  memmove(video_mem, video_mem + 2 * NUM_COLS, (NUM_ROWS - 1) * (NUM_COLS) * 2);
+  screen_y = NUM_ROWS - 1;
+  for (i = 0; i < NUM_COLS; i++)
+  {
+    *(uint8_t *)(video_mem + ((NUM_COLS * screen_y + i) << 1)) = 0x00;
+    *(uint8_t *)(video_mem + ((NUM_COLS * screen_y + i) << 1) + 1) = ATTRIB;
+  }
+  screen_x = 0;
+  screen_y = NUM_ROWS - 1;
+  return;
+}
+
+int get_x() {
+  return screen_x;
+}
+
+int get_y() {
+  return screen_y;
+}
+
+void set_xy(int x, int y) {
+	screen_x = x;
+	screen_y = y;
 }
 
 /* Standard printf().
@@ -168,15 +196,23 @@ int32_t puts(int8_t* s) {
  * Return Value: void
  *  Function: Output a character to the console */
 void putc(uint8_t c) {
-    if(c == '\n' || c == '\r') {
+    /* If the character exceedes the column limit, change new line */
+    if(c == '\n' || c == '\r' || screen_x == NUM_COLS) {
+      if (screen_y == (NUM_ROWS - 1))
+      {
+        scroll_down();
+      }
+      else
+      {
         screen_y++;
         screen_x = 0;
+      }
     } else {
         *(uint8_t *)(video_mem + ((NUM_COLS * screen_y + screen_x) << 1)) = c;
         *(uint8_t *)(video_mem + ((NUM_COLS * screen_y + screen_x) << 1) + 1) = ATTRIB;
         screen_x++;
-        screen_x %= NUM_COLS;
-        screen_y = (screen_y + (screen_x / NUM_COLS)) % NUM_ROWS;
+        screen_x %= (NUM_COLS + 1);
+        screen_y = (screen_y + (screen_x / (NUM_COLS + 1))) % NUM_ROWS;
     }
 }
 
