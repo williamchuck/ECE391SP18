@@ -18,8 +18,8 @@ typedef struct file_desc{
 
 typedef struct file_op{
 	int32_t (*open)(const int8_t* fname);
-	int32_t (*read)(int32_t fd, void* buf, int32_t size);
-	int32_t (*write)(int32_t fd, const void* buf, int32_t size);
+	int32_t (*read)(int32_t fd, void* buf, uint32_t size);
+	int32_t (*write)(int32_t fd, const void* buf, uint32_t size);
 	int32_t (*close)(int32_t fd);	
 } file_op_t;
 

@@ -31,7 +31,6 @@ static file_op_t dir_file_op = {
 void init_fs(uint32_t* file_system_addr){
 	/* Initialize addr for reading data */
 	uint32_t* addr;
-	int i;
 
 	fs_addr = file_system_addr;
 
@@ -243,7 +242,7 @@ int32_t dir_open(const int8_t* fname){
 }
 
 int32_t dir_read(int32_t fd, void* buf, uint32_t size){
-
+	return 0;
 }
 
 int32_t dir_write(int32_t fd, const void* buf, uint32_t size){
