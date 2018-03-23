@@ -6,11 +6,15 @@
 #ifndef PS2_KEYBOARD_H
 #define PS2_KEYBOARD_H
 
-/* Include PIC, library, stdint and interrupt. */
+ /* Include PIC, library, stdint and interrupt. */
 #include "../i8259.h"
 #include "../lib.h"
 #include "../types.h"
 #include "../idt/interrupt.h"
+
+/* Include standard I/O */
+#include "stdin.h"
+#include "stdout.h"
 
 /* Keyboard IRQ number = 1 */
 #define KBD_IRQ     0x01

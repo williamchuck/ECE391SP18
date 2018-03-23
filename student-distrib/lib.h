@@ -15,10 +15,16 @@ int8_t *strrev(int8_t* s);
 uint32_t strlen(const int8_t* s);
 void clear(void);
 
+/* Function for scrolling down a line. */
 void scroll_down();
 
+/* Get current x coordinate of cursor */
 int get_x();
+
+/* Get current y coordinate of cursor */
 int get_y();
+
+/* Set current cursor coordinates */
 void set_xy(int x, int y);
 
 void* memset(void* s, int32_t c, uint32_t n);

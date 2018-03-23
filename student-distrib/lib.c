@@ -25,29 +25,75 @@ void clear(void) {
 	}
 }
 
+/*
+ * scroll_down
+ * DESCRIPTION: scroll down the terminal screen by 1 line
+ * INPUT: none.
+ * OUTPUT: none.
+ * RETURN VALUE: none.
+ * SIDE EFFECTS: terminal screen will scroll down by 1 line.
+ */
 void scroll_down()
 {
+	/* Loop var. */
 	int i;
-	memmove(video_mem, video_mem + 2 * NUM_COLS, (NUM_ROWS - 1) * (NUM_COLS) * 2);
+
+	/* Move row 1's vmem to row 0, row 2 to row 1, etc... */
+	/* Until row 1 to 79's vmem has moved to row 0 to 78 */
+	for (i = 1; i < NUM_ROWS; i++)
+	{
+		memmove(video_mem + (i - 1) * 2 * NUM_COLS, video_mem + i * 2 * NUM_COLS, NUM_COLS * 2);
+	}
+
+	/* Reset cursor value to buttom of terminal because prog. only scroll when needed. */
 	screen_y = NUM_ROWS - 1;
+
+	/* Clear video memory of row 79 (buttom row) */
 	for (i = 0; i < NUM_COLS; i++)
 	{
 		*(uint8_t *)(video_mem + ((NUM_COLS * screen_y + i) << 1)) = 0x00;
 		*(uint8_t *)(video_mem + ((NUM_COLS * screen_y + i) << 1) + 1) = ATTRIB;
 	}
+
+	/* Reset cursor to first column of buttom of the terminal */
 	screen_x = 0;
 	screen_y = NUM_ROWS - 1;
 	return;
 }
 
+/*
+ * get_x
+ * DESCRIPTION: Get x coordinate of cursor.
+ * INPUT: none.
+ * OUTPUT: none.
+ * RETURN VALUE: x coordinate of the cursor.
+ * SIDE EFFECT: none.
+ */
 int get_x() {
 	return screen_x;
 }
 
+/*
+ * get_y
+ * DESCRIPTION: Get y coordinate of cursor.
+ * INPUT: none.
+ * OUTPUT: none.
+ * RETURN VALUE: y coordinate of the cursor.
+ * SIDE EFFECT: none.
+ */
 int get_y() {
 	return screen_y;
 }
 
+/*
+ * set_xy
+ * DESCRIPTION: Set cursor coordinates, given x, y coordinates.
+ * INPUT: x - x coord. of cursor
+ *		  y - y coord. of cursor
+ * OUTPUT: none.
+ * RETURN VALUE: none.
+ * SIDE EFFECT: none.
+ */
 void set_xy(int x, int y) {
 	screen_x = x;
 	screen_y = y;
@@ -200,13 +246,15 @@ int32_t puts(int8_t* s) {
  * Return Value: void
  *  Function: Output a character to the console */
 void putc(uint8_t c) {
-	/* If the character exceedes the column limit, change new line */
+	/* If a newline or carriage return is encountered, change new line. */
 	if (c == '\n' || c == '\r') {
+		/* If current cursor is at the bottom of terminal, scroll down. */
 		if (screen_y == (NUM_ROWS - 1))
 		{
 			scroll_down();
 			return;
 		}
+		/* Else, increment cursor y coord. */
 		else
 		{
 			screen_y++;
@@ -214,24 +262,38 @@ void putc(uint8_t c) {
 			return;
 		}
 	}
+
+	/* If the current string is longer than a line in terminal, change new line and display the char. */
 	if (screen_x == NUM_COLS)
 	{
+		/* If current cursor is at the bottom of terminal, scroll down. */
 		if (screen_y == (NUM_ROWS - 1))
 		{
 			scroll_down();
+
+			/* Copy char into video memory */
 			*(uint8_t *)(video_mem + ((NUM_COLS * screen_y + screen_x) << 1)) = c;
 			*(uint8_t *)(video_mem + ((NUM_COLS * screen_y + screen_x) << 1) + 1) = ATTRIB;
+
+			/* Increment cursor coords. */
 			screen_x++;
 			screen_x %= (NUM_COLS + 1);
 			screen_y = (screen_y + (screen_x / (NUM_COLS + 1))) % NUM_ROWS;
 			return;
 		}
+		/* Else, change line. */
 		else
 		{
+			/* Increment y coord. of cursor. */
 			screen_y++;
+			/* Reset x coord to 0. */
 			screen_x = 0;
+
+			/* Copy char into video memory */
 			*(uint8_t *)(video_mem + ((NUM_COLS * screen_y + screen_x) << 1)) = c;
 			*(uint8_t *)(video_mem + ((NUM_COLS * screen_y + screen_x) << 1) + 1) = ATTRIB;
+
+			/* Increment cursor coords. */
 			screen_x++;
 			screen_x %= (NUM_COLS + 1);
 			screen_y = (screen_y + (screen_x / (NUM_COLS + 1))) % NUM_ROWS;
@@ -239,8 +301,11 @@ void putc(uint8_t c) {
 		}
 	}
 	else {
+		/* Copy char into video memory */
 		*(uint8_t *)(video_mem + ((NUM_COLS * screen_y + screen_x) << 1)) = c;
 		*(uint8_t *)(video_mem + ((NUM_COLS * screen_y + screen_x) << 1) + 1) = ATTRIB;
+
+		/* Increment cursor coords. */
 		screen_x++;
 		screen_x %= (NUM_COLS + 1);
 		screen_y = (screen_y + (screen_x / (NUM_COLS + 1))) % NUM_ROWS;

@@ -1,9 +1,11 @@
+/*
+ * ps2_keyboard.c
+ * Implementation of PS/2 keyboard driver.
+ * Author: Canlin Zhang
+ */
 #include "ps2_keyboard.h"
-#include "stdin.h"
-#include "stdout.h"
 
 /* Keycode set 1. Only for displaying the asciis. */
-/* Further functionalites and keycode toggling will be implmented otherwise */
 static unsigned char set1_code[89] = {
 0, 0, '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '-', '=', 0,
 0, 'q', 'w', 'e', 'r', 't', 'y', 'u', 'i', 'o', 'p', '[', ']', 0x0A,
@@ -18,6 +20,7 @@ static unsigned char set1_code[89] = {
 0, 0,
 };
 
+/* Keycode set 1 for toggled keyset. Only for displaying the asciis. */
 static unsigned char set1_code_toggled[89] = {
 0, 0, '!', '@', '#', '$', '%', '^', '&', '*', '(', ')', '_', '+', 0,
 0, 'Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P', '{', '}', 0x0A,
@@ -46,14 +49,23 @@ static unsigned char set1_code_toggled[89] = {
 #define CAPSLP                        0x3A
 #define SCRLP                         0x46
 #define KBDLP                         0x26
-#define KBDBKP						  					0x0E
-#define KBDENP												0x1C
+#define KBDBKP						  0x0E
+#define KBDENP						  0x1C
 
 /* Keycode value for flag keys released */
 #define LSHIFTR                       0xAA
 #define RSHIFTR                       0xB6
 #define ALTR                          0xB8
 #define CTRLR                         0x9D
+
+/* ON and OFF state for keyboard flags */
+#define FLAG_ON						  0xFF
+#define FLAG_OFF					  0x00
+
+/* Range for scancode numpad */
+#define SCAN_NUMP_UP				  0x53
+#define SCAN_NUMP_DOWN				  0x47
+#define SCAN_NUMP_SPEC				  0x37
 
 /* Flag for toggling keys. Alt - Ctrl - SHIFT - CAPSL - NUML - SCRL */
 static uint8_t alt_flag;
@@ -62,30 +74,34 @@ static uint8_t shift_flag;
 static uint8_t capsl_flag;
 static uint8_t numl_flag;
 static uint8_t scroll_flag;
+
+/* Flag for indicating whether a numpad key or alphabet key is pressed */
 static uint8_t alpha_flag;
 static uint8_t numpad_flag;
 
 /*
-* ps2_keyboard_init
-*   DESCRIPTION: Initialize PS2 keyboard.
-*   ARGUMENTS: none.
-*   OUTPUT: none.
-*   RETURN VALUE: none.
-*   SIDE EFFECTS: Enable keyboard interrupt, reset key toggle flags.
-*/
+ * ps2_keyboard_init
+ *   DESCRIPTION: Initialize PS2 keyboard.
+ *   ARGUMENTS: none.
+ *   OUTPUT: none.
+ *   RETURN VALUE: none.
+ *   SIDE EFFECTS: Enable keyboard interrupt, reset key toggle flags.
+ */
 void ps2_keyboard_init() {
+	/* Initialize terminal (MP3.2 only) */
 	term_init();
 
 	/* Clear key toggle flags */
-	alt_flag = 0x00;
-	ctrl_flag = 0x00;
-	shift_flag = 0x00;
-	capsl_flag = 0x00;
-	numl_flag = 0x00;
-	scroll_flag = 0x00;
+	alt_flag = FLAG_OFF;
+	ctrl_flag = FLAG_OFF;
+	shift_flag = FLAG_OFF;
+	capsl_flag = FLAG_OFF;
+	numl_flag = FLAG_OFF;
+	scroll_flag = FLAG_OFF;
 
-	alpha_flag = 0x00;
-	numpad_flag = 0x00;
+	/* Clear current keycode flags */
+	alpha_flag = FLAG_OFF;
+	numpad_flag = FLAG_OFF;
 
 	/* enable_irq unused, use reques_irq for installation and enabling. */
 	//enable_irq(KBD_IRQ);
@@ -93,13 +109,13 @@ void ps2_keyboard_init() {
 }
 
 /*
-* int_ps2kbd_c
-*   DESCRIPTION: C implementation for keyboard interrupt handling.
-*   ARGUMENTS: none.
-*   OUTPUT: none.
-*   RETURN VALUE: none.
-*   SIDE EFFECTS: Read current keycode and echo it onto screen (if possible).
-*/
+ * int_ps2kbd_c
+ *   DESCRIPTION: C implementation for keyboard interrupt handling.
+ *   ARGUMENTS: none.
+ *   OUTPUT: none.
+ *   RETURN VALUE: none.
+ *   SIDE EFFECTS: Read current keycode and echo it onto screen (if possible).
+ */
 void int_ps2kbd_c() {
 	/* variables for current keycode and ascii (if applicable) */
 	unsigned char currentcode;
@@ -114,12 +130,17 @@ void int_ps2kbd_c() {
 		ps2_keyboard_processflags(currentcode);
 
 		/* Special handler for clearing screens */
-		if ((ctrl_flag != 0x00) && (currentcode == KBDLP))
+		/* If ctrl + L is pressed, clear screen, reset cursor */
+		if ((ctrl_flag != FLAG_OFF) && (currentcode == KBDLP))
 		{
 			term_init();
 			return;
 		}
 
+		/* 
+		 * If backspace is pressed, delete current char before cursor 
+		 * and update cursor position.
+		 */
 		if (currentcode == KBDBKP)
 		{
 			term_del();
@@ -127,19 +148,28 @@ void int_ps2kbd_c() {
 			return;
 		}
 
+		/*
+		 * If enter is pressed, and the cursor is at the bottom of terminal
+		 * Scroll down a line, and update cursor position.
+		 */
 		if ((currentcode == KBDENP) && (get_y() == VGA_HEIGHT - 1))
 		{
 			scroll_down();
 			cursor_update();
 			return;
 		}
+
 		/* Get char to be printed */
 		currentchar = ps2_keyboard_getchar(currentcode);
 	}
 	/* If this key has displable ascii code, print it out! */
 	if (currentchar != 0)
 	{
+		/* Call standard input to put char into buffer */
 		stdin_read(TERM_IN_FD, &currentchar, 1);
+
+		/* Echo the char out using keyboard buffer */
+		/* We use terminal buffer as keyboard buffer here. */
 		stdout_write(TERM_OUT_FD, &term_buf[term_buf_index - 1], 1);
 		cursor_update();
 	}
@@ -148,13 +178,13 @@ void int_ps2kbd_c() {
 }
 
 /*
-* ps2_keyboard_getscancode
-*   DESCRIPTION: Get current scan code from keyboard
-*   ARGUMENTS: none.
-*   OUTPUT: none.
-*   RETURN VALUE: current scan code
-*   SIDE EFFECTS: Get current scan code from keyboard.
-*/
+ * ps2_keyboard_getscancode
+ *   DESCRIPTION: Get current scan code from keyboard
+ *   ARGUMENTS: none.
+ *   OUTPUT: none.
+ *   RETURN VALUE: current scan code
+ *   SIDE EFFECTS: Get current scan code from keyboard.
+ */
 unsigned char ps2_keyboard_getscancode() {
 	unsigned char c1 = 0;
 	/* ONLY READ FROM KEYBOARD REG. ONCE! */
@@ -169,108 +199,154 @@ unsigned char ps2_keyboard_getscancode() {
 }
 
 /*
-* ps2_keyboard_getchar
-*   DESCRIPTION: Get current ascii char from keyboard
-*   ARGUMENTS: scancode - current scancode
-*   OUTPUT: none.
-*   RETURN VALUE: current ascii char (if applicable) or NULL char (if no displable char for the key)
-*   SIDE EFFECTS: Get current ascii char from keyboard
-*/
+ * ps2_keyboard_getchar
+ *   DESCRIPTION: Get current ascii char from keyboard
+ *   ARGUMENTS: scancode - current scancode
+ *   OUTPUT: none.
+ *   RETURN VALUE: current ascii char (if applicable) or NULL char (if no displable char for the key)
+ *   SIDE EFFECTS: Get current ascii char from keyboard
+ */
 unsigned char ps2_keyboard_getchar(unsigned char scancode) {
 	/* If the key pressed has a corresponding value, return it */
 	if (scancode <= 90) {
-		if (numl_flag != 0x00 && numpad_flag != 0x00)
+
+		/* 
+		 * If Numlock is ON and a numpad key is pressed,
+		 * display toggled char.
+		 */
+		if (numl_flag != FLAG_OFF && numpad_flag != FLAG_OFF)
 		{
 			return set1_code_toggled[scancode];
 		}
 
-		if (shift_flag != 0x00 && capsl_flag == 0x00)
+		/* 
+		 * If only shift is pressed,
+		 * displayed toggled char.
+		 */
+		if (shift_flag != FLAG_OFF && capsl_flag == FLAG_OFF)
 		{
 			return set1_code_toggled[scancode];
 		}
-		if (shift_flag != 0x00 && capsl_flag != 0x00)
+		/*
+		 * If shift is pressed and Capslock is ON,
+		 */
+		if (shift_flag != FLAG_OFF && capsl_flag != FLAG_OFF)
 		{
-			if (alpha_flag != 0x00)
+			/* If a alphabet key is pressed, display normal lowercase char. */
+			if (alpha_flag != FLAG_OFF)
 			{
 				return set1_code[scancode];
 			}
+			/* If other keys are pressed, display toggled char. */
 			else
 			{
 				return set1_code_toggled[scancode];
 			}
 		}
-		if (shift_flag == 0x00 && capsl_flag != 0x00)
+		/*
+		 * If shift is not pressed but Capslock is ON, 
+		 */
+		if (shift_flag == FLAG_OFF && capsl_flag != FLAG_OFF)
 		{
-			if (alpha_flag != 0x00)
+			/* If an alphabet key is pressed, displayed upper case char. */
+			if (alpha_flag != FLAG_OFF)
 			{
 				return set1_code_toggled[scancode];
 			}
+			/* Otherwise display normal char. */
 			else
 			{
 				return set1_code[scancode];
 			}
 		}
 
+		/* Display normal char if no flag is present. */
 		return set1_code[scancode];
 	}
 
-	/* Else, return a NULL char */
+	/* If keycode >= 90, return a NULL char */
 	return 0;
 }
 
+/*
+ * ps2_keyboard_processflags
+ * DESCRIPTION: Process flags according to current keycode.
+ * INPUT: scancode - keycode of current pressed key
+ * OUTPUT: none.
+ * RETURN VALUE: none.
+ * SIDE EFFECTS: Set flags of the keyboard. (Capsl, Numl, Scrl, shift, ctrl, alt, etc.)
+ */
 void ps2_keyboard_processflags(unsigned char scancode) {
+	/* If left or right shift is pressed, set shift flag to ON */
 	if ((scancode == LSHIFTP) || (scancode == RSHIFTP))
 	{
-		shift_flag = 0xFF;
+		shift_flag = FLAG_ON;
 	}
+	/* If left or right shift is released, set shift flag to OFF */
 	if ((scancode == LSHIFTR) || (scancode == RSHIFTR))
 	{
-		shift_flag = 0x00;
+		shift_flag = FLAG_OFF;
 	}
+
+	/* If Alt is pressed, set alt flag to ON */
 	if (scancode == ALTP)
 	{
-		alt_flag = 0xFF;
+		alt_flag = FLAG_ON;
 	}
+	/* If Alt is released, set alt flag to OFF */
 	if (scancode == ALTR)
 	{
-		alt_flag = 0x00;
+		alt_flag = FLAG_OFF;
 	}
+
+	/* If Ctrl is pressed, set ctrl flag to ON */
 	if (scancode == CTRLP)
 	{
-		ctrl_flag = 0xFF;
+		ctrl_flag = FLAG_ON;
 	}
+	/* If Ctrl is released, set ctrl flag to OFF */
 	if (scancode == CTRLR)
 	{
-		ctrl_flag = 0x00;
+		ctrl_flag = FLAG_OFF;
 	}
+
+	/* If Numlock is pressed, reverse current Numlock flag */
 	if (scancode == NUMLP)
 	{
 		numl_flag = ~numl_flag;
 	}
+
+	/* If Capslock is pressed, reverse current Capslock flag */
 	if (scancode == CAPSLP)
 	{
 		capsl_flag = ~capsl_flag;
 	}
+
+	/* If ScrollLock is pressed, reverse current ScrollLock flag */
 	if (scancode == SCRLP)
 	{
 		scroll_flag = ~scroll_flag;
 	}
 
-	if (((scancode <= 0x53) && (scancode >= 0x47)) || scancode == 0x37)
+	/* If current scancode is a numpad key, set numpad pressed flag to ON. */
+	if (((scancode <= SCAN_NUMP_UP) && (scancode >= SCAN_NUMP_DOWN)) || scancode == SCAN_NUMP_SPEC)
 	{
-		numpad_flag = 0xFF;
+		numpad_flag = FLAG_ON;
 	}
+	/* Else, set numpad pressed flag to OFF */
 	else
 	{
-		numpad_flag = 0x00;
+		numpad_flag = FLAG_OFF;
 	}
 
+	/* If current scancode is an alphabet, set alphabet pressed flag to ON */
 	if (set1_code[scancode] <= 'z' && set1_code[scancode] >= 'a')
 	{
-		alpha_flag = 0xFF;
+		alpha_flag = FLAG_ON;
 	}
+	/* Else, set alphabet pressed flag to OFF */
 	else
 	{
-		alpha_flag = 0x00;
+		alpha_flag = FLAG_OFF;
 	}
 }
