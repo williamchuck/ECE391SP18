@@ -130,13 +130,19 @@ int test_data_file(){
 	if(fd < 0 || fd > 7)
 		return FAIL;
 
-	if(data_read(fd, (uint8_t*)buf, 187) != 187)
+	if(data_read(fd, (uint8_t*)buf, 100) != 100)
 		return FAIL;
 
 	if(data_write(fd, (uint8_t*)buf, 187) != -1)
 		return FAIL;
 
-	for(i = 0; i < 187; i++)
+	for(i = 0; i < 100; i++)
+		printf("%c", buf[i]);
+
+	if(data_read(fd, (uint8_t*)buf, 87) != 87)
+		return FAIL;
+
+	for(i = 0; i < 87; i++)
 		printf("%c", buf[i]);
 
 	if(data_close(fd) != 0)
@@ -148,21 +154,35 @@ int test_data_file(){
 int test_dir_file(){
 	TEST_HEADER;
 
-	int fd;
-	uint8_t buf[10];
+	int fd, i;
+	uint8_t buf[32];
 
 	fd = dir_open(".");
 
 	if(fd < 0 || fd > 7)
 		return FAIL;
 
-	if(dir_write(fd, (uint8_t*)buf, 10) != -1)
+	if(dir_read(fd, (uint8_t*)buf, 32) != 32)
 		return FAIL;
+
+	if(dir_write(fd, (uint8_t*)buf, 32) != -1)
+		return FAIL;
+
+	for(i = 0; i < 32; i++)
+		printf("%c", buf[i]);
+	printf("\n");
+
+	if(dir_read(fd, (uint8_t*)buf, 32) != 32)
+		return FAIL;
+
+	for(i = 0; i < 32; i++)
+		printf("%c", buf[i]);
+	printf("\n");
 
 	if(data_close(fd) != 0)
 		return FAIL;
 
-	return PASS;	
+	return PASS;
 
 }
 /* Checkpoint 3 tests */

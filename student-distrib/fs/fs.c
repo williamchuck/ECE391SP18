@@ -242,7 +242,22 @@ int32_t dir_open(const int8_t* fname){
 }
 
 int32_t dir_read(int32_t fd, void* buf, uint32_t size){
-	return 0;
+	if(fd < 0 || fd > 7)
+		return -1;
+
+	int i;
+	dentry_t dentry;
+
+	read_dentry_by_index(file_desc[fd].f_pos, &dentry);
+	file_desc[fd].f_pos++;
+
+	for(i = 0; i < size; i++){
+		if(i >= 32)
+			break;
+		((uint8_t*)buf)[i] = dentry.file_name[i];
+	}
+
+	return i;
 }
 
 int32_t dir_write(int32_t fd, const void* buf, uint32_t size){
