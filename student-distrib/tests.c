@@ -145,6 +145,9 @@ int test_data_file(){
 	for(i = 0; i < 87; i++)
 		printf("%c", buf[i]);
 
+	if(data_read(fd, (uint8_t*)buf, 187) != 0)
+		return FAIL;
+
 	if(data_close(fd) != 0)
 		return FAIL;
 
@@ -154,7 +157,7 @@ int test_data_file(){
 int test_dir_file(){
 	TEST_HEADER;
 
-	int fd, i;
+	int fd, i, j;
 	uint8_t buf[32];
 
 	fd = dir_open(".");
@@ -162,28 +165,91 @@ int test_dir_file(){
 	if(fd < 0 || fd > 7)
 		return FAIL;
 
-	if(dir_read(fd, (uint8_t*)buf, 32) != 32)
-		return FAIL;
-
 	if(dir_write(fd, (uint8_t*)buf, 32) != -1)
 		return FAIL;
 
-	for(i = 0; i < 32; i++)
-		printf("%c", buf[i]);
-	printf("\n");
+	for(j = 0; j < 17; j++){
+		if(dir_read(fd, (uint8_t*)buf, 32) != 32)
+			return FAIL;
 
-	if(dir_read(fd, (uint8_t*)buf, 32) != 32)
+		for(i = 0; i < 32; i++)
+			printf("%c", buf[i]);
+		printf("\n");
+	}
+
+	if(dir_read(fd, (uint8_t*)buf, 32) != 0)
 		return FAIL;
-
-	for(i = 0; i < 32; i++)
-		printf("%c", buf[i]);
-	printf("\n");
 
 	if(data_close(fd) != 0)
 		return FAIL;
 
 	return PASS;
 
+}
+
+int test_non_text_data_file(){
+	TEST_HEADER;
+
+	int fd;
+	uint8_t buf[3072];
+
+	fd = data_open("grep");
+
+	if(fd < 0 || fd > 7)
+		return FAIL;
+
+	if(data_read(fd, (uint8_t*)buf, 3072) != 3072)
+		return FAIL;
+
+	if(data_write(fd, (uint8_t*)buf, 3072) != -1)
+		return FAIL;
+
+	if(data_read(fd, (uint8_t*)buf, 3072) != 3072)
+		return FAIL;
+
+	if(data_read(fd, (uint8_t*)buf, 1000) >= 1000)
+		return FAIL;
+
+	if(data_close(fd) != 0)
+		return FAIL;
+
+	return PASS;	
+}
+
+int test_large_file(){
+	TEST_HEADER;
+
+	int fd, i;
+	uint8_t buf[200];
+
+	fd = data_open("verylargetextwithverylongname.txt");
+
+	if(fd < 0 || fd > 7)
+		return FAIL;
+
+	if(data_read(fd, (uint8_t*)buf, 200) != 200)
+		return FAIL;
+
+	if(data_write(fd, (uint8_t*)buf, 200) != -1)
+		return FAIL;
+
+	for(i = 0; i < 50; i++)
+		printf("%c", buf[i]);
+
+	printf("\n");
+
+	if(data_read(fd, (uint8_t*)buf, 200) != 200)
+		return FAIL;
+
+	for(i = 0; i < 50; i++)
+		printf("%c", buf[i]);
+
+	printf("\n");
+
+	if(data_close(fd) != 0)
+		return FAIL;
+
+	return PASS;
 }
 /* Checkpoint 3 tests */
 /* Checkpoint 4 tests */
@@ -194,8 +260,10 @@ int test_dir_file(){
 void launch_tests(){
 	//TEST_OUTPUT("idt_test", idt_test());
 	//TEST_OUTPUT("valid_page_test", valid_page_test());
-	TEST_OUTPUT("Data File Test", test_data_file());
-	TEST_OUTPUT("Directory File Test", test_dir_file());
+	//TEST_OUTPUT("Data File Test", test_data_file());
+	//TEST_OUTPUT("Directory File Test", test_dir_file());
+	//TEST_OUTPUT("None Text File Test", test_non_text_data_file());
+	//TEST_OUTPUT("Large Text File Test", test_large_file());
 #if DIV_0_TEST
 	TEST_OUTPUT("div_by_0_test", div_by_0_test());
 #endif

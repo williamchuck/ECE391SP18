@@ -248,7 +248,9 @@ int32_t dir_read(int32_t fd, void* buf, uint32_t size){
 	int i;
 	dentry_t dentry;
 
-	read_dentry_by_index(file_desc[fd].f_pos, &dentry);
+	if(read_dentry_by_index(file_desc[fd].f_pos, &dentry) == -1)
+		return 0;
+
 	file_desc[fd].f_pos++;
 
 	for(i = 0; i < size; i++){
