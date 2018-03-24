@@ -118,6 +118,45 @@ int invalid_page_test(){
 	return FAIL;
 }
 /* Checkpoint 2 tests */
+
+/* RTC_test
+ *
+ * Test changing RTC rate
+ * Inputs: None
+ * Side Effects: None
+ * Coverage: rtc.h
+ */
+void RTC_test(){
+	open_RTC(0);
+
+	int i,j;
+	char output;
+	int freq = 2;
+	int* ptr = &freq;
+
+	for(i=0;i<10;i++)
+	{
+		for(j=0;j<20;j++)
+		{
+			output = ('0'+i);
+			putc(output);
+			read_RTC(0,0,0);
+		}
+
+		freq <<= 1;
+		write_RTC(0, (void*) ptr, 4);
+		putc('\n');
+	}
+
+	close_RTC(0);
+	for(i=0;i<20;i++)
+	{
+
+		putc(output);
+		read_RTC(0,0,0);
+	}
+	puts("\nRTC TEST COMPLETE\n");
+}
 /* Checkpoint 3 tests */
 /* Checkpoint 4 tests */
 /* Checkpoint 5 tests */

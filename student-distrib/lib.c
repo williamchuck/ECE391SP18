@@ -2,6 +2,7 @@
  * vim:ts=4 noexpandtab */
 
 #include "lib.h"
+#include "drivers/rtc.h"
 
 #define VIDEO       0xB8000
 #define NUM_COLS    80
@@ -11,6 +12,12 @@
 static int screen_x;
 static int screen_y;
 static char* video_mem = (char *)VIDEO;
+
+/* self-defined variables */
+int RTC_STATUS=0;       /* for test use */
+/* initial current pid */
+int32_t current_pid = 0;
+
 
 /* void clear(void);
  * Inputs: void
@@ -473,4 +480,17 @@ void test_interrupts(void) {
     for (i = 0; i < NUM_ROWS * NUM_COLS; i++) {
         video_mem[i << 1]++;
     }
+}
+
+/* Linz C.
+ * uint8_t get_tty()
+ * return current terminal number
+ * Inputs: none
+ * Return Value: tty
+ * Side effect: None
+ */
+uint8_t get_tty()
+{
+    pcb_t *pcb = (pcb_t *)(KERNEL_BOT_ADDR - (current_pid+1) * EIGHT_KB);
+    return pcb->tty;
 }
