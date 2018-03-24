@@ -46,8 +46,17 @@ void init_fs(uint32_t* file_system_addr){
 	/* Read data block count */
 	addr++;
 	data_block_count = *addr;
+}
+
+uint32_t get_size(const int8_t* fname){
+	uint32_t* addr;
+	dentry_t dentry;
+
+	read_dentry_by_name(fname, &dentry);
 	
-	//printf("dentry count:0x%x, inode_count:0x%x, data_block_count:0x%x\n", dentry_count, inode_count, data_block_count);
+	addr = fs_addr + 1024 * (dentry.inode + 1);
+
+	return *addr;
 }
 
 int32_t read_dentry_by_name(const int8_t* fname, dentry_t* dentry){

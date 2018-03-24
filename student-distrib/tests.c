@@ -120,37 +120,50 @@ int invalid_page_test(){
 }
 
 /* Checkpoint 2 tests */
-int test_data_file(){
+int test_data_file(const int8_t* fname){
 	TEST_HEADER;
 
 	int i;
-	uint8_t buf[187];
+	uint32_t size;
 
-	if(data_open("frame0.txt") != 0)
+	size = get_size(fname);
+
+	if(size < 10)
+		return FAIL;
+	
+	uint8_t buf[size];
+
+	if(data_open(fname) != 0)
 		return FAIL;
 
 	if(fd < 0 || fd > 7)
 		return FAIL;
 
-	if(data_read(fd, (uint8_t*)buf, 100) != 100)
+	if(data_read(fd, (uint8_t*)buf, 10) != 10)
 		return FAIL;
 
-	if(data_write(fd, (uint8_t*)buf, 187) != -1)
+	if(data_write(fd, (uint8_t*)buf, 10) != -1)
 		return FAIL;
 
-	for(i = 0; i < 100; i++)
+	for(i = 0; i < 10; i++)
 		printf("%c", buf[i]);
 
-	if(data_read(fd, (uint8_t*)buf, 87) != 87)
+	if(data_read(fd, (uint8_t*)buf, size - 10) != (size - 10))
 		return FAIL;
 
-	for(i = 0; i < 87; i++)
+	for(i = 0; i < (size - 10); i++)
 		printf("%c", buf[i]);
 
-	if(data_read(fd, (uint8_t*)buf, 187) != 0)
+	if(data_read(fd, (uint8_t*)buf, 1) != 0)
 		return FAIL;
 
-	printf("File Name: frame0.txt\n");
+	printf("\nFile Name: ");
+	for(i = 0; i < 32; i++){
+		if(*(fname + i) == '\0')
+			break;
+		printf("%c", *(fname + i));
+	}
+	printf("\n");
 
 	if(data_close(fd) != 0)
 		return FAIL;
@@ -162,7 +175,7 @@ int test_dir_file(){
 	TEST_HEADER;
 
 	int i, j;
-	uint8_t buf[32];
+	int8_t buf[32];
 	dentry_t dentry;
 
 	if(dir_open(".") != 0)
@@ -171,18 +184,19 @@ int test_dir_file(){
 	if(fd < 0 || fd > 7)
 		return FAIL;
 
-	if(dir_write(fd, (uint8_t*)buf, 32) != -1)
+	if(dir_write(fd, (int8_t*)buf, 32) != -1)
 		return FAIL;
 
 	for(j = 0; j < 17; j++){
-		if(dir_read(fd, (uint8_t*)buf, 32) != 32)
+		if(dir_read(fd, (int8_t*)buf, 32) != 32)
 			return FAIL;
 
 		read_dentry_by_index(j, &dentry);
+		printf(" Name: ");
 		for(i = 0; i < 32; i++)
 			printf("%c", buf[i]);
-		printf("File Type: %d", dentry.file_type);
-		printf("\n");
+
+		printf(" Type: %d\n", dentry.file_type);
 	}
 
 	if(dir_read(fd, (uint8_t*)buf, 32) != 0)
@@ -195,31 +209,35 @@ int test_dir_file(){
 
 }
 
-int test_non_text_data_file(){
+int test_non_text_data_file(const int8_t* fname){
 	TEST_HEADER;
 
 	int i;
-	uint8_t buf[3072];
+	uint32_t size;
 
-	if(data_open("grep") != 0)
+	size = get_size(fname);
+
+	if(size < 50)
+		return FAIL;
+
+	uint8_t buf[size];
+
+	if(data_open(fname) != 0)
 		return FAIL;
 
 	if(fd < 0 || fd > 7)
 		return FAIL;
 
-	if(data_read(fd, (uint8_t*)buf, 3072) != 3072)
+	if(data_read(fd, (uint8_t*)buf, (size - 50)) != (size - 50))
 		return FAIL;
 
-	if(data_write(fd, (uint8_t*)buf, 3072) != -1)
+	if(data_write(fd, (uint8_t*)buf, (size - 50)) != -1)
 		return FAIL;
 
-	if(data_read(fd, (uint8_t*)buf, 3000) != 3000)
+	if(data_read(fd, (uint8_t*)buf, 50) != 50)
 		return FAIL;
 
-	if(data_read(fd, (uint8_t*)buf, 1000) >= 1000)
-		return FAIL;
-
-	for(i = 0; i < 77; i++)
+	for(i = 0; i < 50; i++)
 		printf("0x%x ", buf[i]);
 	printf("\n");
 
@@ -227,43 +245,6 @@ int test_non_text_data_file(){
 		return FAIL;
 
 	return PASS;	
-}
-
-int test_large_file(){
-	TEST_HEADER;
-
-	int i;
-	uint8_t buf[200];
-
-	if(data_open("verylargetextwithverylongname.txt") != 0)
-		return FAIL;
-
-	if(fd < 0 || fd > 7)
-		return FAIL;
-
-	if(data_read(fd, (uint8_t*)buf, 200) != 200)
-		return FAIL;
-
-	if(data_write(fd, (uint8_t*)buf, 200) != -1)
-		return FAIL;
-
-	for(i = 0; i < 50; i++)
-		printf("%c", buf[i]);
-
-	printf("\n");
-
-	if(data_read(fd, (uint8_t*)buf, 200) != 200)
-		return FAIL;
-
-	for(i = 0; i < 50; i++)
-		printf("%c", buf[i]);
-
-	printf("\n");
-
-	if(data_close(fd) != 0)
-		return FAIL;
-
-	return PASS;
 }
 /* Checkpoint 3 tests */
 /* Checkpoint 4 tests */
@@ -274,10 +255,9 @@ int test_large_file(){
 void launch_tests(){
 	//TEST_OUTPUT("idt_test", idt_test());
 	//TEST_OUTPUT("valid_page_test", valid_page_test());
-	TEST_OUTPUT("Data File Test", test_data_file());
+	TEST_OUTPUT("Data File Test", test_data_file("frame0.txt"));
 	//TEST_OUTPUT("Directory File Test", test_dir_file());
-	//TEST_OUTPUT("None Text File Test", test_non_text_data_file());
-	//TEST_OUTPUT("Large Text File Test", test_large_file());
+	//TEST_OUTPUT("None Text File Test", test_non_text_data_file("hello"));
 #if DIV_0_TEST
 	TEST_OUTPUT("div_by_0_test", div_by_0_test());
 #endif
