@@ -49,7 +49,7 @@ void initialize_RTC();
  * INPUTS: none
  * OUTPUTS: 0
  */
-int32_t open_RTC(const uint8_t* filename);
+int32_t open_RTC();
 
 /* changeFreq_RTC
  * DESCRIPTION: Change the RTC frequency

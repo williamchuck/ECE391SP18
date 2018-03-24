@@ -13,19 +13,7 @@
 
 /* self-defined variables */
 extern int RTC_STATUS;              // for test
-#define SCROLL_ENTER_PRESSED    1   // for shifting the screen
-#define SCROLL_LAST_LETTER      2   // for shifting the screen
-#define VIDEO           0xB8000
-#define VID_BACKUP_1    0xB9000
-#define VID_BACKUP_2    0xBA000
-#define VID_BACKUP_3    0xBB000
-#define NUM_COLS        80
-#define NUM_ROWS        25
-#define ATTRIB          0x7
-#define CUR_LPORT       0xF
-#define CUR_HPORT       0xE
-#define VGA_INDEX_REG   0x3D4
-#define VGA_DATA_REG    0x3D5
+
 #define KERNEL_BOT_ADDR     0x800000
 #define MAX_LENGTH_ARG          128
 #define EIGHT_KB            0x2000
