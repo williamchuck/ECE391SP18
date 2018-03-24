@@ -26,11 +26,12 @@ int rtc_enable_interrupt();
 #define RTC_DEFAULT_FREQ 	2
 #define NBYTE_DEFAULT_VAL 	4
 
-/*Active Low Implementation Constant*/
+// Active Low Implementation Constant
 #define ACT_LOW				0xFF
-#define RTC_FRQ_ACT_LOW 	0xF0 //The low 4 bits are important for frequency as it is between 2 and 15
+//The low 4 bits are between 2 and 15
+#define RTC_FRQ_ACT_LOW 	0xF0
 
-/*Constants for frequency calculation*/
+// Constants for frequency calculation
 #define MAX_FREQ			1024
 #define FREQ_FOR_RATE_CALC	32768
 
@@ -43,16 +44,49 @@ int rtc_enable_interrupt();
  */
 void initialize_RTC();
 
+/* open_RTC
+ * DESCRIPTION: Set the RTC frequency to default value 2
+ * INPUTS: none
+ * OUTPUTS: 0
+ */
 int32_t open_RTC(const uint8_t* filename);
 
+/* changeFreq_RTC
+ * DESCRIPTION: Change the RTC frequency
+ * INPUTS: freq -- the frequency to be set
+ * OUTPUTS: None
+ */
 void changeFreq_RTC(uint32_t freq);
 
+/* read_RTC
+ * DESCRIPTION: wait for another RTC interrupt occur
+ * INPUTS: none
+ * OUTPUTS: 0
+ */
 int32_t read_RTC();
 
+/* write_RTC
+ * DESCRIPTION: Change the frequency
+ * INPUTS: fd: Not used for now
+ *		   buf: A pointer
+ *		   nbyte: Should be 4 (NBYTE_DEFAULT_VAL), or will not do anything
+ * OUTPUTS: 0 -- Success;
+  			-1 -- Fail
+ */
 int32_t write_RTC(int32_t fd, const void* buf, int32_t nbytes);
 
+/* close_RTC
+ * DESCRIPTION: Set the RTC frequency back to default value 2
+ * INPUTS: none
+ * OUTPUTS: 0
+ */
 int32_t close_RTC();
 
+/* RTC_handler
+ * DESCRIPTION: Changes the RTC flag when RTC interrupt occurs
+ * INPUTS: none
+ * OUTPUTS: None
+ */
 void RTC_handler();
 
 #endif /* RTC_H */
