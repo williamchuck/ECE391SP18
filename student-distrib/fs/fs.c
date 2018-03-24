@@ -1,11 +1,12 @@
 #include "fs.h"
 #include "../lib.h"
+#include "../tests.h"
 
 static uint32_t dentry_count;
 static uint32_t inode_count;
 static uint32_t data_block_count;
 static uint32_t* fs_addr;
-static file_desc_t file_desc[8];
+//static file_desc_t file_desc[8];
 
 static file_op_t data_file_op = {
 	.open = data_open,
@@ -63,8 +64,6 @@ int32_t read_dentry_by_name(const int8_t* fname, dentry_t* dentry){
 		uint8_t same = 1;
 		for(j = 0; j < 32; j++){
 			str[j] = *addr;
-//			printf("%c", str[j]);
-//			printf("%c %d", *name, j);
 			if(str[j] != *name && *name != '\0')
 				same = 0;
 			if(*name == '\0')
@@ -75,12 +74,9 @@ int32_t read_dentry_by_name(const int8_t* fname, dentry_t* dentry){
 		}
 		
 		if(same){
-//			printf("SAME");
 			for(j = 0; j < 32; j++){
-//				printf("%c", str[j]);
 				dentry->file_name[j] = str[j];
 			}
-//			printf("\n");
 			dentry->file_type = *((uint32_t*)addr);
 			addr += 4;
 			dentry->inode = *((uint32_t*)addr);
@@ -119,22 +115,21 @@ int32_t read_data(uint32_t inode, uint32_t offset, uint8_t* buf, uint32_t length
 		return -1;
 
 	uint32_t file_size, data_block_number, byte_left;
-	uint32_t* inode_addr, db_addr;
+	uint32_t* inode_addr;
+	uint32_t* db_addr;
 	uint8_t* data_addr;
 	int i;
 
-	inode_addr = fs_addr + 1024 + 1024 * inode;
-	db_addr = fs_addr + 1024 + 1024 * inode_count;
+	inode_addr = fs_addr + 1024 * (inode + 1);
+	db_addr = fs_addr + 1024 * (inode_count + 1);
 	file_size = *inode_addr;
 	if(file_size == 0)
 		return -1;
 
 	inode_addr++;
 	uint32_t* temp = inode_addr;
-//	printf("Size: %d\n", file_size);
 
 	for(i = 0; i <= (file_size/4096); i++){
-		//printf("data_block #: %d\n", *temp);
 		if(*temp > (data_block_count - 1))
 			return -1;
 		temp++;
@@ -143,7 +138,6 @@ int32_t read_data(uint32_t inode, uint32_t offset, uint8_t* buf, uint32_t length
 	
 	data_block_number = *(inode_addr + (offset/4096));
 	byte_left = file_size - 4096 * (offset/4096);
-	//printf("ByteLeft: %d\n", byte_left);
 
 	data_addr = (uint8_t*)((uint8_t*)db_addr + 4096 * data_block_number + (offset % 4096));
 
@@ -183,7 +177,8 @@ int32_t data_open(const int8_t* fname){
 			file_desc[i].inode = dentry.inode;
 			file_desc[i].f_pos = 0;
 			file_desc[i].flag = 1;
-			return i;
+			fd = i;
+			return 0;
 		}
 	}
 	
@@ -234,7 +229,8 @@ int32_t dir_open(const int8_t* fname){
 			file_desc[i].inode = 0;
 			file_desc[i].f_pos = 0;
 			file_desc[i].flag = 1;
-			return i;
+			fd = i;
+			return 0;
 		}
 	}
 

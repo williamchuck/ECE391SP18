@@ -15,4 +15,6 @@
 // test launcher
 void launch_tests();
 
+extern file_desc_t file_desc[8];
+extern int fd;
 #endif /* TESTS_H */

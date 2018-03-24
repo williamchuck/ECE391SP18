@@ -17,7 +17,8 @@ static inline void assertion_failure(){
 	asm volatile("int $15");
 }
 
-
+file_desc_t file_desc[8];
+int fd;
 /* Checkpoint 1 tests */
 
 /* IDT Test - Example
@@ -122,10 +123,14 @@ int invalid_page_test(){
 int test_data_file(){
 	TEST_HEADER;
 
-	int fd, i;
+	int i;
 	uint8_t buf[187];
 
-	fd = data_open("frame0.txt");
+	if(data_open("frame0.txt") != 0)
+		return FAIL;
+
+//	fd = 2;
+//	printf("%d\n", fd);
 
 	if(fd < 0 || fd > 7)
 		return FAIL;
@@ -157,13 +162,13 @@ int test_data_file(){
 int test_dir_file(){
 	TEST_HEADER;
 
-	int fd, i, j;
+	int i, j;
 	uint8_t buf[32];
 
-	fd = dir_open(".");
-
-	if(fd < 0 || fd > 7)
+	if(dir_open(".") != 0)
 		return FAIL;
+
+//	fd = 2;
 
 	if(dir_write(fd, (uint8_t*)buf, 32) != -1)
 		return FAIL;
@@ -190,13 +195,13 @@ int test_dir_file(){
 int test_non_text_data_file(){
 	TEST_HEADER;
 
-	int fd;
+	int i;
 	uint8_t buf[3072];
 
-	fd = data_open("grep");
-
-	if(fd < 0 || fd > 7)
+	if(data_open("grep") != 0)
 		return FAIL;
+
+	//fd = 2;
 
 	if(data_read(fd, (uint8_t*)buf, 3072) != 3072)
 		return FAIL;
@@ -204,11 +209,15 @@ int test_non_text_data_file(){
 	if(data_write(fd, (uint8_t*)buf, 3072) != -1)
 		return FAIL;
 
-	if(data_read(fd, (uint8_t*)buf, 3072) != 3072)
+	if(data_read(fd, (uint8_t*)buf, 3000) != 3000)
 		return FAIL;
 
 	if(data_read(fd, (uint8_t*)buf, 1000) >= 1000)
 		return FAIL;
+
+	for(i = 0; i < 77; i++)
+		printf("0x%x ", buf[i]);
+	printf("\n");
 
 	if(data_close(fd) != 0)
 		return FAIL;
@@ -219,13 +228,13 @@ int test_non_text_data_file(){
 int test_large_file(){
 	TEST_HEADER;
 
-	int fd, i;
+	int i;
 	uint8_t buf[200];
 
-	fd = data_open("verylargetextwithverylongname.txt");
-
-	if(fd < 0 || fd > 7)
+	if(data_open("verylargetextwithverylongname.txt") != 0)
 		return FAIL;
+
+	//fd = 2;
 
 	if(data_read(fd, (uint8_t*)buf, 200) != 200)
 		return FAIL;
