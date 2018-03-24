@@ -14,7 +14,7 @@ static int screen_y;
 static char* video_mem = (char *)VIDEO;
 
 /* self-defined variables */
-int RTC_STATUS=0;       /* for test use */
+int RTC_STATUS = 0;       // for test use
 /* initial current pid */
 int32_t current_pid = 0;
 
@@ -482,15 +482,13 @@ void test_interrupts(void) {
     }
 }
 
-/* Linz C.
- * uint8_t get_tty()
+/* uint8_t get_tty()
  * return current terminal number
  * Inputs: none
  * Return Value: tty
  * Side effect: None
  */
-uint8_t get_tty()
-{
+uint8_t get_tty(){
     pcb_t *pcb = (pcb_t *)(KERNEL_BOT_ADDR - (current_pid+1) * EIGHT_KB);
     return pcb->tty;
 }
