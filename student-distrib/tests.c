@@ -120,22 +120,20 @@ int invalid_page_test(){
 /* Checkpoint 2 tests */
 
 /* RTC_test
- *
  * Test changing RTC rate
  * Inputs: None
  * Side Effects: None
- * Coverage: rtc.h
  */
 void RTC_test(){
 	open_RTC();
 
-	int i,j;
+	int i, j;
 	char output;
 	int freq = 2;
 	int* ptr = &freq;
 
-	for(i=0;i<10;i++){
-		for(j=0;j<20;j++){
+	for(i = 0; i < 10; i++){
+		for(j = 0;j < 20; j++){
 			output = ('0'+i);
 			putc(output);
 			read_RTC();
@@ -146,7 +144,7 @@ void RTC_test(){
 	}
 
 	close_RTC();
-	for(i=0;i<20;i++){
+	for(i = 0; i < 20; i++){
 		putc(output);
 		read_RTC();
 	}
