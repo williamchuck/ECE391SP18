@@ -171,6 +171,7 @@ void entry(unsigned long magic, unsigned long addr) {
 
     /* Init keyboard */
     ps2_keyboard_init();
+	
 
 #if RTC_TEST
     /* Enable rtc periodic interrupt*/

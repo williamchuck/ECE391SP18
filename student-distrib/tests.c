@@ -127,33 +127,28 @@ int invalid_page_test(){
  * Coverage: rtc.h
  */
 void RTC_test(){
-	open_RTC(0);
+	open_RTC();
 
 	int i,j;
 	char output;
 	int freq = 2;
 	int* ptr = &freq;
 
-	for(i=0;i<10;i++)
-	{
-		for(j=0;j<20;j++)
-		{
+	for(i=0;i<10;i++){
+		for(j=0;j<20;j++){
 			output = ('0'+i);
 			putc(output);
-			read_RTC(0,0,0);
+			read_RTC();
 		}
-
 		freq <<= 1;
 		write_RTC(0, (void*) ptr, 4);
 		putc('\n');
 	}
 
-	close_RTC(0);
-	for(i=0;i<20;i++)
-	{
-
+	close_RTC();
+	for(i=0;i<20;i++){
 		putc(output);
-		read_RTC(0,0,0);
+		read_RTC();
 	}
 	puts("\nRTC TEST COMPLETE\n");
 }
