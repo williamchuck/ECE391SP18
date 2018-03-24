@@ -123,8 +123,9 @@ int invalid_page_test(){
  * Test changing RTC rate
  * Inputs: None
  * Side Effects: None
- */
+
 void RTC_test(){
+	TEST_HEADER;
 	open_RTC();
 
 	int i, j;
@@ -149,7 +150,10 @@ void RTC_test(){
 		read_RTC();
 	}
 	puts("\nRTC TEST COMPLETE\n");
+
 }
+*/
+
 /* Checkpoint 3 tests */
 /* Checkpoint 4 tests */
 /* Checkpoint 5 tests */
