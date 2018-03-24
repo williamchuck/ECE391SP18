@@ -129,9 +129,6 @@ int test_data_file(){
 	if(data_open("frame0.txt") != 0)
 		return FAIL;
 
-//	fd = 2;
-//	printf("%d\n", fd);
-
 	if(fd < 0 || fd > 7)
 		return FAIL;
 
@@ -153,6 +150,8 @@ int test_data_file(){
 	if(data_read(fd, (uint8_t*)buf, 187) != 0)
 		return FAIL;
 
+	printf("File Name: frame0.txt\n");
+
 	if(data_close(fd) != 0)
 		return FAIL;
 
@@ -164,11 +163,13 @@ int test_dir_file(){
 
 	int i, j;
 	uint8_t buf[32];
+	dentry_t dentry;
 
 	if(dir_open(".") != 0)
 		return FAIL;
 
-//	fd = 2;
+	if(fd < 0 || fd > 7)
+		return FAIL;
 
 	if(dir_write(fd, (uint8_t*)buf, 32) != -1)
 		return FAIL;
@@ -177,8 +178,10 @@ int test_dir_file(){
 		if(dir_read(fd, (uint8_t*)buf, 32) != 32)
 			return FAIL;
 
+		read_dentry_by_index(j, &dentry);
 		for(i = 0; i < 32; i++)
 			printf("%c", buf[i]);
+		printf("File Type: %d", dentry.file_type);
 		printf("\n");
 	}
 
@@ -201,7 +204,8 @@ int test_non_text_data_file(){
 	if(data_open("grep") != 0)
 		return FAIL;
 
-	//fd = 2;
+	if(fd < 0 || fd > 7)
+		return FAIL;
 
 	if(data_read(fd, (uint8_t*)buf, 3072) != 3072)
 		return FAIL;
@@ -234,7 +238,8 @@ int test_large_file(){
 	if(data_open("verylargetextwithverylongname.txt") != 0)
 		return FAIL;
 
-	//fd = 2;
+	if(fd < 0 || fd > 7)
+		return FAIL;
 
 	if(data_read(fd, (uint8_t*)buf, 200) != 200)
 		return FAIL;
@@ -269,7 +274,7 @@ int test_large_file(){
 void launch_tests(){
 	//TEST_OUTPUT("idt_test", idt_test());
 	//TEST_OUTPUT("valid_page_test", valid_page_test());
-	//TEST_OUTPUT("Data File Test", test_data_file());
+	TEST_OUTPUT("Data File Test", test_data_file());
 	//TEST_OUTPUT("Directory File Test", test_dir_file());
 	//TEST_OUTPUT("None Text File Test", test_non_text_data_file());
 	//TEST_OUTPUT("Large Text File Test", test_large_file());
