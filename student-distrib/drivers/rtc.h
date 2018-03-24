@@ -43,63 +43,15 @@ int rtc_enable_interrupt();
  */
 void initialize_RTC();
 
-/* open_RTC
- *
- * Description: basically do nothing, only set the freq to default value 2
- * Inputs: filename: not used for now
- * Outputs: 0, always success
- * Side Effects: as description
- */
 int32_t open_RTC(const uint8_t* filename);
 
-/* changeFreq_RTC
- *
- * Description: Change the rtc frequency
- * Inputs: freq: The frequency that we want to change into
- * Outputs: None
- * Side Effects: As description
- */
 void changeFreq_RTC(uint32_t freq);
 
-/* read_RTC
- *
- * Description: Holding on until another RTC interrupt occur
- * Inputs: fd: Not used for now
- *		   buf: Not used for now
- *		   nbyte: Not used for now
- * Outputs: 0, Always success
- * Side Effects: As description
- */
-int32_t read_RTC(int32_t fd, void* buf, int32_t nbytes);
-
-/* write_RTC
- *
- * Description: Change the frequency
- * Inputs: fd: Not used for now
- *		   buf: A pointer
- *		   nbyte: Should be 4 (NBYTE_DEFAULT_VAL), or will not do anything
- * Outputs: 0, Success; -1, Fail
- * Side Effects: As description
- */
+int32_t read_RTC();
 
 int32_t write_RTC(int32_t fd, const void* buf, int32_t nbytes);
 
-/* close_RTC
- *
- * Description: Set the freq back to default value 2
- * Inputs: fd: Not used for now
- * Outputs: 0, Always success
- * Side Effects: As description
- */
-int32_t close_RTC(int32_t fd);
-
-/* RTC_handler
- *
- * Description: Only changes the RTC flag when RTC interrupt occurs
- * Inputs: None
- * Outputs: None
- * Side Effects: As description
- */
+int32_t close_RTC();
 
 void RTC_handler();
 
