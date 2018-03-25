@@ -1,108 +1,83 @@
+/*
+ * ps2_keyboard.c
+ * Implementation of PS/2 keyboard driver.
+ * Author: Canlin Zhang
+ */
 #include "ps2_keyboard.h"
 
 /* Keycode set 1. Only for displaying the asciis. */
-/* Further functionalites and keycode toggling will be implmented otherwise */
-static unsigned char ps2kbd_set1_keycode[90] = {
-    0, 27, '1', '2', '3', '4', '5', '6', '7', '8', '9', '0',
-    '-', '=', 8, 9, 'q', 'w', 'e', 'r', 't', 'y', 'u', 'i', 'o', 'p', '[', ']',
-    10, 0, 'a', 's', 'd', 'f', 'g', 'h', 'j', 'k', 'l', ';', 39, '`', 0, 92,
-    'z', 'x', 'c', 'v', 'b', 'n', 'm', ',', '.', '/', 0, '*', 0, ' ', 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, '7', '8', '9', '-', '4', '5', '6', '+',
-    '1', '2', '3', '0', '.', 0, 0, 0, 0, 0, 0,
+static unsigned char set1_code[89] = {
+0, 0, '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '-', '=', 0,
+0, 'q', 'w', 'e', 'r', 't', 'y', 'u', 'i', 'o', 'p', '[', ']', 0x0A,
+0, 'a', 's', 'd', 'f', 'g', 'h', 'j', 'k', 'l', ';', 0x27,
+0x60, 0, 0x5C,
+'z', 'x', 'c', 'v', 'b', 'n', 'm', ',', '.', '/', 0,
+'*',
+0, ' ', 0,
+0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+0, 0,
+0, 0, 0, '-', 0, 0, 0, '+', 0, 0, 0, 0, 0,
+0, 0,
 };
 
-/* Unused keycode set - Set 2 and 3 */
-/* static unsigned char ps2kbd_set2_keycode[512] = {
-	  0, 67, 65, 63, 61, 59, 60, 88,  0, 68, 66, 64, 62, 15, 41,117,
-	  0, 56, 42, 93, 29, 16,  2,  0,  0,  0, 44, 31, 30, 17,  3,  0,
-	  0, 46, 45, 32, 18,  5,  4, 95,  0, 57, 47, 33, 20, 19,  6,183,
-	  0, 49, 48, 35, 34, 21,  7,184,  0,  0, 50, 36, 22,  8,  9,185,
-	  0, 51, 37, 23, 24, 11, 10,  0,  0, 52, 53, 38, 39, 25, 12,  0,
-	  0, 89, 40,  0, 26, 13,  0,  0, 58, 54, 28, 27,  0, 43,  0, 85,
-	  0, 86, 91, 90, 92,  0, 14, 94,  0, 79,124, 75, 71,121,  0,  0,
-	 82, 83, 80, 76, 77, 72,  1, 69, 87, 78, 81, 74, 55, 73, 70, 99,
-
-	  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
-	217,100,255,  0, 97,165,  0,  0,156,  0,  0,  0,  0,  0,  0,125,
-	173,114,  0,113,  0,  0,  0,126,128,  0,  0,140,  0,  0,  0,127,
-	159,  0,115,  0,164,  0,  0,116,158,  0,150,166,  0,  0,  0,142,
-	157,  0,  0,  0,  0,  0,  0,  0,155,  0, 98,  0,  0,163,  0,  0,
-	226,  0,  0,  0,  0,  0,  0,  0,  0,255, 96,  0,  0,  0,143,  0,
-	  0,  0,  0,  0,  0,  0,  0,  0,  0,107,  0,105,102,  0,  0,112,
-	110,111,108,112,106,103,  0,119,  0,118,109,  0, 99,104,119,  0,
-
-	  0,  0,  0, 65, 99,
+/* Keycode set 1 for toggled keyset. Only for displaying the asciis. */
+static unsigned char set1_code_toggled[89] = {
+0, 0, '!', '@', '#', '$', '%', '^', '&', '*', '(', ')', '_', '+', 0,
+0, 'Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P', '{', '}', 0x0A,
+0, 'A', 'S', 'D', 'F', 'G', 'H', 'J', 'K', 'L', ':', 0x22,
+'~', 0, '|',
+'Z', 'X', 'C', 'V', 'B', 'N', 'M', '<', '>', '?', 0,
+'*',
+0, ' ', 0,
+0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+0, 0,
+'7', '8', '9', '-', '4', '5', '6', '+', '1', '2', '3', '0', '.',
+0, 0,
 };
-
-static unsigned char ps2kbd_set3_keycode[512] = {
-
-	  0,  0,  0,  0,  0,  0,  0, 59,  1,138,128,129,130, 15, 41, 60,
-	131, 29, 42, 86, 58, 16,  2, 61,133, 56, 44, 31, 30, 17,  3, 62,
-	134, 46, 45, 32, 18,  5,  4, 63,135, 57, 47, 33, 20, 19,  6, 64,
-	136, 49, 48, 35, 34, 21,  7, 65,137,100, 50, 36, 22,  8,  9, 66,
-	125, 51, 37, 23, 24, 11, 10, 67,126, 52, 53, 38, 39, 25, 12, 68,
-	113,114, 40, 43, 26, 13, 87, 99, 97, 54, 28, 27, 43, 43, 88, 70,
-	108,105,119,103,111,107, 14,110,  0, 79,106, 75, 71,109,102,104,
-	 82, 83, 80, 76, 77, 72, 69, 98,  0, 96, 81,  0, 78, 73, 55,183,
-
-	184,185,186,187, 74, 94, 92, 93,  0,  0,  0,125,126,127,112,  0,
-	  0,139,150,163,165,115,152,150,166,140,160,154,113,114,167,168,
-	148,149,147,140
-};
-
-static unsigned char ps2kbd_unxlate_table[128] = {
-          0,118, 22, 30, 38, 37, 46, 54, 61, 62, 70, 69, 78, 85,102, 13,
-         21, 29, 36, 45, 44, 53, 60, 67, 68, 77, 84, 91, 90, 20, 28, 27,
-         35, 43, 52, 51, 59, 66, 75, 76, 82, 14, 18, 93, 26, 34, 33, 42,
-         50, 49, 58, 65, 73, 74, 89,124, 17, 41, 88,  5,  6,  4, 12,  3,
-         11,  2, 10,  1,  9,119,126,108,117,125,123,107,115,116,121,105,
-        114,122,112,113,127, 96, 97,120,  7, 15, 23, 31, 39, 47, 55, 63,
-         71, 79, 86, 94,  8, 16, 24, 32, 40, 48, 56, 64, 72, 80, 87,111,
-         19, 25, 57, 81, 83, 92, 95, 98, 99,100,101,103,104,106,109,110
-}; */
 
 /* Command port and data port for ps2 keyboard (and controller, in fact) */
 #define PS2_DATA_PORT                 0x60
 #define PS2_CMD_PORT                  0x64
 #define PS2_STATUS_PORT               0x64
 
-/* Common return values from ps2 keyboard after given command */
-/* Mainly for Debugging purposes. */
-#define PS2KBD_RET_ACK                0xFA
-#define PS2KBD_RET_STPASS             0xAA
-#define PS2KBD_RET_STFAIL1            0xFC
-#define PS2KBD_RET_STFAIL2            0xFD
-#define PS2KBD_RET_ECHO               0xEE
-#define PS2KBD_RET_DETECTION_NULL     0x00
-#define PS2KBD_RET_DETECTION_UNKNOWN  0xFF
-#define PS2KBD_RET_RESEND             0xFE
+/* Keycode value for flag and lock keys pressed */
+#define LSHIFTP                       0x2A
+#define RSHIFTP                       0x36
+#define ALTP                          0x38
+#define CTRLP                         0x1D
+#define NUMLP                         0x45
+#define CAPSLP                        0x3A
+#define SCRLP                         0x46
+#define KBDLP                         0x26
+#define KBDBKP						  0x0E
+#define KBDENP						  0x1C
 
-/* Common command bytes for ps2 keyboard */
-/* Mainly for debugging and experiments. */
-/* Attention! GETSETCODE DOES NOT WORK */
-#define PS2KBD_CMD_LED                0xED
-#define PS2KBD_CMD_ECHO               0xEE
-#define PS2KBD_CMD_GETSETCODE         0xF0
-#define PS2KBD_CMD_IDENTIFY_KBD       0xF2
-#define PS2KBD_CMD_TYPEMATIC          0xF3
-#define PS2KBD_CMD_ENABLE_SCAN        0xF4
-#define PS2KBD_CMD_DISABLE_SCAN       0xF5
-#define PS2KBD_CMD_SET_DEFAULT        0xF6
-#define PS2KBD_CMD_SET_ALL_TYPEMATIC  0xF7
-#define PS2KBD_CMD_SET_ALL_MAKEREA    0xF8
-#define PS2KBD_CMD_SET_ALL_MAKE       0xF9
-#define PS2KBD_CMD_SET_ALL_TAMR       0xFA
-#define PS2KBD_CMD_SET_KEY_MR         0xFB
-#define PS2KBD_CMD_SET_KEY_MAKE       0xFC
-#define PS2KBD_CMD_RESEND_LAST        0xFD
-#define PS2KBD_CMD_RESET_TEST         0xFF
+/* Keycode value for flag keys released */
+#define LSHIFTR                       0xAA
+#define RSHIFTR                       0xB6
+#define ALTR                          0xB8
+#define CTRLR                         0x9D
 
-/* Flag for toggling keys. Alt - Ctrl - CAPSL - NUML - SCRL */
+/* ON and OFF state for keyboard flags */
+#define FLAG_ON						  0xFF
+#define FLAG_OFF					  0x00
+
+/* Range for scancode numpad */
+#define SCAN_NUMP_UP				  0x53
+#define SCAN_NUMP_DOWN				  0x47
+#define SCAN_NUMP_SPEC				  0x37
+
+/* Flag for toggling keys. Alt - Ctrl - SHIFT - CAPSL - NUML - SCRL */
 static uint8_t alt_flag;
+static uint8_t ctrl_flag;
 static uint8_t shift_flag;
 static uint8_t capsl_flag;
 static uint8_t numl_flag;
 static uint8_t scroll_flag;
+
+/* Flag for indicating whether a numpad key or alphabet key is pressed */
+static uint8_t alpha_flag;
+static uint8_t numpad_flag;
 
 /*
  * ps2_keyboard_init
@@ -113,16 +88,24 @@ static uint8_t scroll_flag;
  *   SIDE EFFECTS: Enable keyboard interrupt, reset key toggle flags.
  */
 void ps2_keyboard_init() {
-    /* Clear key toggle flags */
-    alt_flag = 0x00;
-    shift_flag = 0x00;
-    capsl_flag = 0x00;
-    numl_flag = 0x00;
-    scroll_flag = 0x00;
+	/* Initialize terminal (MP3.2 only) */
+	term_init();
 
-    /* enable_irq unused, use reques_irq for installation and enabling. */
-    //enable_irq(KBD_IRQ);
-    request_irq(KBD_IRQ,&int_ps2kbd_c);
+	/* Clear key toggle flags */
+	alt_flag = FLAG_OFF;
+	ctrl_flag = FLAG_OFF;
+	shift_flag = FLAG_OFF;
+	capsl_flag = FLAG_OFF;
+	numl_flag = FLAG_OFF;
+	scroll_flag = FLAG_OFF;
+
+	/* Clear current keycode flags */
+	alpha_flag = FLAG_OFF;
+	numpad_flag = FLAG_OFF;
+
+	/* enable_irq unused, use reques_irq for installation and enabling. */
+	//enable_irq(KBD_IRQ);
+	request_irq(KBD_IRQ, &int_ps2kbd_c);
 }
 
 /*
@@ -134,23 +117,64 @@ void ps2_keyboard_init() {
  *   SIDE EFFECTS: Read current keycode and echo it onto screen (if possible).
  */
 void int_ps2kbd_c() {
-    /* variables for current keycode and ascii (if applicable) */
-    unsigned char currentcode;
-    unsigned char currentchar;
-    /* Get current scan code */
-    currentcode = ps2_keyboard_getscancode();
-    /* If a key IS pressed, get its ascii code */
-    if (currentcode != 0)
-    {
-      currentchar = ps2_keyboard_getchar(currentcode);
-    }
-    /* If this key has displable ascii code, print it out! */
-    if (currentchar != 0)
-    {
-      printf("%c", currentchar);
-    }
-    /* EOI is handled by general irq handler. Hence send_eoi is NOT needed */
-    //send_eoi(KBD_IRQ);
+	/* variables for current keycode and ascii (if applicable) */
+	unsigned char currentcode;
+	unsigned char currentchar;
+	/* Get current scan code and initialize current char */
+	currentcode = ps2_keyboard_getscancode();
+	currentchar = 0;
+	/* If a key IS pressed, get its ascii code */
+	if (currentcode != 0)
+	{
+		/* Process toggle flags first */
+		ps2_keyboard_processflags(currentcode);
+
+		/* Special handler for clearing screens */
+		/* If ctrl + L is pressed, clear screen, reset cursor */
+		if ((ctrl_flag != FLAG_OFF) && (currentcode == KBDLP))
+		{
+			term_init();
+			return;
+		}
+
+		/* 
+		 * If backspace is pressed, delete current char before cursor 
+		 * and update cursor position.
+		 */
+		if (currentcode == KBDBKP)
+		{
+			term_del();
+			cursor_update();
+			return;
+		}
+
+		/*
+		 * If enter is pressed, and the cursor is at the bottom of terminal
+		 * Scroll down a line, and update cursor position.
+		 */
+		if ((currentcode == KBDENP) && (get_y() == VGA_HEIGHT - 1))
+		{
+			scroll_down();
+			cursor_update();
+			return;
+		}
+
+		/* Get char to be printed */
+		currentchar = ps2_keyboard_getchar(currentcode);
+	}
+	/* If this key has displable ascii code, print it out! */
+	if (currentchar != 0)
+	{
+		/* Call standard input to put char into buffer */
+		stdin_read(TERM_IN_FD, &currentchar, 1);
+
+		/* Echo the char out using keyboard buffer */
+		/* We use terminal buffer as keyboard buffer here. */
+		stdout_write(TERM_OUT_FD, &term_buf[term_buf_index - 1], 1);
+		cursor_update();
+	}
+	/* EOI is handled by general irq handler. Hence send_eoi is NOT needed */
+	//send_eoi(KBD_IRQ);
 }
 
 /*
@@ -162,16 +186,16 @@ void int_ps2kbd_c() {
  *   SIDE EFFECTS: Get current scan code from keyboard.
  */
 unsigned char ps2_keyboard_getscancode() {
-    unsigned char c1 = 0;
-    /* ONLY READ FROM KEYBOARD REG. ONCE! */
-    /* Used code on osdev wiki, but... */
-    /* "The PS/2 keyboard code on OSDev is garbage." -- Andrew Sun, 3/12/2018. */
-    c1 = inb(PS2_DATA_PORT);
-    /* If a key is pressed, return its value */
-    if (c1 > 0) {
-      return c1;
-  }
-  return 0;
+	unsigned char c1 = 0;
+	/* ONLY READ FROM KEYBOARD REG. ONCE! */
+	/* Used code on osdev wiki, but... */
+	/* "The PS/2 keyboard code on OSDev is garbage." -- Andrew Sun, 3/12/2018. */
+	c1 = inb(PS2_DATA_PORT);
+	/* If a key is pressed, return its value */
+	if (c1 > 0) {
+		return c1;
+	}
+	return 0;
 }
 
 /*
@@ -183,13 +207,146 @@ unsigned char ps2_keyboard_getscancode() {
  *   SIDE EFFECTS: Get current ascii char from keyboard
  */
 unsigned char ps2_keyboard_getchar(unsigned char scancode) {
-    /* If the key pressed has a corresponding value, return it */
-    if (scancode <= 90) {
-        return ps2kbd_set1_keycode[scancode];
-    }
-    /* Else, return a NULL char. */
-    else {
-      return 0;
-    }
+	/* If the key pressed has a corresponding value, return it */
+	if (scancode <= 90) {
 
+		/* 
+		 * If Numlock is ON and a numpad key is pressed,
+		 * display toggled char.
+		 */
+		if (numl_flag != FLAG_OFF && numpad_flag != FLAG_OFF)
+		{
+			return set1_code_toggled[scancode];
+		}
+
+		/* 
+		 * If only shift is pressed,
+		 * displayed toggled char.
+		 */
+		if (shift_flag != FLAG_OFF && capsl_flag == FLAG_OFF)
+		{
+			return set1_code_toggled[scancode];
+		}
+		/*
+		 * If shift is pressed and Capslock is ON,
+		 */
+		if (shift_flag != FLAG_OFF && capsl_flag != FLAG_OFF)
+		{
+			/* If a alphabet key is pressed, display normal lowercase char. */
+			if (alpha_flag != FLAG_OFF)
+			{
+				return set1_code[scancode];
+			}
+			/* If other keys are pressed, display toggled char. */
+			else
+			{
+				return set1_code_toggled[scancode];
+			}
+		}
+		/*
+		 * If shift is not pressed but Capslock is ON, 
+		 */
+		if (shift_flag == FLAG_OFF && capsl_flag != FLAG_OFF)
+		{
+			/* If an alphabet key is pressed, displayed upper case char. */
+			if (alpha_flag != FLAG_OFF)
+			{
+				return set1_code_toggled[scancode];
+			}
+			/* Otherwise display normal char. */
+			else
+			{
+				return set1_code[scancode];
+			}
+		}
+
+		/* Display normal char if no flag is present. */
+		return set1_code[scancode];
+	}
+
+	/* If keycode >= 90, return a NULL char */
+	return 0;
+}
+
+/*
+ * ps2_keyboard_processflags
+ * DESCRIPTION: Process flags according to current keycode.
+ * INPUT: scancode - keycode of current pressed key
+ * OUTPUT: none.
+ * RETURN VALUE: none.
+ * SIDE EFFECTS: Set flags of the keyboard. (Capsl, Numl, Scrl, shift, ctrl, alt, etc.)
+ */
+void ps2_keyboard_processflags(unsigned char scancode) {
+	/* If left or right shift is pressed, set shift flag to ON */
+	if ((scancode == LSHIFTP) || (scancode == RSHIFTP))
+	{
+		shift_flag = FLAG_ON;
+	}
+	/* If left or right shift is released, set shift flag to OFF */
+	if ((scancode == LSHIFTR) || (scancode == RSHIFTR))
+	{
+		shift_flag = FLAG_OFF;
+	}
+
+	/* If Alt is pressed, set alt flag to ON */
+	if (scancode == ALTP)
+	{
+		alt_flag = FLAG_ON;
+	}
+	/* If Alt is released, set alt flag to OFF */
+	if (scancode == ALTR)
+	{
+		alt_flag = FLAG_OFF;
+	}
+
+	/* If Ctrl is pressed, set ctrl flag to ON */
+	if (scancode == CTRLP)
+	{
+		ctrl_flag = FLAG_ON;
+	}
+	/* If Ctrl is released, set ctrl flag to OFF */
+	if (scancode == CTRLR)
+	{
+		ctrl_flag = FLAG_OFF;
+	}
+
+	/* If Numlock is pressed, reverse current Numlock flag */
+	if (scancode == NUMLP)
+	{
+		numl_flag = ~numl_flag;
+	}
+
+	/* If Capslock is pressed, reverse current Capslock flag */
+	if (scancode == CAPSLP)
+	{
+		capsl_flag = ~capsl_flag;
+	}
+
+	/* If ScrollLock is pressed, reverse current ScrollLock flag */
+	if (scancode == SCRLP)
+	{
+		scroll_flag = ~scroll_flag;
+	}
+
+	/* If current scancode is a numpad key, set numpad pressed flag to ON. */
+	if (((scancode <= SCAN_NUMP_UP) && (scancode >= SCAN_NUMP_DOWN)) || scancode == SCAN_NUMP_SPEC)
+	{
+		numpad_flag = FLAG_ON;
+	}
+	/* Else, set numpad pressed flag to OFF */
+	else
+	{
+		numpad_flag = FLAG_OFF;
+	}
+
+	/* If current scancode is an alphabet, set alphabet pressed flag to ON */
+	if (set1_code[scancode] <= 'z' && set1_code[scancode] >= 'a')
+	{
+		alpha_flag = FLAG_ON;
+	}
+	/* Else, set alphabet pressed flag to OFF */
+	else
+	{
+		alpha_flag = FLAG_OFF;
+	}
 }

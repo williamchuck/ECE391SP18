@@ -24,6 +24,9 @@
 #include "drivers/ps2_controller.h"
 #include "drivers/rtc.h"
 
+/* File system */
+#include "fs/fs.h"
+
 /* Macros. */
 /* Check if the bit BIT in FLAGS is set. */
 #define CHECK_FLAG(flags, bit)   ((flags) & (1 << (bit)))
@@ -33,6 +36,7 @@
 void entry(unsigned long magic, unsigned long addr) {
 
     multiboot_info_t *mbi;
+	uint32_t* file_system_addr;
 
     /* Clear the screen. */
     clear();
@@ -66,6 +70,8 @@ void entry(unsigned long magic, unsigned long addr) {
         int i;
         module_t* mod = (module_t*)mbi->mods_addr;
         while (mod_count < mbi->mods_count) {
+			if(mod_count == 0)
+				file_system_addr = (uint32_t*)mod->mod_start;
             printf("Module %d loaded at address: 0x%#x\n", mod_count, (unsigned int)mod->mod_start);
             printf("Module %d ends at address: 0x%#x\n", mod_count, (unsigned int)mod->mod_end);
             printf("First few bytes of module:\n");
@@ -160,6 +166,9 @@ void entry(unsigned long magic, unsigned long addr) {
 
     /* Init the PIC */
     i8259_init();
+
+	/* Initialize file system */
+	init_fs(file_system_addr);
 
 #if NOT_SHOW_MESSAGE
     /* Clear screen for better testing. */
