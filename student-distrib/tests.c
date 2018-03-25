@@ -128,7 +128,7 @@ int invalid_page_test(){
 int RTC_test(){
     TEST_HEADER;
     //initialize_RTC();
-    open_RTC();
+    rtc_open(0);
 
     int i, j;
     char output;
@@ -140,14 +140,14 @@ int RTC_test(){
         for(j = 0; j < 40; j++){
             output = ('0'+i);
             putc(output);
-            read_RTC();
+            rtc_read(0,0,0);
         }
         freq <<= 1;
-        write_RTC((void*) ptr, 4);
+        rtc_write(0, (void*) ptr, 4);
         putc('\n');
     }
 
-    close_RTC();
+    rtc_close();
 
     puts("\nRTC TEST COMPLETE\n");
     return PASS;

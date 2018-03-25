@@ -7,18 +7,42 @@
 
 #include "rtc.h"
 
+/* Definitions for RTC ports and registers*/
+#define RTC_DIS_NMI         0x80    //set this bit when writing to addr port to disable NMI.
+#define RTC_REG_A           0x0A
+#define RTC_REG_B           0x0B
+#define RTC_REG_C           0x0C
+#define RTC_ADDR_PORT       0x70
+#define RTC_DATA_PORT       0x71
+#define RTC_IRQ             8
+
+//Definitions for RTC register settings
+#define RTC_OSC_ON        0x20  //set DV2:0 to 010 to turn on oscillator
+#define RTC_RS_CLEAR_MASK 0xF0  //mask to clear rate selector
+#define RTC_PIE           0x04  //rtc periodic interrupt enable bit
+
+// Constants for frequency calculation
+#define MAX_FREQ            1024
+#define FREQ_RATE_CALC      32768
+#define RTC_DEF_FREQ        2
+
+//flag to indicate interrupt for read function
 volatile int interrupt_occured = 0;
 
+//cp1 test interrupts in lib.c
 extern void test_interrupts(void);
+
+//change frequency helper
+void rtc_changeFreq(uint32_t freq);
+
+
 /*  rtc_isr
  *  Interrupt service routine for RTC
  *  Side effects: display garbage on screen, clear interrupt on RTC
  */
 void rtc_isr(){
-    //test_interrupts();
-	//printf("1");
-    outb(0x0C, 0x70);   //select register C
-    inb(0x71);          //read register to clear interrupt
+    outb(RTC_REG_C, RTC_ADDR_PORT);   //select register C
+    inb(RTC_DATA_PORT);          //read register to clear interrupt
 	interrupt_occured = 1;
 }
 /*  rtc_enable_interrupt
@@ -28,64 +52,79 @@ int rtc_enable_interrupt(){
     //referenced from https://wiki.osdev.org/RTC
     unsigned long flags;
     cli_and_save(flags);
-    outb(0x8A, 0x70);   //select register A, disable NMI
-    outb(0x2F, 0x71);   //Turn on oscillator, select update rate to be 500ms
-    outb(0x8B, 0x70);   //select register B, disable NMI
-    char regB=inb(0x71);//store current value
-    outb(0x8B, 0x70);   //select register B, disable NMI
-    outb(regB | 0x40, 0x71); //set Periodic Interrupt Enable bit and write it back
-    outb(0x0B, 0x70);//just to enable NMI
-    inb(0x71); //just read
+
+    outb(RTC_DIS_NMI | RTC_REG_A, RTC_ADDR_PORT);   //select register A, disable NMI
+    outb(RTC_OSC_ON, RTC_DATA_PORT);   //Turn on oscillator
+    //(update rate is 0Hz, will be set by rtc_open when device opened)
+
+    outb(RTC_DIS_NMI | RTC_REG_B, RTC_ADDR_PORT);   //select register B, disable NMI
+    uint8_t regB=inb(RTC_DATA_PORT);//read current value
+
+    outb(RTC_DIS_NMI | RTC_REG_B, RTC_ADDR_PORT);   //select register B, disable NMI
+    outb(regB | RTC_PIE, RTC_DATA_PORT); //set Periodic Interrupt Enable bit and write it back
+
+    outb(RTC_REG_B, RTC_ADDR_PORT);//just to enable NMI
+    inb(RTC_DATA_PORT); //just read
+
     restore_flags(flags);
-    return request_irq(8, &rtc_isr);//request to install handler
+    return request_irq(RTC_IRQ, &rtc_isr);//request to install handler
 }
 
-/* changeFreq_RTC
+/* rtc_changeFreq
  * DESCRIPTION: Change the RTC frequency
  * INPUTS: freq -- the frequency to be set
  * OUTPUTS: None
  */
-void changeFreq_RTC(uint32_t freq){
+int32_t rtc_changeFreq(uint32_t freq){
 	uint8_t rate = 1;
 	// check power of 2
 	if( (freq & (freq-1)) != 0)
-		return;
+		return -1;
 	// the freq is not allowed to be higher than 1024
 	if(freq > MAX_FREQ)
-		return;
+		return -1;
 	while((FREQ_RATE_CALC>>(rate-1)) != freq){
 		rate++;
-		// freq needs to be not larger than 2^15
-		if(rate > 15)
-			return;
 	}
+
+	unsigned long flags;
+	cli_and_save(flags);
 	uint8_t regA = 0x00;
-	outb(RTC_REG_A, RTC_PORT);
-	regA = inb(COMS_PORT);
-	outb(RTC_REG_A, RTC_PORT);
-	regA = regA & RTC_FRQ_ACT_LOW;		//0xF0
-	regA = regA | rate;
-	outb(regA, COMS_PORT);
+	outb(RTC_DIS_NMI | RTC_REG_A, RTC_ADDR_PORT);   //select register A
+	regA = inb(RTC_DATA_PORT);                      //read current value
+	regA = regA & RTC_RS_CLEAR_MASK;	//clear rate selector bits
+	regA = regA | rate;                 //set new rate
+	outb(RTC_DIS_NMI | RTC_REG_A, RTC_ADDR_PORT);   //select register A
+	outb(regA, RTC_DATA_PORT);                      //write new rate
+
+	outb(RTC_REG_B, RTC_ADDR_PORT);//just to enable NMI
+	inb(RTC_DATA_PORT); //just read
+
+	restore_flags(flags);
+	return 0;
 }
 
-/* open_RTC
+/* rtc_open
  * DESCRIPTION: Set the RTC frequency to default value 2
  * INPUTS: none
  * OUTPUTS: 0
  */
-int32_t open_RTC(){
-	changeFreq_RTC(DEFAULT_FREQ);
+int32_t rtc_open(const int8_t* fname){
+	rtc_changeFreq(RTC_DEF_FREQ);
 	return 0;	//success
 }
 
-/* read_RTC
+/* rtc_read
  * DESCRIPTION: block for another RTC interrupt occur
  * INPUTS: none
  * OUTPUTS: 0
  */
-int32_t read_RTC(){
+int32_t rtc_read(int32_t fd, void* buf, int32_t nbytes){
+    unsigned long flags;
+    cli_and_save(flags);
 	// clear the flag (set interrupt occured to false)
 	interrupt_occured = 0;
+	restore_flags(flags);
 	// wait for another RTC interrupt
 	while(!interrupt_occured){
 		// do nothing
@@ -93,29 +132,32 @@ int32_t read_RTC(){
 	return 0;
 }
 
-/* write_RTC
+/* rtc_write
  * DESCRIPTION: Change the frequency
  * INPUTS: buf: A pointer
  *		   nbyte: Should be 4 (NBYTE_DEFAULT_VAL), or will not do anything
  * OUTPUTS: 0 -- Success
  *			-1 -- Fail
  */
-int32_t write_RTC(const void* buf, int32_t nbytes){
-	// check error conditions
-	if(buf == NULL || nbytes != NBYTE_DEFAULT_VAL)
+int32_t rtc_write(int32_t fd, const void* buf, int32_t nbytes){
+    int32_t err;
+    // check error conditions
+	if(buf == NULL || nbytes != sizeof(uint32_t))
 		return -1;
 	else{
-		uint32_t frequency = *((int32_t*)buf);			//gives the frequency
-		changeFreq_RTC(frequency);
+	    //TODO: use userspace address-check after being implemented.
+		uint32_t frequency = *((uint32_t*)buf);			//get frequency
+		err = rtc_changeFreq(frequency);
 	}
+	if(err)return -1;
 	return nbytes;
 }
 
-/* close_RTC
+/* rtc_close
  * DESCRIPTION: does nothing
  * INPUTS: none
  * OUTPUTS: 0
  */
-int32_t close_RTC(){
+int32_t rtc_close(int32_t fd){
 	return 0;
 }
