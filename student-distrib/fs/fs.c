@@ -4,6 +4,9 @@
 
 #define FILE_NAME_LENGTH 32
 #define BLOCK_SIZE 4096
+#define BYTES_PER_INT 4
+#define BOOT_BLOCK_ENTRY_SIZE 64
+#define INT_PER_BLOCK BLOCK_SIZE/BYTES_PER_INT
 
 /* Count for dentry, inode and data block */
 static uint32_t dentry_count;
@@ -70,7 +73,7 @@ uint32_t get_size(const int8_t* fname){
 	read_dentry_by_name(fname, &dentry);
 	
 	/* Read size according to inode */
-	addr = fs_addr + (BLOCK_SIZE/4) * (dentry.inode + 1);
+	addr = fs_addr + INT_PER_BLOCK * (dentry.inode + 1);
 
 	return *addr;
 }
@@ -89,7 +92,7 @@ int32_t read_dentry_by_name(const int8_t* fname, dentry_t* dentry){
 	int i,j;
 
 	/* Point addr to the start of dentries */
-	addr = (uint8_t*)fs_addr + 64;
+	addr = (uint8_t*)fs_addr + BOOT_BLOCK_ENTRY_SIZE;
 
 	/* Search for dentry with file name */
 	for(i = 0; i < dentry_count; i++){
@@ -121,7 +124,7 @@ int32_t read_dentry_by_name(const int8_t* fname, dentry_t* dentry){
 			/* Fill in dentry file_type */
 			dentry->file_type = *((uint32_t*)addr);
 			/* Point addr to inode */
-			addr += 4;
+			addr += BYTES_PER_INT;
 			/* Fill in dentry inode */
 			dentry->inode = *((uint32_t*)addr);
 			/* Return 0 on success */
@@ -152,10 +155,10 @@ int32_t read_dentry_by_index(uint32_t index, dentry_t* dentry){
 	int i;
 
 	/* Point addr to the start of dentries */
-	addr = (uint8_t*)fs_addr + 64;
+	addr = (uint8_t*)fs_addr + BOOT_BLOCK_ENTRY_SIZE;
 
 	/* Point addr to the dentry we want */
-	addr += index * 64;
+	addr += index * BOOT_BLOCK_ENTRY_SIZE;
 
 	/* Fill in dentry_t file_name */
 	for(i = 0; i < FILE_NAME_LENGTH; i++){
@@ -165,7 +168,7 @@ int32_t read_dentry_by_index(uint32_t index, dentry_t* dentry){
 	/* Fill in dentry_t file_type */
 	dentry->file_type = *((uint32_t*)addr);
 	/* Point addr to inode */
-	addr += 4;
+	addr += BYTES_PER_INT;
 	/* Fill in dentry_t inode */
 	dentry->inode = *((uint32_t*)addr);
 	/* Return 0 on success */
@@ -192,9 +195,9 @@ int32_t read_data(uint32_t inode, uint32_t offset, uint8_t* buf, uint32_t length
 	int i;
 
 	/* Point inode_addr to start of inode */
-	inode_addr = fs_addr + (BLOCK_SIZE/4) * (inode + 1);
+	inode_addr = fs_addr + INT_PER_BLOCK * (inode + 1);
 	/* Point db_addr to start of data block entries */
-	db_addr = fs_addr + (BLOCK_SIZE/4) * (inode_count + 1);
+	db_addr = fs_addr + INT_PER_BLOCK * (inode_count + 1);
 	/* Read in file_size */
 	file_size = *inode_addr;
 	/* If this inode is not used, return -1 */
@@ -246,7 +249,7 @@ int32_t data_open(const int8_t* fname){
 	int i;
 	dentry_t dentry;
 
-	for(i = 0; i < 32; i++)
+	for(i = 0; i < FILE_NAME_LENGTH; i++)
 		dentry.file_name[i] = 0;
 
 	/* Fill in dentry and check if file exist */
@@ -395,7 +398,7 @@ int32_t dir_read(int32_t fd, void* buf, uint32_t size){
 	/* Copy filename of current file into buf */
 	for(i = 0; i < size; i++){
 		/* No more than 32 bytes is allowed */
-		if(i >= 32)
+		if(i >= FILE_NAME_LENGTH)
 			break;
 		/* Copy filename to buf */
 		((uint8_t*)buf)[i] = dentry.file_name[i];
