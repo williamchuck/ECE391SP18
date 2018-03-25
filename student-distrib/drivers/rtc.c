@@ -36,7 +36,8 @@ int rtc_enable_interrupt(){
     return request_irq(8, &rtc_isr);//request to install handler
 }
 
-volatile int rtc_interrupt_occured[3] = {1,1,1};
+// flags for handling ovvured interrupts
+volatile int interrupt_occured[3] = {1,1,1};
 
 /* initialize_RTC
  * DESCRIPTION: Initialize the RTC
@@ -87,18 +88,18 @@ void changeFreq_RTC(uint32_t freq){
  * OUTPUTS: 0
  */
 int32_t open_RTC(){
-	changeFreq_RTC(RTC_DEFAULT_FREQ);
+	changeFreq_RTC(DEFAULT_FREQ);
 	return 0;	//success
 }
 
 /* read_RTC
- * DESCRIPTION: wait for another RTC interrupt occur
+ * DESCRIPTION: block for another RTC interrupt occur
  * INPUTS: none
  * OUTPUTS: 0
  */
 int32_t read_RTC(){
-	rtc_interrupt_occured[get_tty()] = 1; 	// set to high (active low)
-	while (rtc_interrupt_occured[get_tty()] == 1){			// similar to a spin lock
+	interrupt_occured[get_tty()] = 1; 				// set to high (active low)
+	while (interrupt_occured[get_tty()] == 1){		// similar to a spin lock
 	}
 	return 0;
 }
@@ -122,7 +123,7 @@ int32_t write_RTC(int32_t fd, const void* buf, int32_t nbytes){
 }
 
 /* close_RTC
- * DESCRIPTION: Set the RTC frequency back to default value 2
+ * DESCRIPTION: does nothing
  * INPUTS: none
  * OUTPUTS: 0
  */
@@ -137,9 +138,9 @@ int32_t close_RTC(){
  */
 void RTC_handler(){
 	int8_t garbage;
-	rtc_interrupt_occured[0] = 0;
-	rtc_interrupt_occured[1] = 0;
-	rtc_interrupt_occured[2] = 0;
+	interrupt_occured[0] = 0;
+	interrupt_occured[1] = 0;
+	interrupt_occured[2] = 0;
 	outb(RTC_REG_C, RTC_PORT);
     garbage = inb(COMS_PORT);
     send_eoi(RTC_EOI);

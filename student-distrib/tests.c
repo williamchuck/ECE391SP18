@@ -122,10 +122,11 @@ int invalid_page_test(){
 /* RTC_test
  * Test changing RTC rate
  * Inputs: None
- * Side Effects: None
-
-void RTC_test(){
+ * Outputs: 1 as success, 0 as failure
+ */
+int RTC_test(){
 	TEST_HEADER;
+	initialize_RTC();
 	open_RTC();
 
 	int i, j;
@@ -150,9 +151,10 @@ void RTC_test(){
 		read_RTC();
 	}
 	puts("\nRTC TEST COMPLETE\n");
+	return PASS;
 
 }
-*/
+
 
 /* Checkpoint 3 tests */
 /* Checkpoint 4 tests */
@@ -163,6 +165,7 @@ void RTC_test(){
 void launch_tests(){
 	TEST_OUTPUT("idt_test", idt_test());
 	TEST_OUTPUT("valid_page_test", valid_page_test());
+	TEST_OUTPUT("RTC_test", RTC_test());
 #if DIV_0_TEST
 	TEST_OUTPUT("div_by_0_test", div_by_0_test());
 #endif

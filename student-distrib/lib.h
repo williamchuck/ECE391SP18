@@ -7,6 +7,7 @@
 
 #include "types.h"
 #include "i8259.h"
+#include "drivers/rtc.h"
 
 
 

@@ -23,7 +23,7 @@ int rtc_enable_interrupt();
 #define RTC_PORT 			0x70
 #define COMS_PORT 			0x71
 #define RTC_EOI				8
-#define RTC_DEFAULT_FREQ 	2
+#define DEFAULT_FREQ 	2
 #define NBYTE_DEFAULT_VAL 	4
 
 // Active Low Implementation Constant
