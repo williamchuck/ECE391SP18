@@ -227,7 +227,9 @@ int test_non_text_data_file(const int8_t* fname){
 	if(size < 50)
 		return FAIL;
 
-	uint8_t buf[size];
+	int8_t start[24];
+	int8_t end[50];	
+	int8_t buf[size];
 
 	if(data_open(fname) != 0)
 		return FAIL;
@@ -235,17 +237,32 @@ int test_non_text_data_file(const int8_t* fname){
 	if(fd < 0 || fd > 7)
 		return FAIL;
 
-	if(data_read(fd, (uint8_t*)buf, (size - 50)) != (size - 50))
+	if(data_read(fd, (int8_t*)start, 24) != 24)
 		return FAIL;
 
-	if(data_write(fd, (uint8_t*)buf, (size - 50)) != -1)
+	if(data_read(fd, (uint8_t*)buf, (size - 74)) != (size - 74))
 		return FAIL;
 
-	if(data_read(fd, (uint8_t*)buf, 50) != 50)
+	if(data_write(fd, (uint8_t*)buf, (size - 74)) != -1)
 		return FAIL;
 
+	if(data_read(fd, (uint8_t*)end, 50) != 50)
+		return FAIL;
+
+	printf("Name: ");
+	for(i = 0; i < 32; i++){
+		if(*(fname + i) == '\0')
+			break;
+		printf("%c", *(fname + i));
+	}
+	printf("\n");
+	printf("Start: ");
+	for(i = 0; i < 24; i++)
+		printf("0x%x ", start[i]);
+	printf("\n");
+	printf("End: ");
 	for(i = 0; i < 50; i++)
-		printf("0x%x ", buf[i]);
+		printf("0x%x ", end[i]);
 	printf("\n");
 
 	if(data_close(fd) != 0)
@@ -263,7 +280,7 @@ void launch_tests(){
 	//TEST_OUTPUT("idt_test", idt_test());
 	//TEST_OUTPUT("valid_page_test", valid_page_test());
 	//TEST_OUTPUT("Data File Test", test_data_file("frame0.txt"));
-	TEST_OUTPUT("Directory File Test", test_dir_file());
+	//TEST_OUTPUT("Directory File Test", test_dir_file());
 	//TEST_OUTPUT("None Text File Test", test_non_text_data_file("hello"));
 #if DIV_0_TEST
 	TEST_OUTPUT("div_by_0_test", div_by_0_test());
