@@ -23,7 +23,7 @@ int rtc_enable_interrupt();
 #define RTC_PORT 			0x70
 #define COMS_PORT 			0x71
 #define RTC_EOI				8
-#define DEFAULT_FREQ 	2
+#define DEFAULT_FREQ 		2
 #define NBYTE_DEFAULT_VAL 	4
 
 // Active Low Implementation Constant
@@ -35,14 +35,6 @@ int rtc_enable_interrupt();
 #define MAX_FREQ			1024
 #define FREQ_FOR_RATE_CALC	32768
 
-/* initialize_RTC
- *
- * Description: Initialize the RTC
- * Inputs: None
- * Outputs: None
- * Side Effects: As description
- */
-void initialize_RTC();
 
 /* open_RTC
  * DESCRIPTION: Set the RTC frequency to default value 2
@@ -82,11 +74,5 @@ int32_t write_RTC(int32_t fd, const void* buf, int32_t nbytes);
  */
 int32_t close_RTC();
 
-/* RTC_handler
- * DESCRIPTION: Changes the RTC flag when RTC interrupt occurs
- * INPUTS: none
- * OUTPUTS: None
- */
-void RTC_handler();
 
 #endif /* RTC_H */

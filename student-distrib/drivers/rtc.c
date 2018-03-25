@@ -7,15 +7,19 @@
 
 #include "rtc.h"
 
+volatile int interrupt_occured = 0;
+
 extern void test_interrupts(void);
 /*  rtc_isr
  *  Interrupt service routine for RTC
  *  Side effects: display garbage on screen, clear interrupt on RTC
  */
 void rtc_isr(){
-    test_interrupts();
+    //test_interrupts();
+	//printf("1");
     outb(0x0C, 0x70);   //select register C
     inb(0x71);          //read register to clear interrupt
+	interrupt_occured = 1;
 }
 /*  rtc_enable_interrupt
  *  Enable RTC periodic interrupt and install the rtc_isr interrupt handler
@@ -36,27 +40,6 @@ int rtc_enable_interrupt(){
     return request_irq(8, &rtc_isr);//request to install handler
 }
 
-// flags for handling ovvured interrupts
-volatile int interrupt_occured[3] = {1,1,1};
-
-/* initialize_RTC
- * DESCRIPTION: Initialize the RTC
- * INPUTS: None
- * OUTPUTS: None
- */
-void initialize_RTC(){
-	uint8_t regB = 0x00;		// register B of RTC
-	outb(RTC_REG_B, RTC_PORT);
-	regB = inb(COMS_PORT);
-	regB = regB | 0x40;			// set bit 6 to high
-	outb(RTC_REG_B, RTC_PORT);
-	outb(regB, COMS_PORT);
-	enable_irq(2);
-	enable_irq(8);
-	outb(RTC_REG_C, RTC_PORT);
-	inb(COMS_PORT);
-}
-
 /* changeFreq_RTC
  * DESCRIPTION: Change the RTC frequency
  * INPUTS: freq -- the frequency to be set
@@ -64,12 +47,15 @@ void initialize_RTC(){
  */
 void changeFreq_RTC(uint32_t freq){
 	uint8_t rate = 1;
+	// check power of 2
+	if( (freq & (freq-1)) != 0)
+		return;
 	// the freq is not allowed to be higher than 1024
 	if(freq > MAX_FREQ)
 		return;
 	while((FREQ_FOR_RATE_CALC>>(rate-1)) != freq){
 		rate++;
-		// freq needs to be power of 2 and not larger than 2^15
+		// freq needs to be not larger than 2^15
 		if(rate > 15)
 			return;
 	}
@@ -98,8 +84,14 @@ int32_t open_RTC(){
  * OUTPUTS: 0
  */
 int32_t read_RTC(){
-	interrupt_occured[get_tty()] = 1; 				// set to high (active low)
+	/*interrupt_occured[get_tty()] = 1; 				// set to high (active low)
 	while (interrupt_occured[get_tty()] == 1){		// similar to a spin lock
+	}*/
+	// clear the flag (set interrupt occured to false)
+	interrupt_occured = 0;
+	// wait for another RTC interrupt
+	while(!interrupt_occured){
+		// pass
 	}
 	return 0;
 }
@@ -109,7 +101,7 @@ int32_t read_RTC(){
  * INPUTS: fd: Not used for now
  *		   buf: A pointer
  *		   nbyte: Should be 4 (NBYTE_DEFAULT_VAL), or will not do anything
- * OUTPUTS: 0 -- Success;
+ * OUTPUTS: 0 -- Success
   			-1 -- Fail
  */
 int32_t write_RTC(int32_t fd, const void* buf, int32_t nbytes){
@@ -129,19 +121,4 @@ int32_t write_RTC(int32_t fd, const void* buf, int32_t nbytes){
  */
 int32_t close_RTC(){
 	return 0;
-}
-
-/* RTC_handler
- * DESCRIPTION: Changes the RTC flag when RTC interrupt occurs
- * INPUTS: none
- * OUTPUTS: None
- */
-void RTC_handler(){
-	int8_t garbage;
-	interrupt_occured[0] = 0;
-	interrupt_occured[1] = 0;
-	interrupt_occured[2] = 0;
-	outb(RTC_REG_C, RTC_PORT);
-    garbage = inb(COMS_PORT);
-    send_eoi(RTC_EOI);
 }

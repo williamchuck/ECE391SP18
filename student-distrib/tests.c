@@ -120,13 +120,14 @@ int invalid_page_test(){
 /* Checkpoint 2 tests */
 
 /* RTC_test
- * Test changing RTC rate
- * Inputs: None
- * Outputs: 1 as success, 0 as failure
+ * DESCRIPTION: Test changing RTC rate
+ * INPUT: None
+ * OUTPUT: PASS as success
+ 		   FAIL as failure
  */
 int RTC_test(){
 	TEST_HEADER;
-	initialize_RTC();
+	//initialize_RTC();
 	open_RTC();
 
 	int i, j;
@@ -135,7 +136,7 @@ int RTC_test(){
 	int* ptr = &freq;
 
 	for(i = 0; i < 10; i++){
-		for(j = 0;j < 20; j++){
+		for(j = 0; j < 20; j++){
 			output = ('0'+i);
 			putc(output);
 			read_RTC();

@@ -4,7 +4,7 @@
 /* Run tests for paging and IDT table */
 #define RUN_TESTS 1
 /* Run tests for RTC */
-#define RTC_TEST 0
+#define RTC_TEST 1
 /* Do not show loading message */
 #define NOT_SHOW_MESSAGE 1
 /* Run invalid page test (Will lead to Page Fault) */

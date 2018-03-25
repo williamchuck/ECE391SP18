@@ -42,9 +42,6 @@ int8_t* strncpy(int8_t* dest, const int8_t*src, uint32_t n);
 
 
 
-uint8_t get_tty();
-
-
 
 /* Userspace address-check functions */
 int32_t bad_userspace_addr(const void* addr, int32_t len);
@@ -60,25 +57,6 @@ typedef struct fd_entry  {
     int32_t file_position;
     int32_t flags;
 } fd_entry_t;
-
-
-/* structure for PCB */
-typedef struct process_control_block  {
-    fd_entry_t fd_entry[8];
-    uint32_t process_id;                // pid of this pcb
-    uint32_t parent_id;                 // pid of the parent process of this pcb
-    uint32_t parent_esp;                // parent's esp (used to restore esp when halt this process)
-    uint32_t parent_ebp;                // parent's ebp (used to restore esp when halt this process)
-    uint32_t parent_esp0;               // parent's esp0 (used to restore esp when halt this process)
-    uint32_t return_value;              // used to store the return value
-    uint8_t args[MAX_LENGTH_ARG];       // store the arguments from the terminal input
-    uint32_t sched_ebp;                 // used to store/restore ebp using in task switching
-    uint32_t sched_esp;                 // used to store/restore esp using in task switching
-    uint32_t sched_esp0;                // used to store/restore esp0 using in task switching
-    uint8_t tty;                        // the terminal number currently on the screen
-} pcb_t;
-
-
 
 
 
