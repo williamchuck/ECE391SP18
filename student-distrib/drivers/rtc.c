@@ -53,7 +53,7 @@ void changeFreq_RTC(uint32_t freq){
 	// the freq is not allowed to be higher than 1024
 	if(freq > MAX_FREQ)
 		return;
-	while((FREQ_FOR_RATE_CALC>>(rate-1)) != freq){
+	while((FREQ_RATE_CALC>>(rate-1)) != freq){
 		rate++;
 		// freq needs to be not larger than 2^15
 		if(rate > 15)
@@ -84,27 +84,24 @@ int32_t open_RTC(){
  * OUTPUTS: 0
  */
 int32_t read_RTC(){
-	/*interrupt_occured[get_tty()] = 1; 				// set to high (active low)
-	while (interrupt_occured[get_tty()] == 1){		// similar to a spin lock
-	}*/
 	// clear the flag (set interrupt occured to false)
 	interrupt_occured = 0;
 	// wait for another RTC interrupt
 	while(!interrupt_occured){
-		// pass
+		// do nothing
 	}
 	return 0;
 }
 
 /* write_RTC
  * DESCRIPTION: Change the frequency
- * INPUTS: fd: Not used for now
- *		   buf: A pointer
+ * INPUTS: buf: A pointer
  *		   nbyte: Should be 4 (NBYTE_DEFAULT_VAL), or will not do anything
  * OUTPUTS: 0 -- Success
-  			-1 -- Fail
+ *			-1 -- Fail
  */
-int32_t write_RTC(int32_t fd, const void* buf, int32_t nbytes){
+int32_t write_RTC(const void* buf, int32_t nbytes){
+	// check error conditions
 	if(buf == NULL || nbytes != NBYTE_DEFAULT_VAL)
 		return -1;
 	else{

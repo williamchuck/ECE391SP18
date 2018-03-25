@@ -122,8 +122,7 @@ int invalid_page_test(){
 /* RTC_test
  * DESCRIPTION: Test changing RTC rate
  * INPUT: None
- * OUTPUT: PASS as success
- 		   FAIL as failure
+ * OUTPUT: PASS as success (complete = success)
  */
 int RTC_test(){
 	TEST_HEADER;
@@ -135,6 +134,7 @@ int RTC_test(){
 	int freq = 2;
 	int* ptr = &freq;
 
+	// print rate char in different rates
 	for(i = 0; i < 10; i++){
 		for(j = 0; j < 20; j++){
 			output = ('0'+i);
@@ -142,7 +142,7 @@ int RTC_test(){
 			read_RTC();
 		}
 		freq <<= 1;
-		write_RTC(0, (void*) ptr, 4);
+		write_RTC((void*) ptr, 4);
 		putc('\n');
 	}
 

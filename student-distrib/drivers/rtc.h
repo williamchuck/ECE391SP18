@@ -33,7 +33,7 @@ int rtc_enable_interrupt();
 
 // Constants for frequency calculation
 #define MAX_FREQ			1024
-#define FREQ_FOR_RATE_CALC	32768
+#define FREQ_RATE_CALC		32768
 
 
 /* open_RTC
@@ -59,13 +59,12 @@ int32_t read_RTC();
 
 /* write_RTC
  * DESCRIPTION: Change the frequency
- * INPUTS: fd: Not used for now
- *		   buf: A pointer
+ * INPUTS: buf: A pointer
  *		   nbyte: Should be 4 (NBYTE_DEFAULT_VAL), or will not do anything
  * OUTPUTS: 0 -- Success;
   			-1 -- Fail
  */
-int32_t write_RTC(int32_t fd, const void* buf, int32_t nbytes);
+int32_t write_RTC(const void* buf, int32_t nbytes);
 
 /* close_RTC
  * DESCRIPTION: Set the RTC frequency back to default value 2
