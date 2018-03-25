@@ -176,6 +176,7 @@ int test_dir_file(){
 
 	int i, j;
 	int8_t buf[32];
+	uint32_t size[17];
 	dentry_t dentry;
 
 	if(dir_open(".") != 0)
@@ -188,15 +189,21 @@ int test_dir_file(){
 		return FAIL;
 
 	for(j = 0; j < 17; j++){
+		dentry_t temp;
+		read_dentry_by_index(j, &temp);
+		size[j] = get_size((int8_t*)temp.file_name);
+	}
+
+	for(j = 0; j < 17; j++){
 		if(dir_read(fd, (int8_t*)buf, 32) != 32)
 			return FAIL;
 
 		read_dentry_by_index(j, &dentry);
-		printf(" Name: ");
+		printf("Name: ");
 		for(i = 0; i < 32; i++)
 			printf("%c", buf[i]);
 
-		printf(" Type: %d\n", dentry.file_type);
+		printf(" Type: %d Size: %d\n", dentry.file_type, size[j]);
 	}
 
 	if(dir_read(fd, (uint8_t*)buf, 32) != 0)
@@ -255,8 +262,8 @@ int test_non_text_data_file(const int8_t* fname){
 void launch_tests(){
 	//TEST_OUTPUT("idt_test", idt_test());
 	//TEST_OUTPUT("valid_page_test", valid_page_test());
-	TEST_OUTPUT("Data File Test", test_data_file("frame0.txt"));
-	//TEST_OUTPUT("Directory File Test", test_dir_file());
+	//TEST_OUTPUT("Data File Test", test_data_file("frame0.txt"));
+	TEST_OUTPUT("Directory File Test", test_dir_file());
 	//TEST_OUTPUT("None Text File Test", test_non_text_data_file("hello"));
 #if DIV_0_TEST
 	TEST_OUTPUT("div_by_0_test", div_by_0_test());
