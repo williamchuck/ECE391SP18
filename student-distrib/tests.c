@@ -136,7 +136,7 @@ int RTC_test(){
 
 	// print rate char in different rates
 	for(i = 0; i < 10; i++){
-		for(j = 0; j < 20; j++){
+		for(j = 0; j < 40; j++){
 			output = ('0'+i);
 			putc(output);
 			read_RTC();
@@ -147,10 +147,7 @@ int RTC_test(){
 	}
 
 	close_RTC();
-	for(i = 0; i < 20; i++){
-		putc(output);
-		read_RTC();
-	}
+
 	puts("\nRTC TEST COMPLETE\n");
 	return PASS;
 
