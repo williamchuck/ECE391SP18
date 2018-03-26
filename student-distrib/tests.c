@@ -376,6 +376,50 @@ int RTC_test(){
 
 }
 
+/* long_printf_test
+ * test terminal printing and scrolling functionality
+ */
+int long_printf_test(){
+    TEST_HEADER;
+    #define PAUSE for(count=0;count<4;count++)while(rtc_read(0,0,0))
+    uint32_t freq=2;
+    int count=0;
+    rtc_open(0);
+    rtc_write(0,&freq,sizeof(uint32_t));
+
+    printf("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPRSTUVWXYZ1234567890`~!@#$%^&*()-=_+[]\\|;:'\",./<>?the quick brown fox jumps over the lazy dog\n");
+    //scrolling test
+    printf("the quick brown fox jumps over the lazy dog 1234567890-= the quick brown fox jumps over the lazy dog 1234567890-= the quick brown fox jumps over the lazy dog 1234567890-= the quick brown fox jumps over the lazy dog 1234567890-= the quick brown fox jumps over the lazy dog 1234567890-= the quick brown fox jumps over the lazy dog 1234567890-= the quick brown fox jumps over the lazy dog 1234567890-= the quick brown fox jumps over the lazy dog 1234567890-= the quick brown fox jumps over the lazy dog 1234567890-= the quick brown fox jumps over the lazy dog 1234567890-= the quick brown fox jumps over the lazy dog 1234567890-= the quick brown fox jumps over the lazy dog 1234567890-= the quick brown fox jumps over the lazy dog 1234567890-= the quick brown fox jumps over the lazy dog 1234567890-= the quick brown fox jumps over the lazy dog 1234567890-= the quick brown fox jumps over the lazy dog 1234567890-= the quick brown fox jumps over the lazy dog 1234567890-= the quick brown fox jumps over the lazy dog 1234567890-= the quick brown fox jumps over the lazy dog 1234567890-= the quick brown fox jumps over the lazy dog 1234567890-= the quick brown fox jumps over the lazy dog 1234567890-= the quick brown fox jumps over the lazy dog 1234567890-= the quick brown fox jumps over the lazy dog 1234567890-= the quick brown fox jumps over the lazy dog 1234567890-= the quick brown fox jumps over the lazy dog 1234567890-= the quick brown fox jumps over the lazy dog 1234567890-= the quick brown fox jumps over the lazy dog 1234567890-= the quick brown fox jumps over the lazy dog 1234567890-= the quick brown fox jumps over the lazy dog 1234567890-= the quick brown fox jumps over the lazy dog 1234567890-= the quick brown fox jumps over the lazy dog 1234567890-= the quick brown fox jumps over the lazy dog 1234567890-= the quick brown fox jumps over the lazy dog 1234567890-= the quick brown fox jumps over the lazy dog 1234567890-= the quick brown fox jumps over the lazy dog 1234567890-= the quick brown fox jumps over the lazy dog 1234567890-= the quick brown fox jumps over the lazy dog 1234567890-= the quick brown fox jumps over the lazy dog 1234567890-= the quick brown fox jumps over the lazy dog 1234567890-= ");
+    PAUSE;
+
+    printf("\ntesting puts, check if cursor moves with print. \nWill pause for 2 seconds for each line");
+
+
+
+    puts("\n1the quick brown fox jumps over the lazy dog 1234567890-=");
+    PAUSE;
+    puts("\n2the quick brown fox jumps over the lazy dog 1234567890-=");
+    PAUSE;
+    puts("\n3the quick brown fox jumps over the lazy dog 1234567890-=");
+    PAUSE;
+    puts("\n4the quick brown fox jumps over the lazy dog 1234567890-=");
+    PAUSE;
+    rtc_close(0);
+    putc('\n');
+
+    printf("non printable char\n");
+    int c=0;
+    for(c=0;c<' ';c++){
+        putc(c);
+    }
+    printf("\nextended ascii\n");
+    for(c=0x80;c<0xFF;c++){
+        putc(c);
+    }
+    putc(c);
+    putc('\n');
+    return PASS;
+}
 /* Checkpoint 3 tests */
 /* Checkpoint 4 tests */
 /* Checkpoint 5 tests */
@@ -395,8 +439,16 @@ void launch_tests(){
 #endif
 
     //cp2 tests
-    TEST_OUTPUT("Data File Test", test_text_data_file("frame0.txt"));
+    /* text file tests */
+    //TEST_OUTPUT("Data File Test", test_text_data_file("frame0.txt"));
+    //TEST_OUTPUT("Data File Test", test_text_data_file("frame1.txt"));
+    //TEST_OUTPUT("Data File Test", test_text_data_file("created.txt"));
+    //TEST_OUTPUT("Data File Test", test_text_data_file("verylargetextwithverylongname.txt"));
+    /* other file tests */
     //TEST_OUTPUT("Directory File Test", test_dir_file());
     //TEST_OUTPUT("Non Text File Test", test_non_text_data_file("hello"));
-    TEST_OUTPUT("RTC_test", RTC_test());
+    /* other tests */
+    TEST_OUTPUT("Long printf test (terminal driver)", long_printf_test());
+    //TEST_OUTPUT("RTC_test", RTC_test());
+
 }
