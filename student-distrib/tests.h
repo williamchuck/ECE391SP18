@@ -1,7 +1,6 @@
 #ifndef TESTS_H
 #define TESTS_H
 #include "fs/fs.h"
-#include "drivers/stdout.h"
 
 /* Run tests for paging and IDT table */
 #define RUN_TESTS 1

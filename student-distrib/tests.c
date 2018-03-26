@@ -4,6 +4,10 @@
 
 #define PASS 1
 #define FAIL 0
+#define FILE_NAME_LENGTH 32
+#define FILE_COUNT 17
+#define FILE_HEAD_LENGTH 24
+#define FILE_END_LENGTH 50
 
 /* format these macros as you see fit */
 #define TEST_HEADER 	\
@@ -17,8 +21,11 @@ static inline void assertion_failure(){
 	asm volatile("int $15");
 }
 
+/* Temprary file descriptor array */
 file_desc_t file_desc[8];
+/* Temporary file descriptor */
 int fd;
+
 /* Checkpoint 1 tests */
 
 /* IDT Test - Example
@@ -119,9 +126,214 @@ int invalid_page_test(){
 	return FAIL;
 }
 
-
 /* Checkpoint 2 tests */
 
+/*
+ * test_text_data_file:
+ * Description: Test on reading a text file
+ * Input: File name of a text file
+ * Ouput: Result of the test
+ * Effect: Print out contents of the text file
+ */
+int test_text_data_file(const int8_t* fname){
+	TEST_HEADER;
+
+	/* Initialize variables */
+	int i;
+	uint32_t size;
+
+	/* Get size for text file */
+	size = get_size(fname);
+	uint8_t buf[size];
+
+
+	/* Assume size is larger than 10 */
+	if(size < 10)
+		return FAIL;
+
+	/* Open text file */
+	if(data_open(fname) != 0)
+		return FAIL;
+
+	/* Sanity check */
+	if(fd < 0 || fd > 7)
+		return FAIL;
+
+	/* Read first 10 bytes */
+	if(data_read(fd, (uint8_t*)buf, 10) != 10)
+		return FAIL;
+
+	/* Write function should be disabled */
+	if(data_write(fd, (uint8_t*)buf, 10) != -1)
+		return FAIL;
+
+	/* Print out first 10 bytes */
+	for(i = 0; i < 10; i++)
+		printf("%c", buf[i]);
+
+	/* Read the rest of text file */
+	if(data_read(fd, (uint8_t*)buf, size - 10) != (size - 10))
+		return FAIL;
+
+	/* Print out rest of text file */
+	for(i = 0; i < (size - 10); i++)
+		printf("%c", buf[i]);
+
+	/* Anymore read should return 0 for EOF */
+	if(data_read(fd, (uint8_t*)buf, 1) != 0)
+		return FAIL;
+
+	/* Print out file name for reference */
+	printf("\nFile Name: ");
+	for(i = 0; i < FILE_NAME_LENGTH; i++){
+		if(*(fname + i) == '\0')
+			break;
+		printf("%c", *(fname + i));
+	}
+	printf("\n");
+
+	/* Close the text file */
+	if(data_close(fd) != 0)
+		return FAIL;
+
+	return PASS;
+}
+
+/*
+ * test_dir_file:
+ * Description: Test on reading a directory
+ * Input: None
+ * Output: Test result
+ * Effect: Print out all files in the directory with info
+ */
+int test_dir_file(){
+	TEST_HEADER;
+
+	/* Initialize variables */
+	int i, j;
+	int8_t buf[FILE_NAME_LENGTH];
+	dentry_t dentry;
+
+	/* Open the . directory */
+	if(dir_open(".") != 0)
+		return FAIL;
+
+	/* Sanity check */
+	if(fd < 0 || fd > 7)
+		return FAIL;
+
+	/* Write function should be disabled */
+	if(dir_write(fd, (int8_t*)buf, FILE_NAME_LENGTH) != -1)
+		return FAIL;
+
+	
+	/* Print out file names and info for every file */
+	for(j = 0; j < FILE_COUNT; j++){
+		/* Read in file name */
+		if(dir_read(fd, (int8_t*)buf, FILE_NAME_LENGTH) != FILE_NAME_LENGTH)
+			return FAIL;
+
+		/* Fill in dentry for info */
+		read_dentry_by_index(j, &dentry);
+		
+		/* Print out file name and info */
+		printf("Name: ");
+		for(i = 0; i < FILE_NAME_LENGTH; i++)
+			printf("%c", buf[i]);
+
+		printf(" Type: %d Size: %d\n", dentry.file_type, get_size((int8_t*)buf));
+	}
+
+	/* Anymore read should return 0 for no more file to read */
+	if(dir_read(fd, (uint8_t*)buf, FILE_NAME_LENGTH) != 0)
+		return FAIL;
+
+	/* Close the directory */
+	if(data_close(fd) != 0)
+		return FAIL;
+
+	return PASS;
+
+}
+
+/*
+ * test_non_text_data_file:
+ * Description: Test on binary files
+ * Input: File name of a binary file
+ * Output: Test result
+ * Effect: Print out the first 24B and last 50B and file name
+ */
+int test_binary_data_file(const int8_t* fname){
+	TEST_HEADER;
+
+	/* Initialize variables */
+	int i;
+	uint32_t size;
+	int8_t start[FILE_HEAD_LENGTH];
+	int8_t end[FILE_END_LENGTH];	
+
+	/* Get size for the binary file */
+	size = get_size(fname);
+	int8_t buf[size];
+
+
+	/* Assume size is larger than 74B */
+	if(size < (FILE_HEAD_LENGTH + FILE_END_LENGTH))
+		return FAIL;
+
+	/* Open the binary file */
+	if(data_open(fname) != 0)
+		return FAIL;
+
+	/* Sanity check */
+	if(fd < 0 || fd > 7)
+		return FAIL;
+
+	/* Read in first 24B for print */
+	if(data_read(fd, (int8_t*)start, FILE_HEAD_LENGTH) != FILE_HEAD_LENGTH)
+		return FAIL;
+
+	/* Read in middle of the file */
+	if(data_read(fd, (int8_t*)buf, (size - FILE_HEAD_LENGTH - FILE_END_LENGTH)) != (size - FILE_HEAD_LENGTH - FILE_END_LENGTH))
+		return FAIL;
+
+	/* Write should be disabled */
+	if(data_write(fd, (int8_t*)buf, (size - FILE_HEAD_LENGTH - FILE_END_LENGTH)) != -1)
+		return FAIL;
+
+	/* Read in the last 50B for print */
+	if(data_read(fd, (int8_t*)end, FILE_END_LENGTH) != FILE_END_LENGTH)
+		return FAIL;
+
+	/* Anymore read should return 0 for EOF */
+	if(data_read(fd, (int8_t*)buf, 1) != 0)
+		return FAIL;
+
+	/* Print out file name for reference */
+	printf("Name: ");
+	for(i = 0; i < FILE_NAME_LENGTH; i++){
+		if(*(fname + i) == '\0')
+			break;
+		printf("%c", *(fname + i));
+	}
+	
+	/* Print out first 24B for check */
+	printf("\nStart: ");
+	for(i = 0; i < FILE_HEAD_LENGTH; i++)
+		printf("0x%x ", start[i]);
+	
+	/* Print out last 50B for check */
+	printf("\nEnd: ");
+	for(i = 0; i < FILE_END_LENGTH; i++)
+		printf("0x%x ", end[i]);
+	printf("\n");
+
+	/* Close the binary file */
+	if(data_close(fd) != 0)
+		return FAIL;
+
+	return PASS;
+}
 /* RTC_test
  * DESCRIPTION: Test changing RTC rate
  * INPUT: None
@@ -164,132 +376,6 @@ int RTC_test(){
 
 }
 
-int test_data_file(const int8_t* fname){
-	TEST_HEADER;
-
-	int i;
-	uint32_t size;
-
-	size = get_size(fname);
-
-	if(size < 10)
-		return FAIL;
-	
-	uint8_t buf[size];
-
-	if(data_open(fname) != 0)
-		return FAIL;
-
-	if(fd < 0 || fd > 7)
-		return FAIL;
-
-	if(data_read(fd, (uint8_t*)buf, 10) != 10)
-		return FAIL;
-
-	if(data_write(fd, (uint8_t*)buf, 10) != -1)
-		return FAIL;
-
-	for(i = 0; i < 10; i++)
-		printf("%c", buf[i]);
-
-	if(data_read(fd, (uint8_t*)buf, size - 10) != (size - 10))
-		return FAIL;
-
-	for(i = 0; i < (size - 10); i++)
-		printf("%c", buf[i]);
-
-	if(data_read(fd, (uint8_t*)buf, 1) != 0)
-		return FAIL;
-
-	printf("\nFile Name: ");
-	for(i = 0; i < 32; i++){
-		if(*(fname + i) == '\0')
-			break;
-		printf("%c", *(fname + i));
-	}
-	printf("\n");
-
-	if(data_close(fd) != 0)
-		return FAIL;
-
-	return PASS;
-}
-
-int test_dir_file(){
-	TEST_HEADER;
-
-	int i, j;
-	int8_t buf[32];
-	dentry_t dentry;
-
-	if(dir_open(".") != 0)
-		return FAIL;
-
-	if(fd < 0 || fd > 7)
-		return FAIL;
-
-	if(dir_write(fd, (int8_t*)buf, 32) != -1)
-		return FAIL;
-
-	for(j = 0; j < 17; j++){
-		if(dir_read(fd, (int8_t*)buf, 32) != 32)
-			return FAIL;
-
-		read_dentry_by_index(j, &dentry);
-		printf(" Name: ");
-		for(i = 0; i < 32; i++)
-			printf("%c", buf[i]);
-
-		printf(" Type: %d\n", dentry.file_type);
-	}
-
-	if(dir_read(fd, (uint8_t*)buf, 32) != 0)
-		return FAIL;
-
-	if(data_close(fd) != 0)
-		return FAIL;
-
-	return PASS;
-
-}
-
-int test_non_text_data_file(const int8_t* fname){
-	TEST_HEADER;
-
-	int i;
-	uint32_t size;
-
-	size = get_size(fname);
-
-	if(size < 50)
-		return FAIL;
-
-	uint8_t buf[size];
-
-	if(data_open(fname) != 0)
-		return FAIL;
-
-	if(fd < 0 || fd > 7)
-		return FAIL;
-
-	if(data_read(fd, (uint8_t*)buf, (size - 50)) != (size - 50))
-		return FAIL;
-
-	if(data_write(fd, (uint8_t*)buf, (size - 50)) != -1)
-		return FAIL;
-
-	if(data_read(fd, (uint8_t*)buf, 50) != 50)
-		return FAIL;
-
-	for(i = 0; i < 50; i++)
-		printf("0x%x ", buf[i]);
-	printf("\n");
-
-	if(data_close(fd) != 0)
-		return FAIL;
-
-	return PASS;	
-}
 /* Checkpoint 3 tests */
 /* Checkpoint 4 tests */
 /* Checkpoint 5 tests */
@@ -298,8 +384,8 @@ int test_non_text_data_file(const int8_t* fname){
 /* Test suite entry point */
 void launch_tests(){
     //cp1 tests
-	//TEST_OUTPUT("idt_test", idt_test());
-	//TEST_OUTPUT("valid_page_test", valid_page_test());
+    //TEST_OUTPUT("idt_test", idt_test());
+    //TEST_OUTPUT("valid_page_test", valid_page_test());
     //cp1 crashing tests
 #if DIV_0_TEST
     TEST_OUTPUT("div_by_0_test", div_by_0_test());
@@ -309,9 +395,8 @@ void launch_tests(){
 #endif
 
     //cp2 tests
-	TEST_OUTPUT("Data File Test", test_data_file("verylargetextwithverylongname.txt"));
-	//TEST_OUTPUT("Directory File Test", test_dir_file());
-	//TEST_OUTPUT("Non Text File Test", test_non_text_data_file("hello"));
-	TEST_OUTPUT("RTC_test", RTC_test());
-
+    TEST_OUTPUT("Data File Test", test_text_data_file("frame0.txt"));
+    //TEST_OUTPUT("Directory File Test", test_dir_file());
+    //TEST_OUTPUT("Non Text File Test", test_non_text_data_file("hello"));
+    TEST_OUTPUT("RTC_test", RTC_test());
 }
