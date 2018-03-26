@@ -258,6 +258,9 @@ void putc(uint8_t c) {
 		if (screen_y == (NUM_ROWS - 1))
 		{
 			scroll_down();
+
+			/* Update cursor */
+			cursor_update();
 			return;
 		}
 		/* Else, increment cursor y coord. */
