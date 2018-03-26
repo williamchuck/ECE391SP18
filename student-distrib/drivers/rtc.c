@@ -19,7 +19,7 @@
 //Definitions for RTC register settings
 #define RTC_OSC_ON        0x20  //set DV2:0 to 010 to turn on oscillator
 #define RTC_RS_CLEAR_MASK 0xF0  //mask to clear rate selector
-#define RTC_PIE           0x04  //rtc periodic interrupt enable bit
+#define RTC_PIE           0x40  //rtc periodic interrupt enable bit
 
 // Constants for frequency calculation
 #define MAX_FREQ            1024
@@ -33,7 +33,7 @@ volatile int interrupt_occured = 0;
 extern void test_interrupts(void);
 
 //change frequency helper
-void rtc_changeFreq(uint32_t freq);
+int32_t rtc_changeFreq(uint32_t freq);
 
 
 /*  rtc_isr
@@ -125,6 +125,7 @@ int32_t rtc_read(int32_t fd, void* buf, int32_t nbytes){
 	// clear the flag (set interrupt occured to false)
 	interrupt_occured = 0;
 	restore_flags(flags);
+
 	// wait for another RTC interrupt
 	while(!interrupt_occured){
 		// do nothing

@@ -147,7 +147,7 @@ int RTC_test(){
         putc('\n');
     }
 
-    rtc_close();
+    rtc_close(0);
 
     puts("\nRTC TEST COMPLETE\n");
     return PASS;
