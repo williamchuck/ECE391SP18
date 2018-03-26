@@ -265,6 +265,9 @@ void putc(uint8_t c) {
 		{
 			screen_y++;
 			screen_x = 0;
+
+			/* Update cursor */
+			cursor_update();
 			return;
 		}
 	}
@@ -285,6 +288,9 @@ void putc(uint8_t c) {
 			screen_x++;
 			screen_x %= (NUM_COLS + 1);
 			screen_y = (screen_y + (screen_x / (NUM_COLS + 1))) % NUM_ROWS;
+
+			/* Update cursor */
+			cursor_update();
 			return;
 		}
 		/* Else, change line. */
@@ -303,6 +309,9 @@ void putc(uint8_t c) {
 			screen_x++;
 			screen_x %= (NUM_COLS + 1);
 			screen_y = (screen_y + (screen_x / (NUM_COLS + 1))) % NUM_ROWS;
+
+			/* Update cursor */
+			cursor_update();
 			return;
 		}
 	}
@@ -315,6 +324,9 @@ void putc(uint8_t c) {
 		screen_x++;
 		screen_x %= (NUM_COLS + 1);
 		screen_y = (screen_y + (screen_x / (NUM_COLS + 1))) % NUM_ROWS;
+
+		/* Update cursor */
+		cursor_update();
 		return;
 	}
 }

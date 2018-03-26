@@ -171,7 +171,6 @@ void int_ps2kbd_c() {
 		/* Echo the char out using keyboard buffer */
 		/* We use terminal buffer as keyboard buffer here. */
 		stdout_write(TERM_OUT_FD, &term_buf[term_buf_index - 1], 1);
-		cursor_update();
 	}
 	/* EOI is handled by general irq handler. Hence send_eoi is NOT needed */
 	//send_eoi(KBD_IRQ);
