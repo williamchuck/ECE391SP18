@@ -6,6 +6,8 @@
 #define _LIB_H
 
 #include "types.h"
+#include "i8259.h"
+#include "drivers/rtc.h"
 
 int32_t printf(int8_t *format, ...);
 void putc(uint8_t c);

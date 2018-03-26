@@ -13,6 +13,12 @@ static int screen_x;
 static int screen_y;
 static char* video_mem = (char *)VIDEO;
 
+/* self-defined variables */
+int RTC_STATUS = 0;       // for test use
+/* initial current pid */
+int32_t current_pid = 0;
+
+
 /* void clear(void);
  * Inputs: void
  * Return Value: none

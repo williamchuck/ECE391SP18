@@ -334,6 +334,48 @@ int test_binary_data_file(const int8_t* fname){
 
 	return PASS;
 }
+/* RTC_test
+ * DESCRIPTION: Test changing RTC rate
+ * INPUT: None
+ * OUTPUT: PASS as success (complete = success)
+ */
+int RTC_test(){
+    TEST_HEADER;
+    //initialize_RTC();
+    rtc_open(0);
+
+    int i, j;
+    char output;
+    int freq = 2;
+    int* ptr = &freq;
+
+    // print rate char in different rates
+    for(i = 0; i < 10; i++){
+        for(j = 0; j < 40; j++){
+            output = ('0'+i);
+            putc(output);
+            rtc_read(0,0,0);
+        }
+        freq <<= 1;
+        rtc_write(0, (void*) ptr, 4);
+        putc('\n');
+    }
+
+    //test invalid frequencies
+    freq <<=1;//more than 1024
+    if(!rtc_write(0, (void*) ptr, 4))return FAIL;
+    freq = 1;//less than 2
+    if(!rtc_write(0, (void*) ptr, 4))return FAIL;
+    freq = 3;//not power of 2
+    if(!rtc_write(0, (void*) ptr, 4))return FAIL;
+
+    rtc_close(0);
+
+    puts("\nRTC TEST COMPLETE\n");
+    return PASS;
+
+}
+
 /* Checkpoint 3 tests */
 /* Checkpoint 4 tests */
 /* Checkpoint 5 tests */
@@ -341,15 +383,20 @@ int test_binary_data_file(const int8_t* fname){
 
 /* Test suite entry point */
 void launch_tests(){
-	//TEST_OUTPUT("idt_test", idt_test());
-	//TEST_OUTPUT("valid_page_test", valid_page_test());
-	TEST_OUTPUT("Data File Test", test_text_data_file("frame0.txt"));
-	//TEST_OUTPUT("Directory File Test", test_dir_file());
-	//TEST_OUTPUT("None Text File Test", test_binary_data_file("hello"));
+    //cp1 tests
+    //TEST_OUTPUT("idt_test", idt_test());
+    //TEST_OUTPUT("valid_page_test", valid_page_test());
+    //cp1 crashing tests
 #if DIV_0_TEST
-	TEST_OUTPUT("div_by_0_test", div_by_0_test());
+    TEST_OUTPUT("div_by_0_test", div_by_0_test());
 #endif
 #if INVALID_ADDR_TEST
-	TEST_OUTPUT("invalid_page_test", invalid_page_test());
+    TEST_OUTPUT("invalid_page_test", invalid_page_test());
 #endif
+
+    //cp2 tests
+    TEST_OUTPUT("Data File Test", test_text_data_file("frame0.txt"));
+    //TEST_OUTPUT("Directory File Test", test_dir_file());
+    //TEST_OUTPUT("Non Text File Test", test_non_text_data_file("hello"));
+    TEST_OUTPUT("RTC_test", RTC_test());
 }
