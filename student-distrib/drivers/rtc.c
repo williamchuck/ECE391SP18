@@ -80,8 +80,8 @@ int32_t rtc_changeFreq(uint32_t freq){
 	// check power of 2
 	if( (freq & (freq-1)) != 0)
 		return -1;
-	// the freq is not allowed to be higher than 1024
-	if(freq > MAX_FREQ)
+	// the freq is not allowed to be higher than 1024 or lower than 2
+	if(freq < RTC_DEF_FREQ || freq > MAX_FREQ)
 		return -1;
 	while((FREQ_RATE_CALC>>(rate-1)) != freq){
 		rate++;
@@ -92,6 +92,7 @@ int32_t rtc_changeFreq(uint32_t freq){
 	uint8_t regA = 0x00;
 	outb(RTC_DIS_NMI | RTC_REG_A, RTC_ADDR_PORT);   //select register A
 	regA = inb(RTC_DATA_PORT);                      //read current value
+
 	regA = regA & RTC_RS_CLEAR_MASK;	//clear rate selector bits
 	regA = regA | rate;                 //set new rate
 	outb(RTC_DIS_NMI | RTC_REG_A, RTC_ADDR_PORT);   //select register A
@@ -136,7 +137,7 @@ int32_t rtc_read(int32_t fd, void* buf, int32_t nbytes){
 /* rtc_write
  * DESCRIPTION: Change the frequency
  * INPUTS: buf: A pointer
- *		   nbyte: Should be 4 (NBYTE_DEFAULT_VAL), or will not do anything
+ *		   nbytes: Should be 4 (buf is a uint32_t pointer), or will not do anything
  * OUTPUTS: 0 -- Success
  *			-1 -- Fail
  */

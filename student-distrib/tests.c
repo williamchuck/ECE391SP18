@@ -119,7 +119,9 @@ int invalid_page_test(){
 	return FAIL;
 }
 
+
 /* Checkpoint 2 tests */
+
 /* RTC_test
  * DESCRIPTION: Test changing RTC rate
  * INPUT: None
@@ -146,6 +148,14 @@ int RTC_test(){
         rtc_write(0, (void*) ptr, 4);
         putc('\n');
     }
+
+    //test invalid frequencies
+    freq <<=1;//more than 1024
+    if(!rtc_write(0, (void*) ptr, 4))return FAIL;
+    freq = 1;//less than 2
+    if(!rtc_write(0, (void*) ptr, 4))return FAIL;
+    freq = 3;//not power of 2
+    if(!rtc_write(0, (void*) ptr, 4))return FAIL;
 
     rtc_close(0);
 
@@ -287,16 +297,21 @@ int test_non_text_data_file(const int8_t* fname){
 
 /* Test suite entry point */
 void launch_tests(){
+    //cp1 tests
 	//TEST_OUTPUT("idt_test", idt_test());
 	//TEST_OUTPUT("valid_page_test", valid_page_test());
-	TEST_OUTPUT("Data File Test", test_data_file("frame0.txt"));
-	//TEST_OUTPUT("Directory File Test", test_dir_file());
-	//TEST_OUTPUT("None Text File Test", test_non_text_data_file("hello"));
-	TEST_OUTPUT("RTC_test", RTC_test());
+    //cp1 crashing tests
 #if DIV_0_TEST
-	TEST_OUTPUT("div_by_0_test", div_by_0_test());
+    TEST_OUTPUT("div_by_0_test", div_by_0_test());
 #endif
 #if INVALID_ADDR_TEST
-	TEST_OUTPUT("invalid_page_test", invalid_page_test());
+    TEST_OUTPUT("invalid_page_test", invalid_page_test());
 #endif
+
+    //cp2 tests
+	TEST_OUTPUT("Data File Test", test_data_file("verylargetextwithverylongname.txt"));
+	//TEST_OUTPUT("Directory File Test", test_dir_file());
+	//TEST_OUTPUT("Non Text File Test", test_non_text_data_file("hello"));
+	TEST_OUTPUT("RTC_test", RTC_test());
+
 }
