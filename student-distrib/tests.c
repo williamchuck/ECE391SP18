@@ -24,6 +24,9 @@ static inline void assertion_failure(){
 /* Temprary file descriptor array */
 file_desc_t file_desc[8];
 
+static int RTC_test();
+static int test_dir_file();
+
 /* Checkpoint 1 tests */
 
 /* IDT Test - Example
@@ -127,13 +130,13 @@ int invalid_page_test(){
 /* Checkpoint 2 tests */
 
 /*
- * test_data_file:
+ * test_file_by_name:
  * Description: Test on reading a text file
  * Input: File name of a text file
  * Ouput: Result of the test
  * Effect: Print out contents of the text file
  */
-int test_data_file(const int8_t* fname){
+int test_file_by_name(const int8_t* fname){
 	TEST_HEADER;
 
 	/* Initialize variables */
@@ -141,12 +144,19 @@ int test_data_file(const int8_t* fname){
 	uint32_t size;
 	dentry_t dentry;
 
+	/* Fill dentry for info */
+	if(read_dentry_by_name(fname, &dentry) == -1)
+		return FAIL;
+
+	/* Call corresponding test for non data file */
+	if(dentry.file_type == 0)
+		return RTC_test();
+	else if(dentry.file_type == 1)
+		return test_dir_file();
+
 	/* Get size for text file */
 	size = get_size(fname);
 	int8_t buf[size];
-
-	/* Fill dentry for info */
-	read_dentry_by_name(fname, &dentry);
 
 	/* Assume size is larger than 10 */
 	if(size < 10)
@@ -213,6 +223,99 @@ int test_data_file(const int8_t* fname){
 	return PASS;
 }
 
+/*
+ * test_file_by_index:
+ * Description: Test on reading a text file
+ * Input: Index into the boot block
+ * Ouput: Result of the test
+ * Effect: Print out contents of the text file
+ */
+int test_file_by_index(uint32_t index){
+	TEST_HEADER;
+
+	/* Initialize variables */
+	int i, fd;
+	uint32_t size;
+	dentry_t dentry;
+
+	/* Fill dentry for info */
+	if(read_dentry_by_index(index, &dentry) == -1)
+		return FAIL;
+
+	/* Call corresponding test for non data file */
+	if(dentry.file_type == 0)
+		return RTC_test();
+	else if(dentry.file_type == 1)
+		return test_dir_file();
+
+	/* Get size for text file */
+	size = get_size((int8_t*)dentry.file_name);
+	int8_t buf[size];
+
+	/* Assume size is larger than 10 */
+	if(size < 10)
+		return FAIL;
+
+	/* Open text file */
+	if(data_open((int8_t*)dentry.file_name) != 0)
+		return FAIL;
+
+	/* Reserve file descriptor 0 and 1 for stdin and stdout, search for free entry */
+	for(i = 2; i < 8; i++){
+		/* If free, then fill in file_desc_t */
+		if(file_desc[i].flag == 0){
+			file_desc[i].inode = dentry.inode;
+			file_desc[i].f_pos = 0;
+			file_desc[i].flag = 1;
+			/* Change fd */
+			fd = i;
+			break;
+		}
+	}
+
+	/* Sanity check */
+	if(fd < 0 || fd > 7)
+		return FAIL;
+
+	/* Read first 10 bytes */
+	if(data_read(fd, (int8_t*)buf, 10) != 10)
+		return FAIL;
+
+	/* Write function should be disabled */
+	if(data_write(fd, (int8_t*)buf, 10) != -1)
+		return FAIL;
+
+	/* Print out first 10 bytes */
+	for(i = 0; i < 10; i++)
+		putc(buf[i]);
+
+	/* Read the rest of text file */
+	if(data_read(fd, (int8_t*)buf, size - 10) != (size - 10))
+		return FAIL;
+
+	/* Print out rest of text file */
+	for(i = 0; i < (size - 10); i++)
+		putc(buf[i]);
+
+	/* Anymore read should return 0 for EOF */
+	if(data_read(fd, (int8_t*)buf, 1) != 0)
+		return FAIL;
+
+	/* Print out file name for reference */
+	printf("\nFile Name: ");
+	for(i = 0; i < FILE_NAME_LENGTH; i++){
+		if(dentry.file_name[i] == '\0')
+			break;
+		printf("%c", dentry.file_name[i]);
+	}
+	printf("\n");
+
+	/* Close the text file */
+	if(data_close(fd) != 0)
+		return FAIL;
+
+	return PASS;
+}
 /*
  * test_dir_file:
  * Description: Test on reading a directory
@@ -485,17 +588,29 @@ void launch_tests(){
 #endif
 
     //cp2 tests
-    /* text file tests */
-    //TEST_OUTPUT("Data File Test", test_data_file("hello"));
-    //TEST_OUTPUT("Data File Test", test_data_file("frame0.txt"));
-    //TEST_OUTPUT("Data File Test", test_data_file("frame1.txt"));
-    //TEST_OUTPUT("Data File Test", test_data_file("created.txt"));
-    //TEST_OUTPUT("Data File Test", test_data_file("verylargetextwithverylongname.txt"));
+    /* test file by name */
+    //TEST_OUTPUT("Data File Test", test_file_by_name("."));
+    //TEST_OUTPUT("Data File Test", test_file_by_name("rtc"));
+    //TEST_OUTPUT("Data File Test", test_file_by_name("hello"));
+    //TEST_OUTPUT("Data File Test", test_file_by_name("frame0.txt"));
+    //TEST_OUTPUT("Data File Test", test_file_by_name("frame1.txt"));
+    //TEST_OUTPUT("Data File Test", test_file_by_name("created.txt"));
+    //TEST_OUTPUT("Data File Test", test_file_by_name("verylargetextwithverylongname.txt"));
+    
+    /* test file by index */
+    //TEST_OUTPUT("Data File Test", test_file_by_index(0));
+    //TEST_OUTPUT("Data File Test", test_file_by_index(1));
+    //TEST_OUTPUT("Data File Test", test_file_by_index(2));
+    //TEST_OUTPUT("Data File Test", test_file_by_index(3));
+    //TEST_OUTPUT("Data File Test", test_file_by_index(5));
+    //TEST_OUTPUT("Data File Test", test_file_by_index(10));
+    //TEST_OUTPUT("Data File Test", test_file_by_index(11));
+
     /* other file tests */
     //TEST_OUTPUT("Directory File Test", test_dir_file());
     //TEST_OUTPUT("Non Text File Test", test_head_tail_data_file("hello"));
+
     /* other tests */
     TEST_OUTPUT("Long printf test (terminal driver)", long_printf_test());
     //TEST_OUTPUT("RTC_test", RTC_test());
-
 }
