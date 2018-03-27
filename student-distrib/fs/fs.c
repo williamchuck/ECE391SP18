@@ -16,19 +16,19 @@ static uint32_t data_block_count;
 static uint32_t* fs_addr;
 
 /* Two jump tables for future usage */
-static file_op_t data_file_op = {
-	.open = data_open,
-	.read = data_read,
-	.write = data_write,
-	.close = data_close
-};
+//static file_op_t data_file_op = {
+//	.open = data_open,
+//	.read = data_read,
+//	.write = data_write,
+//	.close = data_close
+//};
 
-static file_op_t dir_file_op = {
-	.open = dir_open,
-	.read = dir_read,
-	.write = dir_write,
-	.close = dir_close
-};
+//static file_op_t dir_file_op = {
+//	.open = dir_open,
+//	.read = dir_read,
+//	.write = dir_write,
+//	.close = dir_close
+//};
 
 /*
  * init_fs:
@@ -192,7 +192,7 @@ int32_t read_data(uint32_t inode, uint32_t offset, uint8_t* buf, uint32_t length
 	uint32_t* inode_addr;
 	uint32_t* db_addr;
 	uint8_t* data_addr;
-	int i;
+	int i, j;
 
 	/* Point inode_addr to start of inode */
 	inode_addr = fs_addr + INT_PER_BLOCK * (inode + 1);
@@ -220,21 +220,34 @@ int32_t read_data(uint32_t inode, uint32_t offset, uint8_t* buf, uint32_t length
 	data_block_number = *(inode_addr + (offset/BLOCK_SIZE));
 	/* Set bytes left to read in current data block */
 	byte_left = file_size - BLOCK_SIZE * (offset/BLOCK_SIZE);
-
 	/* Point data_addr to where we start to read */
 	data_addr = (uint8_t*)((uint8_t*)db_addr + BLOCK_SIZE * data_block_number + (offset % BLOCK_SIZE));
 
 	/* Read in data to buffer */
-	for(i = 0; i < length; i++){
+	for(i = 0, j = 0; i < length; i++, j++){
 		/* If no more byte to read, return number of bytes read */
-		if(((offset % BLOCK_SIZE) + i) > (byte_left - 1))
+		if(((offset % BLOCK_SIZE) + j) > (byte_left - 1))
 			return i;
+
+		/* If need to switch data block */
+		if(((offset % BLOCK_SIZE) + j) > (BLOCK_SIZE - 1)){
+			/* Update offset */
+			offset = offset + i;
+			/* Reset position in data block to 0 */
+			j = 0;
+			/* Reset data_block_number */	
+			data_block_number = *(inode_addr + (offset/BLOCK_SIZE));
+			/* Reset bytes left to read in current data block */
+			byte_left = file_size - BLOCK_SIZE * (offset/BLOCK_SIZE);
+			/* Point data_addr to where we start to read */
+			data_addr = (uint8_t*)((uint8_t*)db_addr + BLOCK_SIZE * data_block_number + (offset % BLOCK_SIZE));
+		}
 		/* Copy value from file to buffer */
-		buf[i] = *(data_addr + i);
+		buf[i] = *(data_addr + j);
 	}
 
 	/* If read in fully complete, return number of bytes read */
-	return length;
+	return i;
 }
 
 /*
@@ -261,20 +274,20 @@ int32_t data_open(const int8_t* fname){
 		return -1;
 
 	/* Reserve 0 and 1 for stdin and stdout, search for a free entry */
-	for(i = 2; i < 8; i++){
+	//for(i = 2; i < 8; i++){
 		/* If free, then fill in file_desc_t */
-		if(file_desc[i].flag == 0){
-			file_desc[i].f_op = &data_file_op;
-			file_desc[i].inode = dentry.inode;
-			file_desc[i].f_pos = 0;
-			file_desc[i].flag = 1;
+	//	if(file_desc[i].flag == 0){
+	//		file_desc[i].f_op = &data_file_op;
+	//		file_desc[i].inode = dentry.inode;
+	//		file_desc[i].f_pos = 0;
+	//		file_desc[i].flag = 1;
 			/* Change global fd */
-			fd = i;
-			return 0;
-		}
-	}
+	//		fd = i;
+	//		return 0;
+	//	}
+	//}
 	/* If file desc array is full, return -1 */
-	return -1;
+	return 0;
 }
 
 /*
@@ -344,7 +357,7 @@ int32_t data_close(int32_t fd){
  */
 int32_t dir_open(const int8_t* fname){
 	/* Initialize varaibles */
-	int i;
+	//int i;
 	dentry_t dentry;
 
 	/* Fill in dentry */
@@ -355,21 +368,21 @@ int32_t dir_open(const int8_t* fname){
 		return -1;
 
 	/* Reserve file descriptor 0 and 1 for stdin and stdout, search for free entry */
-	for(i = 2; i < 8; i++){
+	//for(i = 2; i < 8; i++){
 		/* If free, then fill in the file_desc_t */
-		if(file_desc[i].flag == 0){
-			file_desc[i].f_op = &dir_file_op;
-			file_desc[i].inode = 0;
-			file_desc[i].f_pos = 0;
-			file_desc[i].flag = 1;
+	//	if(file_desc[i].flag == 0){
+	///		file_desc[i].f_op = &dir_file_op;
+	//		file_desc[i].inode = 0;
+	//		file_desc[i].f_pos = 0;
+	//		file_desc[i].flag = 1;
 			/* Change global fd */
-			fd = i;
-			return 0;
-		}
-	}
+	//		fd = i;
+	//		return 0;
+	//	}
+	//}
 
 	/* If file_desc is full, return -1 */
-	return -1;
+	return 0;
 }
 
 /*

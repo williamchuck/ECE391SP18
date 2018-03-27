@@ -23,8 +23,6 @@ static inline void assertion_failure(){
 
 /* Temprary file descriptor array */
 file_desc_t file_desc[8];
-/* Temporary file descriptor */
-int fd;
 
 /* Checkpoint 1 tests */
 
@@ -129,23 +127,26 @@ int invalid_page_test(){
 /* Checkpoint 2 tests */
 
 /*
- * test_text_data_file:
+ * test_data_file:
  * Description: Test on reading a text file
  * Input: File name of a text file
  * Ouput: Result of the test
  * Effect: Print out contents of the text file
  */
-int test_text_data_file(const int8_t* fname){
+int test_data_file(const int8_t* fname){
 	TEST_HEADER;
 
 	/* Initialize variables */
-	int i;
+	int i, fd;
 	uint32_t size;
+	dentry_t dentry;
 
 	/* Get size for text file */
 	size = get_size(fname);
-	uint8_t buf[size];
+	int8_t buf[size];
 
+	/* Fill dentry for info */
+	read_dentry_by_name(fname, &dentry);
 
 	/* Assume size is larger than 10 */
 	if(size < 10)
@@ -155,32 +156,45 @@ int test_text_data_file(const int8_t* fname){
 	if(data_open(fname) != 0)
 		return FAIL;
 
+	/* Reserve file descriptor 0 and 1 for stdin and stdout, search for free entry */
+	for(i = 2; i < 8; i++){
+		/* If free, then fill in file_desc_t */
+		if(file_desc[i].flag == 0){
+			file_desc[i].inode = dentry.inode;
+			file_desc[i].f_pos = 0;
+			file_desc[i].flag = 1;
+			/* Change fd */
+			fd = i;
+			break;
+		}
+	}
+
 	/* Sanity check */
 	if(fd < 0 || fd > 7)
 		return FAIL;
 
 	/* Read first 10 bytes */
-	if(data_read(fd, (uint8_t*)buf, 10) != 10)
+	if(data_read(fd, (int8_t*)buf, 10) != 10)
 		return FAIL;
 
 	/* Write function should be disabled */
-	if(data_write(fd, (uint8_t*)buf, 10) != -1)
+	if(data_write(fd, (int8_t*)buf, 10) != -1)
 		return FAIL;
 
 	/* Print out first 10 bytes */
 	for(i = 0; i < 10; i++)
-		printf("%c", buf[i]);
+		putc(buf[i]);
 
 	/* Read the rest of text file */
-	if(data_read(fd, (uint8_t*)buf, size - 10) != (size - 10))
+	if(data_read(fd, (int8_t*)buf, size - 10) != (size - 10))
 		return FAIL;
 
 	/* Print out rest of text file */
 	for(i = 0; i < (size - 10); i++)
-		printf("%c", buf[i]);
+		putc(buf[i]);
 
 	/* Anymore read should return 0 for EOF */
-	if(data_read(fd, (uint8_t*)buf, 1) != 0)
+	if(data_read(fd, (int8_t*)buf, 1) != 0)
 		return FAIL;
 
 	/* Print out file name for reference */
@@ -210,13 +224,29 @@ int test_dir_file(){
 	TEST_HEADER;
 
 	/* Initialize variables */
-	int i, j;
+	int i, j, fd;
 	int8_t buf[FILE_NAME_LENGTH];
 	dentry_t dentry;
+
+	/* Fill dentry for info */
+	read_dentry_by_name(".", &dentry);
 
 	/* Open the . directory */
 	if(dir_open(".") != 0)
 		return FAIL;
+	
+	/* Reserve file descriptor 0 and 1 for stdin and stdout, search for free entry */
+	for(i = 2; i < 8; i++){
+		/* If free, then fill in file_desc_t */
+		if(file_desc[i].flag == 0){
+			file_desc[i].inode = dentry.inode;
+			file_desc[i].f_pos = 0;
+			file_desc[i].flag = 1;
+			/* Change fd */
+			fd = i;
+			break;
+		}
+	}
 
 	/* Sanity check */
 	if(fd < 0 || fd > 7)
@@ -257,25 +287,28 @@ int test_dir_file(){
 }
 
 /*
- * test_non_text_data_file:
+ * test_head_tail_data_file:
  * Description: Test on binary files
  * Input: File name of a binary file
  * Output: Test result
  * Effect: Print out the first 24B and last 50B and file name
  */
-int test_binary_data_file(const int8_t* fname){
+int test_head_tail_data_file(const int8_t* fname){
 	TEST_HEADER;
 
 	/* Initialize variables */
-	int i;
+	int i, fd;
 	uint32_t size;
 	int8_t start[FILE_HEAD_LENGTH];
-	int8_t end[FILE_END_LENGTH];	
+	int8_t end[FILE_END_LENGTH];
+	dentry_t dentry;	
 
 	/* Get size for the binary file */
 	size = get_size(fname);
 	int8_t buf[size];
 
+	/* Fill dentry for info */
+	read_dentry_by_name(fname, &dentry);
 
 	/* Assume size is larger than 74B */
 	if(size < (FILE_HEAD_LENGTH + FILE_END_LENGTH))
@@ -284,6 +317,19 @@ int test_binary_data_file(const int8_t* fname){
 	/* Open the binary file */
 	if(data_open(fname) != 0)
 		return FAIL;
+
+	/* Reserve file descriptor 0 and 1 for stdin and stdout, search for free entry */
+	for(i = 2; i < 8; i++){
+		/* If free, then fill in file_desc_t */
+		if(file_desc[i].flag == 0){
+			file_desc[i].inode = dentry.inode;
+			file_desc[i].f_pos = 0;
+			file_desc[i].flag = 1;
+			/* Change fd */
+			fd = i;
+			break;
+		}
+	}
 
 	/* Sanity check */
 	if(fd < 0 || fd > 7)
@@ -320,12 +366,12 @@ int test_binary_data_file(const int8_t* fname){
 	/* Print out first 24B for check */
 	printf("\nStart: ");
 	for(i = 0; i < FILE_HEAD_LENGTH; i++)
-		printf("0x%x ", start[i]);
+		putc(start[i]);
 	
 	/* Print out last 50B for check */
 	printf("\nEnd: ");
 	for(i = 0; i < FILE_END_LENGTH; i++)
-		printf("0x%x ", end[i]);
+		putc(end[i]);
 	printf("\n");
 
 	/* Close the binary file */
@@ -440,13 +486,14 @@ void launch_tests(){
 
     //cp2 tests
     /* text file tests */
-    //TEST_OUTPUT("Data File Test", test_text_data_file("frame0.txt"));
-    //TEST_OUTPUT("Data File Test", test_text_data_file("frame1.txt"));
-    //TEST_OUTPUT("Data File Test", test_text_data_file("created.txt"));
-    //TEST_OUTPUT("Data File Test", test_text_data_file("verylargetextwithverylongname.txt"));
+    //TEST_OUTPUT("Data File Test", test_data_file("hello"));
+    //TEST_OUTPUT("Data File Test", test_data_file("frame0.txt"));
+    //TEST_OUTPUT("Data File Test", test_data_file("frame1.txt"));
+    //TEST_OUTPUT("Data File Test", test_data_file("created.txt"));
+    //TEST_OUTPUT("Data File Test", test_data_file("verylargetextwithverylongname.txt"));
     /* other file tests */
     //TEST_OUTPUT("Directory File Test", test_dir_file());
-    //TEST_OUTPUT("Non Text File Test", test_non_text_data_file("hello"));
+    //TEST_OUTPUT("Non Text File Test", test_head_tail_data_file("hello"));
     /* other tests */
     TEST_OUTPUT("Long printf test (terminal driver)", long_printf_test());
     //TEST_OUTPUT("RTC_test", RTC_test());
