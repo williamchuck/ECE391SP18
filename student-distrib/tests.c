@@ -144,6 +144,10 @@ int test_file_by_name(const int8_t* fname){
 	uint32_t size;
 	dentry_t dentry;
 
+	/* Clear file_name */
+	for(i = 0; i < FILE_NAME_LENGTH; i++)
+		dentry.file_name[i] = '\0';
+
 	/* Fill dentry for info */
 	if(read_dentry_by_name(fname, &dentry) == -1)
 		return FAIL;
@@ -237,6 +241,10 @@ int test_file_by_index(uint32_t index){
 	int i, fd;
 	uint32_t size;
 	dentry_t dentry;
+
+	/* Clear file_name */
+	for(i = 0; i < FILE_NAME_LENGTH; i++)
+		dentry.file_name[i] = '\0';
 
 	/* Fill dentry for info */
 	if(read_dentry_by_index(index, &dentry) == -1)
@@ -595,7 +603,7 @@ void launch_tests(){
     //TEST_OUTPUT("Data File Test", test_file_by_name("frame0.txt"));
     //TEST_OUTPUT("Data File Test", test_file_by_name("frame1.txt"));
     //TEST_OUTPUT("Data File Test", test_file_by_name("created.txt"));
-    //TEST_OUTPUT("Data File Test", test_file_by_name("verylargetextwithverylongname.txt"));
+    //TEST_OUTPUT("Data File Test", test_file_by_name("verylargetextwithverylongname.tx"));
     
     /* test file by index */
     //TEST_OUTPUT("Data File Test", test_file_by_index(0));

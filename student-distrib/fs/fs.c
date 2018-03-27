@@ -70,7 +70,8 @@ uint32_t get_size(const int8_t* fname){
 	dentry_t dentry;
 
 	/* Fill in dentry */
-	read_dentry_by_name(fname, &dentry);
+	if(read_dentry_by_name(fname, &dentry) == -1)
+		return -1;
 	
 	/* Read size according to inode */
 	addr = fs_addr + INT_PER_BLOCK * (dentry.inode + 1);
@@ -89,7 +90,16 @@ int32_t read_dentry_by_name(const int8_t* fname, dentry_t* dentry){
 	/* Initialize variables */
 	uint8_t* addr;
 	uint8_t str[FILE_NAME_LENGTH];
-	int i,j;
+	int i, j, size;
+
+	/* Check for size of input fname */
+	size = 0;
+	while(*(fname + size) != '\0')
+		size++;
+
+	/* If it is too long, return -1 */
+	if(size > FILE_NAME_LENGTH)
+		return -1;
 
 	/* Point addr to the start of dentries */
 	addr = (uint8_t*)fs_addr + BOOT_BLOCK_ENTRY_SIZE;
@@ -121,6 +131,8 @@ int32_t read_dentry_by_name(const int8_t* fname, dentry_t* dentry){
 			/* Fill in dentry file_name */
 			for(j = 0; j < FILE_NAME_LENGTH; j++)
 				dentry->file_name[j] = str[j];
+
+			dentry->file_name[FILE_NAME_LENGTH] = '\0';
 			/* Fill in dentry file_type */
 			dentry->file_type = *((uint32_t*)addr);
 			/* Point addr to inode */
@@ -165,6 +177,7 @@ int32_t read_dentry_by_index(uint32_t index, dentry_t* dentry){
 		dentry->file_name[i] = *addr;
 		addr++;
 	}
+	dentry->file_name[FILE_NAME_LENGTH] = '\0';
 	/* Fill in dentry_t file_type */
 	dentry->file_type = *((uint32_t*)addr);
 	/* Point addr to inode */
@@ -361,7 +374,8 @@ int32_t dir_open(const int8_t* fname){
 	dentry_t dentry;
 
 	/* Fill in dentry */
-	read_dentry_by_name(fname, &dentry);
+	if(read_dentry_by_name(fname, &dentry) == -1)
+		return -1;
 
 	/* Sanity check */
 	if(dentry.file_type != 1)
