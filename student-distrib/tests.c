@@ -532,7 +532,29 @@ int RTC_test(){
     return PASS;
 
 }
-
+/* stdin_read_test
+ * tests stdin read call. Check if last character in buffer is \n
+ */
+int stdin_read_test(){
+    TEST_HEADER;
+    #define bufsize 128 //size of stdin buffer
+    char buffer[bufsize]={0};
+    stdin_open(0);
+    while(1){
+        int nchar=stdin_read(0,buffer,bufsize);
+        printf("size: %d",nchar);
+        int i;
+        printf("stdin_read: ");
+        for(i=0;i<nchar;i++)putc(buffer[i]);
+        if(buffer[nchar-1]!='\n'){
+            stdin_close(0);
+            return FAIL;
+        }
+    }
+    stdin_close(0);
+    return PASS;
+#undef bufsize
+}
 /* long_printf_test
  * test terminal printing and scrolling functionality
  */
@@ -604,7 +626,7 @@ void launch_tests(){
     //TEST_OUTPUT("Data File Test", test_file_by_name("frame1.txt"));
     //TEST_OUTPUT("Data File Test", test_file_by_name("created.txt"));
     //TEST_OUTPUT("Data File Test", test_file_by_name("verylargetextwithverylongname.tx"));
-    
+    //TEST_OUTPUT("Data File Test (oversize filename, should fail)", test_file_by_name("verylargetextwithverylongname.txt"));
     /* test file by index */
     //TEST_OUTPUT("Data File Test", test_file_by_index(0));
     //TEST_OUTPUT("Data File Test", test_file_by_index(1));
@@ -619,6 +641,7 @@ void launch_tests(){
     //TEST_OUTPUT("Non Text File Test", test_head_tail_data_file("hello"));
 
     /* other tests */
-    TEST_OUTPUT("Long printf test (terminal driver)", long_printf_test());
+    //TEST_OUTPUT("Long printf test (terminal driver)", long_printf_test());
     //TEST_OUTPUT("RTC_test", RTC_test());
+    TEST_OUTPUT("stdin read test", stdin_read_test());
 }

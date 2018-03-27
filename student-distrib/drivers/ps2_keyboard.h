@@ -37,4 +37,8 @@ void ps2_keyboard_processflags(unsigned char scancode);
 /* Interrupt handler for keyboard */
 extern void int_ps2kbd_c();
 
+/* variables for current keycode and ascii (if applicable) */
+extern unsigned char currentcode;
+extern unsigned char currentchar;
+extern char keypressed;
 #endif

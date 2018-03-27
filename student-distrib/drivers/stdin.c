@@ -4,7 +4,8 @@
  * Author: Canlin Zhang
  */
 #include "stdin.h"
-
+/* Current code */
+unsigned char cur_kbdcode;
 /*
  * stdin_open
  * DESCRIPTION: "open" system call handler for standard input
@@ -48,7 +49,7 @@ int32_t stdin_read(int32_t fd, void* buf, int32_t nbytes)
 	unsigned char* buf_ptr;
 	
 	/* Loop var. */
-	int i;
+	int i=0;
 
 	/* Cast void* to unsigned char* */
 	buf_ptr = (unsigned char*)buf;
@@ -65,65 +66,76 @@ int32_t stdin_read(int32_t fd, void* buf, int32_t nbytes)
 		return -1;
 	}
 
-	/* Always clear buffer before reading */
-	for (i = 0; i < BUF_SIZE; i++)
-	{
-		term_buf[i] = TERM_EOF;
+	while (cur_kbdcode != KBDENP){
+	    if(keypressed){
+	        keypressed=0;
+            if(currentchar&&i<nbytes-1){
+                buf_ptr[i]=currentchar;
+                i++;
+            }
+	    }
 	}
-
-	/* Initialize terminal buffer index */
-	term_buf_index = 0;
-
-	/* Block when enter is not pressed. */
-	/* Does not block outside buffer */
-	while (cur_kbdcode != KBDENP && buf_ptr == term_buf)
-	{
-
-	}
-
-	/* Read the bytes */
-	/* We assume nbytes is smaller than or equal to the size of buffer. */
-	/* We also use EOF to avoid most potential undefined behavior. */
-	for (i = 0; i < nbytes; i++)
-	{
-		/* If reached end of file, return. */
-		if (buf_ptr[i] == TERM_EOF)
-		{
-			/* Reset keycode to prevent crash in event loop */
-			if (cur_kbdcode == KBDENP)
-			{
-				cur_kbdcode = 0;
-			}
-			return (uint32_t)i;
-		}
-
-		/* Only read to buffer when input buffer is NOT keyboard */
-		/* If buffer is full, refuse new input. */
-		if ((buf_ptr != term_buf) && (term_buf_index < BUF_SIZE - 1))
-		{
-			/* Store data into buffer and increment buffer index */
-			term_buf[term_buf_index] = buf_ptr[i];
-			term_buf_index++;
-		}
-
-		/* If newline is reached, return. */
-		if (buf_ptr[i] == ASCII_NL)
-		{
-			/* Reset keycode to prevent crash in event loop */
-			if (cur_kbdcode == KBDENP)
-			{
-				cur_kbdcode = 0;
-			}
-			return (uint32_t)(i + 1);
-		}
-	}
+	buf_ptr[i]='\n';
+	i++;
+//	/* Always clear buffer before reading */
+//	for (i = 0; i < BUF_SIZE; i++)
+//	{
+//		term_buf[i] = TERM_EOF;
+//	}
+//
+//	/* Initialize terminal buffer index */
+//	term_buf_index = 0;
+//
+//	/* Block when enter is not pressed. */
+//	/* Does not block outside buffer */
+//	while (cur_kbdcode != KBDENP && buf_ptr == term_buf)
+//	{
+//
+//	}
+//
+//	/* Read the bytes */
+//	/* We assume nbytes is smaller than or equal to the size of buffer. */
+//	/* We also use EOF to avoid most potential undefined behavior. */
+//	for (i = 0; i < nbytes; i++)
+//	{
+//		/* If reached end of file, return. */
+//		if (buf_ptr[i] == TERM_EOF)
+//		{
+//			/* Reset keycode to prevent crash in event loop */
+//			if (cur_kbdcode == KBDENP)
+//			{
+//				cur_kbdcode = 0;
+//			}
+//			return (uint32_t)i;
+//		}
+//
+//		/* Only read to buffer when input buffer is NOT keyboard */
+//		/* If buffer is full, refuse new input. */
+//		if ((buf_ptr != term_buf) && (term_buf_index < BUF_SIZE - 1))
+//		{
+//			/* Store data into buffer and increment buffer index */
+//			term_buf[term_buf_index] = buf_ptr[i];
+//			term_buf_index++;
+//		}
+//
+//		/* If newline is reached, return. */
+//		if (buf_ptr[i] == ASCII_NL)
+//		{
+//			/* Reset keycode to prevent crash in event loop */
+//			if (cur_kbdcode == KBDENP)
+//			{
+//				cur_kbdcode = 0;
+//			}
+//			return (uint32_t)(i + 1);
+//		}
+//	}
 
 	/* Reset keycode to prevent crash in event loop */
 	if (cur_kbdcode == KBDENP)
 	{
 		cur_kbdcode = 0;
 	}
-	return nbytes;
+	return i;
 }
 
 /*

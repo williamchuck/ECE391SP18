@@ -79,6 +79,10 @@ static uint8_t scroll_flag;
 static uint8_t alpha_flag;
 static uint8_t numpad_flag;
 
+/* variables for current keycode and ascii (if applicable) */
+unsigned char currentcode;
+unsigned char currentchar;
+char keypressed;
 /*
  * ps2_keyboard_init
  *   DESCRIPTION: Initialize PS2 keyboard.
@@ -117,14 +121,13 @@ void ps2_keyboard_init() {
  *   SIDE EFFECTS: Read current keycode and echo it onto screen (if possible).
  */
 void int_ps2kbd_c() {
-	/* variables for current keycode and ascii (if applicable) */
-	unsigned char currentcode;
-	unsigned char currentchar;
+
 
 	/* Get current scan code and initialize current char */
 	currentcode = ps2_keyboard_getscancode();
 	cur_kbdcode = currentcode;
 	currentchar = 0;
+	keypressed=1;
 
 	/* If a key IS pressed, get its ascii code */
 	if (currentcode != 0)
