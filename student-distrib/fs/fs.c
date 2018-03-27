@@ -132,6 +132,7 @@ int32_t read_dentry_by_name(const int8_t* fname, dentry_t* dentry){
 			for(j = 0; j < FILE_NAME_LENGTH; j++)
 				dentry->file_name[j] = str[j];
 
+			/* Clear last entry to null terminate */
 			dentry->file_name[FILE_NAME_LENGTH] = '\0';
 			/* Fill in dentry file_type */
 			dentry->file_type = *((uint32_t*)addr);
@@ -143,7 +144,7 @@ int32_t read_dentry_by_name(const int8_t* fname, dentry_t* dentry){
 			return 0;
 		}
 		/* If dismatch, move on to next dentry */
-		addr += 32;
+		addr += BOOT_BLOCK_ENTRY_SIZE - FILE_NAME_LENGTH;
 	}
 
 	/* If file does not exist, return -1 */
@@ -177,6 +178,7 @@ int32_t read_dentry_by_index(uint32_t index, dentry_t* dentry){
 		dentry->file_name[i] = *addr;
 		addr++;
 	}
+	/* Clear last entry to null terminate */
 	dentry->file_name[FILE_NAME_LENGTH] = '\0';
 	/* Fill in dentry_t file_type */
 	dentry->file_type = *((uint32_t*)addr);
