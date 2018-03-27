@@ -131,10 +131,10 @@ int invalid_page_test(){
 
 /*
  * test_file_by_name:
- * Description: Test on reading a text file
+ * Description: Test on operations on a file given name
  * Input: File name of a text file
  * Ouput: Result of the test
- * Effect: Print out contents of the text file
+ * Effect: Print out data files and run corresponding test for other files
  */
 int test_file_by_name(const int8_t* fname){
 	TEST_HEADER;
@@ -225,10 +225,10 @@ int test_file_by_name(const int8_t* fname){
 
 /*
  * test_file_by_index:
- * Description: Test on reading a text file
+ * Description: Test on operations of a file given index
  * Input: Index into the boot block
  * Ouput: Result of the test
- * Effect: Print out contents of the text file
+ * Effect: Print out data files and run corresponding test for other files
  */
 int test_file_by_index(uint32_t index){
 	TEST_HEADER;
