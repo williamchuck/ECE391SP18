@@ -59,6 +59,12 @@ int32_t stdin_read(int32_t fd, void* buf, int32_t nbytes)
 		return -1;
 	}
 
+	/* Block when enter is not pressed. */
+	while (currentcode != KBDENP)
+	{
+
+	}
+
 	/* Read the bytes */
 	/* We assume nbytes is smaller than or equal to the size of buffer. */
 	/* We also use EOF to avoid most potential undefined behavior. */
