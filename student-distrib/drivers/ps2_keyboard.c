@@ -150,14 +150,32 @@ void int_ps2kbd_c() {
 
 		/*
 		 * If enter is pressed, and the cursor is at the bottom of terminal
-		 * Scroll down a line, and update cursor position.
+		 * Scroll down a line, update cursor position and clear buffer.
+		 * If normal enter press, only clear buffer.
 		 */
-		if ((currentcode == KBDENP) && (get_y() == VGA_HEIGHT - 1))
+		if ((currentcode == KBDENP))
 		{
-			scroll_down();
-			cursor_update();
-			return;
+			/* Loop var */
+			int i;
+
+			/* Clear buffer, set buffer to EOF */
+			for (i = 0; i < BUF_SIZE; i++)
+			{
+				term_buf[i] = TERM_EOF;
+			}
+
+			/* Reset buffer index */
+			term_buf_index = 0;
+
+			if (get_y() == VGA_HEIGHT - 1)
+			{
+				scroll_down();
+				cursor_update();
+				return;
+			}
+
 		}
+
 
 		/* Get char to be printed */
 		currentchar = ps2_keyboard_getchar(currentcode);
