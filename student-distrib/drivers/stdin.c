@@ -71,8 +71,8 @@ int32_t stdin_read(int32_t fd, void* buf, int32_t nbytes)
 	for (i = 0; i < nbytes; i++)
 	{
 		/* If buffer is full, clear current buffer. */
-		/* NOT to be used for file stream... */
-		if (term_buf_index == BUF_SIZE)
+		/* Not to be used for keyboard reads! */
+		if (term_buf_index == BUF_SIZE && buf_ptr != term_buf)
 		{
 			for (j = 0; j < BUF_SIZE; j++)
 			{
@@ -86,10 +86,14 @@ int32_t stdin_read(int32_t fd, void* buf, int32_t nbytes)
 		{
 			return (uint32_t)i;
 		}
-		
-		/* Store data into buffer and increment buffer index */
-		term_buf[term_buf_index] = buf_ptr[i];
-		term_buf_index++;
+
+		/* Only read to buffer when input buffer is NOT keyboard */
+		if (buf_ptr != term_buf)
+		{
+			/* Store data into buffer and increment buffer index */
+			term_buf[term_buf_index] = buf_ptr[i];
+			term_buf_index++;
+		}
 
 		/* If newline is reached, return. */
 		if (buf_ptr[i] == ASCII_NL)

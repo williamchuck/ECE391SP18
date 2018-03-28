@@ -180,6 +180,8 @@ void int_ps2kbd_c() {
 				term_buf[j] = TERM_EOF;
 			}
 			term_buf_index = 0;
+			term_buf[term_buf_index] = currentchar;
+			term_buf_index++;
 		}
 		else
 		{
