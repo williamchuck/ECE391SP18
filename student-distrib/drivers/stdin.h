@@ -49,4 +49,7 @@ extern int32_t stdin_read(int32_t fd, void* buf, int32_t nbytes);
 /* Write handler for standard input */
 extern int32_t stdin_write(int32_t fd, const void* buf, int32_t nbytes);
 
+/* Current code */
+unsigned char cur_kbdcode;
+
 #endif

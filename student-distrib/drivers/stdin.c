@@ -48,7 +48,7 @@ int32_t stdin_read(int32_t fd, void* buf, int32_t nbytes)
 	unsigned char* buf_ptr;
 	
 	/* Loop var. */
-	int i, j;
+	int i;
 
 	/* Cast void* to unsigned char* */
 	buf_ptr = (unsigned char*)buf;
@@ -59,8 +59,23 @@ int32_t stdin_read(int32_t fd, void* buf, int32_t nbytes)
 		return -1;
 	}
 
+	/* If outside buffer size is larger than terminal buffer size, return error. */
+	if (nbytes > BUF_SIZE)
+	{
+		return -1;
+	}
+
+	/* Always clear buffer before reading */
+	for (i = 0; i < BUF_SIZE; i++)
+	{
+		term_buf[i] = TERM_EOF;
+	}
+
+	/* Initialize terminal buffer index */
+	term_buf_index = 0;
+
 	/* Block when enter is not pressed. */
-	while (currentcode != KBDENP)
+	while (cur_kbdcode != KBDENP)
 	{
 
 	}
@@ -70,25 +85,20 @@ int32_t stdin_read(int32_t fd, void* buf, int32_t nbytes)
 	/* We also use EOF to avoid most potential undefined behavior. */
 	for (i = 0; i < nbytes; i++)
 	{
-		/* If buffer is full, clear current buffer. */
-		/* Not to be used for keyboard reads! */
-		if (term_buf_index == BUF_SIZE && buf_ptr != term_buf)
-		{
-			for (j = 0; j < BUF_SIZE; j++)
-			{
-				term_buf[j] = TERM_EOF;
-			}
-			term_buf_index = 0;
-		}
-
 		/* If reached end of file, return. */
 		if (buf_ptr[i] == TERM_EOF)
 		{
+			/* Reset keycode to prevent crash in event loop */
+			if (cur_kbdcode == KBDENP)
+			{
+				cur_kbdcode = 0;
+			}
 			return (uint32_t)i;
 		}
 
 		/* Only read to buffer when input buffer is NOT keyboard */
-		if (buf_ptr != term_buf)
+		/* If buffer is full, refuse new input. */
+		if ((buf_ptr != term_buf) && (term_buf_index < BUF_SIZE - 1))
 		{
 			/* Store data into buffer and increment buffer index */
 			term_buf[term_buf_index] = buf_ptr[i];
@@ -98,10 +108,20 @@ int32_t stdin_read(int32_t fd, void* buf, int32_t nbytes)
 		/* If newline is reached, return. */
 		if (buf_ptr[i] == ASCII_NL)
 		{
+			/* Reset keycode to prevent crash in event loop */
+			if (cur_kbdcode == KBDENP)
+			{
+				cur_kbdcode = 0;
+			}
 			return (uint32_t)(i + 1);
 		}
 	}
 
+	/* Reset keycode to prevent crash in event loop */
+	if (cur_kbdcode == KBDENP)
+	{
+		cur_kbdcode = 0;
+	}
 	return nbytes;
 }
 

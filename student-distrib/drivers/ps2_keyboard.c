@@ -117,9 +117,15 @@ void ps2_keyboard_init() {
  *   SIDE EFFECTS: Read current keycode and echo it onto screen (if possible).
  */
 void int_ps2kbd_c() {
+	/* variables for current keycode and ascii (if applicable) */
+	unsigned char currentcode;
+	unsigned char currentchar;
+
 	/* Get current scan code and initialize current char */
 	currentcode = ps2_keyboard_getscancode();
+	cur_kbdcode = currentcode;
 	currentchar = 0;
+
 	/* If a key IS pressed, get its ascii code */
 	if (currentcode != 0)
 	{
@@ -161,37 +167,25 @@ void int_ps2kbd_c() {
 
 		}
 
-
 		/* Get char to be printed */
 		currentchar = ps2_keyboard_getchar(currentcode);
 	}
 	/* If this key has displable ascii code, print it out! */
 	if (currentchar != 0)
 	{
-		/* Loop var. */
-		int j;
 
 		/* Add char into terminal(keyboard) buffer. */
-		/* If current buffer is full, clear it. */
-		if (term_buf_index == BUF_SIZE)
-		{
-			for (j = 0; j < BUF_SIZE; j++)
-			{
-				term_buf[j] = TERM_EOF;
-			}
-			term_buf_index = 0;
-			term_buf[term_buf_index] = currentchar;
-			term_buf_index++;
-		}
-		else
+		/* If current buffer is full, do nothing. */
+		if (term_buf_index < BUF_SIZE - 1)
 		{
 			/* Add char into buffer and increment index */
 			term_buf[term_buf_index] = currentchar;
 			term_buf_index++;
 		}
 
-		/* Echo character using putc */
-		putc(term_buf[term_buf_index - 1]);
+		/* Echo character using putc. */
+		putc(currentchar);
+
 	}
 	/* EOI is handled by general irq handler. Hence send_eoi is NOT needed */
 	//send_eoi(KBD_IRQ);
