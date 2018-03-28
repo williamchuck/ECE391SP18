@@ -75,7 +75,8 @@ int32_t stdin_read(int32_t fd, void* buf, int32_t nbytes)
 	term_buf_index = 0;
 
 	/* Block when enter is not pressed. */
-	while (cur_kbdcode != KBDENP)
+	/* Does not block outside buffer */
+	while (cur_kbdcode != KBDENP && buf_ptr == term_buf)
 	{
 
 	}
