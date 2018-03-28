@@ -117,9 +117,6 @@ void ps2_keyboard_init() {
  *   SIDE EFFECTS: Read current keycode and echo it onto screen (if possible).
  */
 void int_ps2kbd_c() {
-	/* variables for current keycode and ascii (if applicable) */
-	unsigned char currentcode;
-	unsigned char currentchar;
 	/* Get current scan code and initialize current char */
 	currentcode = ps2_keyboard_getscancode();
 	currentchar = 0;
@@ -151,21 +148,9 @@ void int_ps2kbd_c() {
 		/*
 		 * If enter is pressed, and the cursor is at the bottom of terminal
 		 * Scroll down a line, update cursor position and clear buffer.
-		 * If normal enter press, only clear buffer.
 		 */
 		if ((currentcode == KBDENP))
 		{
-			/* Loop var */
-			int i;
-
-			/* Clear buffer, set buffer to EOF */
-			for (i = 0; i < BUF_SIZE; i++)
-			{
-				term_buf[i] = TERM_EOF;
-			}
-
-			/* Reset buffer index */
-			term_buf_index = 0;
 
 			if (get_y() == VGA_HEIGHT - 1)
 			{
@@ -183,12 +168,28 @@ void int_ps2kbd_c() {
 	/* If this key has displable ascii code, print it out! */
 	if (currentchar != 0)
 	{
-		/* Call standard input to put char into buffer */
-		stdin_read(TERM_IN_FD, &currentchar, 1);
+		/* Loop var. */
+		int j;
 
-		/* Echo the char out using keyboard buffer */
-		/* We use terminal buffer as keyboard buffer here. */
-		stdout_write(TERM_OUT_FD, &term_buf[term_buf_index - 1], 1);
+		/* Add char into terminal(keyboard) buffer. */
+		/* If current buffer is full, clear it. */
+		if (term_buf_index == BUF_SIZE)
+		{
+			for (j = 0; j < BUF_SIZE; j++)
+			{
+				term_buf[j] = TERM_EOF;
+			}
+			term_buf_index = 0;
+		}
+		else
+		{
+			/* Add char into buffer and increment index */
+			term_buf[term_buf_index] = currentchar;
+			term_buf_index++;
+		}
+
+		/* Echo character using putc */
+		putc(term_buf[term_buf_index - 1]);
 	}
 	/* EOI is handled by general irq handler. Hence send_eoi is NOT needed */
 	//send_eoi(KBD_IRQ);

@@ -34,6 +34,9 @@
 /* Buffer size is 128 bytes */
 #define BUF_SIZE		   128
 
+/* Keycode of enter key */
+#define KBDENP			   0x1C
+
 /* Open handler for standard input */
 extern int32_t stdin_open(const uint8_t* filename);
 
