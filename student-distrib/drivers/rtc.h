@@ -28,7 +28,7 @@ int32_t rtc_open(const int8_t* fname);
  * INPUTS: none
  * OUTPUTS: 0
  */
-int32_t rtc_read(int32_t fd, void* buf, int32_t nbytes);
+int32_t rtc_read(int32_t fd, void* buf, uint32_t nbytes);
 
 /* rtc_write
  * DESCRIPTION: Change the frequency
@@ -37,7 +37,7 @@ int32_t rtc_read(int32_t fd, void* buf, int32_t nbytes);
  * OUTPUTS: 0 -- Success;
   			-1 -- Fail
  */
-int32_t rtc_write(int32_t fd, const void* buf, int32_t nbytes);
+int32_t rtc_write(int32_t fd, const void* buf, uint32_t nbytes);
 
 /* rtc_close
  * DESCRIPTION: Set the RTC frequency back to default value 2

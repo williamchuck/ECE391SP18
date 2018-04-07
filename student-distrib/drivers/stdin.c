@@ -25,7 +25,7 @@ unsigned char cur_kbdcode;
  * RETURN VALUE: 0 on success, -1 on failure
  * NOTES: More functionality to be implemented. This function now does nothing and returns 0.
  */
-int32_t stdin_open(const uint8_t* filename)
+int32_t stdin_open(const int8_t* filename)
 {
 	return 0;
 }
@@ -54,7 +54,7 @@ int32_t stdin_close(int32_t fd)
  * RETURN VALUE: number of bytes read on success, -1 on failure.
  * SIDE EFFECTS: Data will be stored into buffer. Return value affects sys. call.
  */
-int32_t stdin_read(int32_t fd, void* buf, int32_t nbytes)
+int32_t stdin_read(int32_t fd, void* buf, uint32_t nbytes)
 {
 	/* Pointer to data stream to be read */
 	unsigned char* buf_ptr;
@@ -160,7 +160,7 @@ int32_t stdin_read(int32_t fd, void* buf, int32_t nbytes)
 * SIDE EFFECTS: none.
 * NOTE: System is NOT supposed to call this. Return error only.
 */
-int32_t stdin_write(int32_t fd, const void* buf, int32_t nbytes)
+int32_t stdin_write(int32_t fd, const void* buf, uint32_t nbytes)
 {
 	return -1;
 }

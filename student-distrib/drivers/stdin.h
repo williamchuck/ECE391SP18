@@ -38,16 +38,16 @@
 #define KBDENP			   0x1C
 
 /* Open handler for standard input */
-extern int32_t stdin_open(const uint8_t* filename);
+extern int32_t stdin_open(const int8_t* filename);
 
 /* Close handler for standard input */
 extern int32_t stdin_close(int32_t fd);
 
 /* Read handler for standard input */
-extern int32_t stdin_read(int32_t fd, void* buf, int32_t nbytes);
+extern int32_t stdin_read(int32_t fd, void* buf, uint32_t nbytes);
 
 /* Write handler for standard input */
-extern int32_t stdin_write(int32_t fd, const void* buf, int32_t nbytes);
+extern int32_t stdin_write(int32_t fd, const void* buf, uint32_t nbytes);
 
 /* Current code */
 extern unsigned char cur_kbdcode;

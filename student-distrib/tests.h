@@ -2,7 +2,6 @@
 #define TESTS_H
 #include "fs/fs.h"
 #include "drivers/stdin.h"
-#include "syscall/syscall.h"
 
 /* Run tests for paging and IDT table */
 #define RUN_TESTS 0

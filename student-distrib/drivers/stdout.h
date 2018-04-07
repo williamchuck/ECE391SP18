@@ -39,16 +39,16 @@ int term_buf_index;
 unsigned char term_buf[BUF_SIZE];
 
 /* Open sys. call handler for standard output */
-extern int32_t stdout_open(const uint8_t* filename);
+extern int32_t stdout_open(const int8_t* filename);
 
 /* Close sys. call handler for standard output */
 extern int32_t stdout_close(int32_t fd);
 
 /* Read sys. call handler for standard output */
-extern int32_t stdout_read(int32_t fd, void* buf, int32_t nbytes);
+extern int32_t stdout_read(int32_t fd, void* buf, uint32_t nbytes);
 
 /* Write sys. call handler for standard output */
-extern int32_t stdout_write(int32_t fd, const void* buf, int32_t nbytes);
+extern int32_t stdout_write(int32_t fd, const void* buf, uint32_t nbytes);
 
 /* Helper function. Resets cursor to (0, 0) */
 void cursor_reset();

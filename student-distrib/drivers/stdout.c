@@ -24,7 +24,7 @@ file_op_t* stdout_op = &stdout_file_op;
   * SIDE EFFECTS: Return value affects system call.
   * NOTES: More functionality to be implemented. This function now does nothing and returns 0.
   */
-int32_t stdout_open(const uint8_t* filename)
+int32_t stdout_open(const int8_t* filename)
 {
 	return 0;
 }
@@ -55,7 +55,7 @@ int32_t stdout_close(int32_t fd)
  * NOTES: The system is NOT supposed to call read for standard input.
  *		  This function will only return -1.
  */
-int32_t stdout_read(int32_t fd, void* buf, int32_t nbytes)
+int32_t stdout_read(int32_t fd, void* buf, uint32_t nbytes)
 {
 	return -1;
 }
@@ -70,7 +70,7 @@ int32_t stdout_read(int32_t fd, void* buf, int32_t nbytes)
  * RETURN VALUE: number of bytes displayed on success. -1 on failure.
  * SIDE EFFECTS: Data will be displayed onto terminal.
  */
-int32_t stdout_write(int32_t fd, const void* buf, int32_t nbytes)
+int32_t stdout_write(int32_t fd, const void* buf, uint32_t nbytes)
 {
 	/* Loop var. */
 	int i;
