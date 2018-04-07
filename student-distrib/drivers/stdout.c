@@ -6,14 +6,14 @@
 #include "stdout.h"
 #include "../fs/fs.h"
 
-file_op_t* stdout_op = &stdout_file_op;
-
 static file_op_t stdout_file_op = {
 	.open = stdout_open,
 	.read = stdout_read,
 	.write = stdout_write,
 	.close = stdout_close
 };
+
+file_op_t* stdout_op = &stdout_file_op;
 
  /*
   * stdout_open

@@ -37,14 +37,15 @@ extern void test_interrupts(void);
 //change frequency helper
 int32_t rtc_changeFreq(uint32_t freq);
 
-file_op_t* rtc_op = &rtc_file_op;
-
-static file_op_t rtc_file_op{
+static file_op_t rtc_file_op = {
 	.open = rtc_open,
-	read = rtc_read,
+	.read = rtc_read,
 	.write = rtc_write,
 	.close = rtc_close	
 };
+
+file_op_t* rtc_op = &rtc_file_op;
+
 
 /*  rtc_isr
  *  Interrupt service routine for RTC
@@ -135,18 +136,18 @@ int32_t rtc_open(const int8_t* fname){
 
 	/* Reserve file descriptor 0 and 1 for stdin and stdout, search for free entry */
 	for(i = 2; i < 8; i++){
-		/* If free, then fill in the current_PCB->file_desc_t */
-		if(current_PCB->file_desc[i].flag == 0){
-			current_PCB->file_desc[i].f_op = &rtc_file_op;
-			current_PCB->file_desc[i].inode = 0;
-			current_PCB->file_desc[i].f_pos = 0;
-			current_PCB->file_desc[i].flag = 1;
+		/* If free, then fill in the current_PCB->file_desc_arr_t */
+		if(current_PCB->file_desc_arr[i].flag == 0){
+			current_PCB->file_desc_arr[i].f_op = &rtc_file_op;
+			current_PCB->file_desc_arr[i].inode = 0;
+			current_PCB->file_desc_arr[i].f_pos = 0;
+			current_PCB->file_desc_arr[i].flag = 1;
 			rtc_changeFreq(RTC_DEF_FREQ);
 			return i;
 		}
 	}
 
-	/* If current_PCB->file_desc is full, return -1 */
+	/* If current_PCB->file_desc_arr is full, return -1 */
 	return -1;
 }
 
@@ -201,14 +202,14 @@ int32_t rtc_close(int32_t fd){
 		return -1;
 
 	/* If file is already closed, return -1 */
-	if(current_PCB->file_desc[fd].flag == 0)
+	if(current_PCB->file_desc_arr[fd].flag == 0)
 		return -1;
 	
 	/* Clean up file desc array entry */
-	current_PCB->file_desc[fd].f_op = NULL;
-	current_PCB->file_desc[fd].inode = 0;
-	current_PCB->file_desc[fd].f_pos = 0;
-	current_PCB->file_desc[fd].flag = 0;
+	current_PCB->file_desc_arr[fd].f_op = NULL;
+	current_PCB->file_desc_arr[fd].inode = 0;
+	current_PCB->file_desc_arr[fd].f_pos = 0;
+	current_PCB->file_desc_arr[fd].flag = 0;
 
 	/* Return 0 on success */
 	return 0;	

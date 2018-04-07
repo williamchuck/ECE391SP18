@@ -16,9 +16,6 @@ static uint32_t data_block_count;
 /* Start address of the file system */
 static uint32_t* fs_addr;
 
-file_op_t* data_op = &data_file_op;
-file_op_t* dir_op = &dir_file_op;
-
 /* Two jump tables for future usage */
 static file_op_t data_file_op = {
 	.open = data_open,
@@ -33,6 +30,9 @@ static file_op_t dir_file_op = {
 	.write = dir_write,
 	.close = dir_close
 };
+
+file_op_t* data_op = &data_file_op;
+file_op_t* dir_op = &dir_file_op;
 
 /*
  * init_fs:
@@ -294,12 +294,12 @@ int32_t data_open(const int8_t* fname){
 
 	/* Reserve 0 and 1 for stdin and stdout, search for a free entry */
 	for(i = 2; i < 8; i++){
-		/* If free, then fill in current_PCB->file_desc_t */
-		if(current_PCB->file_desc[i].flag == 0){
-			current_PCB->file_desc[i].f_op = &data_file_op;
-			current_PCB->file_desc[i].inode = dentry.inode;
-			current_PCB->file_desc[i].f_pos = 0;
-			current_PCB->file_desc[i].flag = 1;
+		/* If free, then fill in current_PCB->file_desc_arr_t */
+		if(current_PCB->file_desc_arr[i].flag == 0){
+			current_PCB->file_desc_arr[i].f_op = &data_file_op;
+			current_PCB->file_desc_arr[i].inode = dentry.inode;
+			current_PCB->file_desc_arr[i].f_pos = 0;
+			current_PCB->file_desc_arr[i].flag = 1;
 			return i;
 		}
 	}
@@ -323,9 +323,9 @@ int32_t data_read(int32_t fd, void* buf, uint32_t size){
 	/* Initialize varaibles */
 	int ret;
 	/* Read data from the data file using file descriptor */
-	ret = read_data(current_PCB->file_desc[fd].inode, current_PCB->file_desc[fd].f_pos, (uint8_t*)buf, size);
+	ret = read_data(current_PCB->file_desc_arr[fd].inode, current_PCB->file_desc_arr[fd].f_pos, (uint8_t*)buf, size);
 	/* Progress in the file */
-	current_PCB->file_desc[fd].f_pos += ret;
+	current_PCB->file_desc_arr[fd].f_pos += ret;
 	/* Return number of bytes actually read */
 	return ret;
 }
@@ -354,13 +354,13 @@ int32_t data_close(int32_t fd){
 		return -1;
 
 	/* If file is already free, return -1 */
-	if(current_PCB->file_desc[fd].flag == 0)
+	if(current_PCB->file_desc_arr[fd].flag == 0)
 		return -1;
 	/* Clean up file desc array entry */
-	current_PCB->file_desc[fd].f_op = NULL;
-	current_PCB->file_desc[fd].inode = 0;
-	current_PCB->file_desc[fd].f_pos = 0;
-	current_PCB->file_desc[fd].flag = 0;
+	current_PCB->file_desc_arr[fd].f_op = NULL;
+	current_PCB->file_desc_arr[fd].inode = 0;
+	current_PCB->file_desc_arr[fd].f_pos = 0;
+	current_PCB->file_desc_arr[fd].flag = 0;
 
 	/* Return 0 on success */
 	return 0;
@@ -388,17 +388,17 @@ int32_t dir_open(const int8_t* fname){
 
 	/* Reserve file descriptor 0 and 1 for stdin and stdout, search for free entry */
 	for(i = 2; i < 8; i++){
-		/* If free, then fill in the current_PCB->file_desc_t */
-		if(current_PCB->file_desc[i].flag == 0){
-			current_PCB->file_desc[i].f_op = &dir_file_op;
-			current_PCB->file_desc[i].inode = 0;
-			current_PCB->file_desc[i].f_pos = 0;
-			current_PCB->file_desc[i].flag = 1;
+		/* If free, then fill in the current_PCB->file_desc_arr_t */
+		if(current_PCB->file_desc_arr[i].flag == 0){
+			current_PCB->file_desc_arr[i].f_op = &dir_file_op;
+			current_PCB->file_desc_arr[i].inode = 0;
+			current_PCB->file_desc_arr[i].f_pos = 0;
+			current_PCB->file_desc_arr[i].flag = 1;
 			return i;
 		}
 	}
 
-	/* If current_PCB->file_desc is full, return -1 */
+	/* If current_PCB->file_desc_arr is full, return -1 */
 	return -1;
 }
 
@@ -419,11 +419,11 @@ int32_t dir_read(int32_t fd, void* buf, uint32_t size){
 	dentry_t dentry;
 
 	/* Fill dentry and check if index is valid */
-	if(read_dentry_by_index(current_PCB->file_desc[fd].f_pos, &dentry) == -1)
+	if(read_dentry_by_index(current_PCB->file_desc_arr[fd].f_pos, &dentry) == -1)
 		return 0;
 
 	/* Progress one file */
-	current_PCB->file_desc[fd].f_pos++;
+	current_PCB->file_desc_arr[fd].f_pos++;
 
 	/* Copy filename of current file into buf */
 	for(i = 0; i < size; i++){
@@ -462,14 +462,14 @@ int32_t dir_close(int32_t fd){
 		return -1;
 
 	/* If file is already closed, return -1 */
-	if(current_PCB->file_desc[fd].flag == 0)
+	if(current_PCB->file_desc_arr[fd].flag == 0)
 		return -1;
 	
 	/* Clean up file desc array entry */
-	current_PCB->file_desc[fd].f_op = NULL;
-	current_PCB->file_desc[fd].inode = 0;
-	current_PCB->file_desc[fd].f_pos = 0;
-	current_PCB->file_desc[fd].flag = 0;
+	current_PCB->file_desc_arr[fd].f_op = NULL;
+	current_PCB->file_desc_arr[fd].inode = 0;
+	current_PCB->file_desc_arr[fd].f_pos = 0;
+	current_PCB->file_desc_arr[fd].flag = 0;
 
 	/* Return 0 on success */
 	return 0;	

@@ -6,15 +6,15 @@
 #include "stdin.h"
 #include "../fs/fs.h"
 
-
-file_op_t* stdin_op = &stdin_file_op;
-
 static file_op_t stdin_file_op = {
 	.open = stdin_open,
 	.read = stdin_read,
 	.write = stdin_write,
 	.close = stdin_close
 };
+
+file_op_t* stdin_op = &stdin_file_op;
+
 /* Current code */
 unsigned char cur_kbdcode;
 /*
