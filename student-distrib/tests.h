@@ -2,11 +2,12 @@
 #define TESTS_H
 #include "fs/fs.h"
 #include "drivers/stdin.h"
+#include "syscall/syscall.h"
 
 /* Run tests for paging and IDT table */
-#define RUN_TESTS 1
+#define RUN_TESTS 0
 /* Run tests for RTC */
-#define RTC_TEST 1
+#define RTC_TEST 0
 /* Do not show loading message */
 #define NOT_SHOW_MESSAGE 1
 /* Run invalid page test (Will lead to Page Fault) */

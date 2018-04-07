@@ -4,6 +4,16 @@
  * Author: Canlin Zhang
  */
 #include "stdout.h"
+#include "../fs/fs.h"
+
+file_op_t* stdout_op = &stdout_file_op;
+
+static file_op_t stdout_file_op = {
+	.open = stdout_open,
+	.read = stdout_read,
+	.write = stdout_write,
+	.close = stdout_close
+};
 
  /*
   * stdout_open

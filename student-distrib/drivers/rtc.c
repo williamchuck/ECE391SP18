@@ -6,6 +6,8 @@
  */
 
 #include "rtc.h"
+#include "../fs/fs.h"
+#include "../process/process.h"
 
 /* Definitions for RTC ports and registers*/
 #define RTC_DIS_NMI         0x80    //set this bit when writing to addr port to disable NMI.
@@ -35,6 +37,14 @@ extern void test_interrupts(void);
 //change frequency helper
 int32_t rtc_changeFreq(uint32_t freq);
 
+file_op_t* rtc_op = &rtc_file_op;
+
+static file_op_t rtc_file_op{
+	.open = rtc_open,
+	read = rtc_read,
+	.write = rtc_write,
+	.close = rtc_close	
+};
 
 /*  rtc_isr
  *  Interrupt service routine for RTC
@@ -111,8 +121,33 @@ int32_t rtc_changeFreq(uint32_t freq){
  * OUTPUTS: 0
  */
 int32_t rtc_open(const int8_t* fname){
-	rtc_changeFreq(RTC_DEF_FREQ);
-	return 0;	//success
+	/* Initialize varaibles */
+	int i;
+	dentry_t dentry;
+
+	/* Fill in dentry */
+	if(read_dentry_by_name(fname, &dentry) == -1)
+		return -1;
+
+	/* Sanity check */
+	if(dentry.file_type != 0)
+		return -1;
+
+	/* Reserve file descriptor 0 and 1 for stdin and stdout, search for free entry */
+	for(i = 2; i < 8; i++){
+		/* If free, then fill in the current_PCB->file_desc_t */
+		if(current_PCB->file_desc[i].flag == 0){
+			current_PCB->file_desc[i].f_op = &rtc_file_op;
+			current_PCB->file_desc[i].inode = 0;
+			current_PCB->file_desc[i].f_pos = 0;
+			current_PCB->file_desc[i].flag = 1;
+			rtc_changeFreq(RTC_DEF_FREQ);
+			return i;
+		}
+	}
+
+	/* If current_PCB->file_desc is full, return -1 */
+	return -1;
 }
 
 /* rtc_read
@@ -161,5 +196,20 @@ int32_t rtc_write(int32_t fd, const void* buf, int32_t nbytes){
  * OUTPUTS: 0
  */
 int32_t rtc_close(int32_t fd){
-	return 0;
+	/* Sanity check */
+	if(fd < 0 || fd > 7)
+		return -1;
+
+	/* If file is already closed, return -1 */
+	if(current_PCB->file_desc[fd].flag == 0)
+		return -1;
+	
+	/* Clean up file desc array entry */
+	current_PCB->file_desc[fd].f_op = NULL;
+	current_PCB->file_desc[fd].inode = 0;
+	current_PCB->file_desc[fd].f_pos = 0;
+	current_PCB->file_desc[fd].flag = 0;
+
+	/* Return 0 on success */
+	return 0;	
 }

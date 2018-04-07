@@ -52,4 +52,10 @@ extern int32_t dir_read(int32_t fd, void* buf, uint32_t size);
 extern int32_t dir_write(int32_t fd, const void* buf, uint32_t size);
 /* Close a directory */
 extern int32_t dir_close(int32_t fd);
+
+extern file_op_t* data_op;
+extern file_op_t* dir_op;
+extern file_op_t* stdin_op;
+extern file_op_t* stdout_op;
+extern file_op_t* rtc_op;
 #endif

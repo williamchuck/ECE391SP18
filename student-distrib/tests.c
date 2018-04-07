@@ -643,5 +643,5 @@ void launch_tests(){
     /* other tests */
     //TEST_OUTPUT("Long printf test (terminal driver)", long_printf_test());
     //TEST_OUTPUT("RTC_test", RTC_test());
-    TEST_OUTPUT("stdin read test", stdin_read_test());
+    //TEST_OUTPUT("stdin read test", stdin_read_test());
 }
