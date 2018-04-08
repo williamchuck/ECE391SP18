@@ -8,6 +8,7 @@
 #define _128MB 0x80000000
 #define _8MB 0x800000
 #define _4MB 0x400000
+#define _8KB 
 
 extern int p_num;
 

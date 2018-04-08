@@ -73,9 +73,8 @@ int32_t system_execute(const int8_t* file_name){
 	memcpy((uint32_t*)(phys_addr + 0x48000), &buf, size);
 
 	user_ESP = phys_addr + _4MB;
-	current_ESP = _8MB;
+	current_ESP = _8MB - (cur_p_num * _8KB);
 	tss.esp0 = current_ESP;
-	tss.esp = user_ESP;
 	
 	//jump_to_user();
 
@@ -109,7 +108,6 @@ int32_t system_open(const int8_t* fname){
 int32_t system_read(int32_t fd, void* buf, uint32_t size){
 	return current_PCB->file_desc_arr[fd].f_op->read(fd, buf, size);
 }
-
 
 int32_t system_write(int32_t fd, const void* buf, uint32_t size){
 	return current_PCB->file_desc_arr[fd].f_op->write(fd, buf, size);	
