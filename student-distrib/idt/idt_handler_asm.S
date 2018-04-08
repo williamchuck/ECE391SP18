@@ -51,8 +51,6 @@
 .globl int_1D_asm
 .globl int_1F_asm
 
-/* (x86 wrapper for) Handler for system call */
-.globl int_80_asm
 
 /*
  * irq handler stubs.
@@ -308,12 +306,7 @@ int_1F_asm:
   popal
   iret
 
-/* Interrupt 128 - System Call */
-int_80_asm:
-  pushal
-  call int_80_c
-  popal
-  iret
+
 
 /* irq handler stub */
 /*

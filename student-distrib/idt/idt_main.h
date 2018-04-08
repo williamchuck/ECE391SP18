@@ -23,7 +23,6 @@
 #include "../x86_desc.h"
 
 /* Include c implementation and x86 wrappers of idt handlers. */
-#include "idt_handler_c.h"
 #include "idt_handler_asm.h"
 
 /* Include interrupt handling for keyboard. (Not currently in use.) */

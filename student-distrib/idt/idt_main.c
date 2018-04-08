@@ -68,7 +68,7 @@ uint32_t irq_handler_addr[0x10] = {
 };
 
 /* Handler address for system call */
-uint32_t idt_system_call_addr = (uint32_t)int_80_asm;
+uint32_t idt_system_call_addr = (uint32_t)syscall_asm;
 
 /*
  * idt_set_all()

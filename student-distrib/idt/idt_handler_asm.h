@@ -54,7 +54,8 @@ extern void int_1D_asm();
 extern void int_1E_asm();
 extern void int_1F_asm();
 /* Handler for system call */
-extern void int_80_asm();
+//defined in ../syscall/syscall.S
+extern void syscall_asm();
 /* IRQ handler stubs*/
 extern void int_20_asm();
 extern void int_21_asm();
