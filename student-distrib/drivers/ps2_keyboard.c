@@ -98,6 +98,9 @@ void ps2_keyboard_init() {
 	/* Clear buffer. */
 	ps2_keyboard_clearbuf();
 
+	/* Initialize count */
+	afterenter_count = 0;
+
 	/* Clear key toggle flags */
 	alt_flag = FLAG_OFF;
 	ctrl_flag = FLAG_OFF;
@@ -187,12 +190,16 @@ void int_ps2kbd_c() {
 			/* If enter key is pressed, toggle enter flag on. */
 			if (currentchar == ASCII_NL)
 			{
+				afterenter_count = 0;
 				enter_flag = FLAG_ON;
 			}
 		}
 
 		/* Echo character using putc. */
 		putc(currentchar);
+
+		/* Increment count */
+		afterenter_count++;
 
 	}
 	/* EOI is handled by general irq handler. Hence send_eoi is NOT needed */

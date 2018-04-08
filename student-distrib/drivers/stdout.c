@@ -180,6 +180,12 @@ void term_init()
  */
 void term_del()
 {
+	/* If keyboard not pressed yet, do nothing. (Experimental, terminal use.) */
+	if (term_buf_index == 0)
+	{
+		return;
+	}
+
 	/* Coordinates and location var. */
 	int x;
 	int y;
@@ -212,14 +218,21 @@ void term_del()
 	/* Set coordinates to decremented position again. */
 	set_xy(x, y);
 
+	if (afterenter_count > BUF_SIZE - 1)
+	{
+		afterenter_count--;
+		return;
+	}
+
 	/* If current buffer index is 0 (buffer empty), do nothing. */
 	/* Else, delete current char in buffer. */
-	if (term_buf_index != 0)
+	if (term_buf_index != 0 && afterenter_count <= BUF_SIZE - 1)
 	{
 		if (term_buf[term_buf_index - 1] != TERM_EOF)
 		{
 			term_buf[term_buf_index - 1] = TERM_EOF;
 			term_buf_index--;
+			afterenter_count--;
 			return;
 		}
 	}

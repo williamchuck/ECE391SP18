@@ -42,4 +42,7 @@ extern void int_ps2kbd_c();
 
 /* variables for enter key press */
 uint8_t enter_flag;
+
+/* Counter for all char entered after last enter keypress */
+uint32_t afterenter_count;
 #endif
