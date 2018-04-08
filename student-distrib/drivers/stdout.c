@@ -224,19 +224,10 @@ void term_del()
 		return;
 	}
 
-	/* If current buffer index is 0 (buffer empty), do nothing. */
-	/* Else, delete current char in buffer. */
-	if (term_buf_index != 0 && afterenter_count <= BUF_SIZE - 1)
-	{
-		if (term_buf[term_buf_index - 1] != TERM_EOF)
-		{
-			term_buf[term_buf_index - 1] = TERM_EOF;
-			term_buf_index--;
-			afterenter_count--;
-			return;
-		}
-	}
-
+	/* Delete current char in buffer and decrement count. */
+	term_buf[term_buf_index - 1] = TERM_EOF;
+	term_buf_index--;
+	afterenter_count--;
 	return;
 }
 

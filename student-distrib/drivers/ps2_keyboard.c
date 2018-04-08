@@ -198,8 +198,13 @@ void int_ps2kbd_c() {
 		/* Echo character using putc. */
 		putc(currentchar);
 
-		/* Increment count */
-		afterenter_count++;
+		/* Enter key does not count as key count. */
+		if (currentchar != ASCII_NL)
+		{
+			/* Increment count */
+			afterenter_count++;
+		}
+
 
 	}
 	/* EOI is handled by general irq handler. Hence send_eoi is NOT needed */
