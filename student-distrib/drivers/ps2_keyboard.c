@@ -80,9 +80,9 @@ static uint8_t alpha_flag;
 static uint8_t numpad_flag;
 
 /* variables for current keycode and ascii (if applicable) */
-unsigned char currentcode;
-unsigned char currentchar;
-char keypressed;
+static unsigned char currentcode;
+static unsigned char currentchar;
+
 /*
  * ps2_keyboard_init
  *   DESCRIPTION: Initialize PS2 keyboard.
@@ -95,6 +95,9 @@ void ps2_keyboard_init() {
 	/* Initialize terminal (MP3.2 only) */
 	term_init();
 
+	/* Clear buffer. */
+	ps2_keyboard_clearbuf();
+
 	/* Clear key toggle flags */
 	alt_flag = FLAG_OFF;
 	ctrl_flag = FLAG_OFF;
@@ -106,10 +109,23 @@ void ps2_keyboard_init() {
 	/* Clear current keycode flags */
 	alpha_flag = FLAG_OFF;
 	numpad_flag = FLAG_OFF;
+	enter_flag = FLAG_OFF;
 
 	/* enable_irq unused, use reques_irq for installation and enabling. */
 	//enable_irq(KBD_IRQ);
 	request_irq(KBD_IRQ, &int_ps2kbd_c);
+}
+
+void ps2_keyboard_clearbuf()
+{
+	int i;
+
+	for (i = 0; i < BUF_SIZE; i++)
+	{
+		term_buf[i] = TERM_EOF;
+	}
+	
+	term_buf_index = 0;
 }
 
 /*
@@ -122,12 +138,11 @@ void ps2_keyboard_init() {
  */
 void int_ps2kbd_c() {
 
+	/* Set enter flag to off. */
+	enter_flag = FLAG_OFF;
 
 	/* Get current scan code and initialize current char */
 	currentcode = ps2_keyboard_getscancode();
-	cur_kbdcode = currentcode;
-	currentchar = 0;
-	keypressed=1;
 
 	/* If a key IS pressed, get its ascii code */
 	if (currentcode != 0)
@@ -154,22 +169,6 @@ void int_ps2kbd_c() {
 			return;
 		}
 
-		/*
-		 * If enter is pressed, and the cursor is at the bottom of terminal
-		 * Scroll down a line, update cursor position and clear buffer.
-		 */
-		if ((currentcode == KBDENP))
-		{
-
-			if (get_y() == VGA_HEIGHT - 1)
-			{
-				scroll_down();
-				cursor_update();
-				return;
-			}
-
-		}
-
 		/* Get char to be printed */
 		currentchar = ps2_keyboard_getchar(currentcode);
 	}
@@ -179,11 +178,17 @@ void int_ps2kbd_c() {
 
 		/* Add char into terminal(keyboard) buffer. */
 		/* If current buffer is full, do nothing. */
-		if (term_buf_index < BUF_SIZE - 1)
+		if (term_buf_index < BUF_SIZE - 1 || currentchar == ASCII_NL)
 		{
 			/* Add char into buffer and increment index */
 			term_buf[term_buf_index] = currentchar;
 			term_buf_index++;
+
+			/* If enter key is pressed, toggle enter flag on. */
+			if (currentchar == ASCII_NL)
+			{
+				enter_flag = FLAG_ON;
+			}
 		}
 
 		/* Echo character using putc. */

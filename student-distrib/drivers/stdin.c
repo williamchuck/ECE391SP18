@@ -71,82 +71,43 @@ int32_t stdin_read(int32_t fd, void* buf, uint32_t nbytes)
 		return -1;
 	}
 
-	/* If outside buffer size is larger than terminal buffer size, return error. */
-	if (nbytes > BUF_SIZE)
+	/* Hold for enter key press. */
+	while (!enter_flag)
 	{
-		return -1;
+
 	}
 
-	while (cur_kbdcode != KBDENP){
-	    if(keypressed){
-	        keypressed=0;
-            if(currentchar&&i<nbytes-1){
-                buf_ptr[i]=currentchar;
-                i++;
-            }
-	    }
-	}
-	buf_ptr[i]='\n';
-	i++;
-//	/* Always clear buffer before reading */
-//	for (i = 0; i < BUF_SIZE; i++)
-//	{
-//		term_buf[i] = TERM_EOF;
-//	}
-//
-//	/* Initialize terminal buffer index */
-//	term_buf_index = 0;
-//
-//	/* Block when enter is not pressed. */
-//	/* Does not block outside buffer */
-//	while (cur_kbdcode != KBDENP && buf_ptr == term_buf)
-//	{
-//
-//	}
-//
-//	/* Read the bytes */
-//	/* We assume nbytes is smaller than or equal to the size of buffer. */
-//	/* We also use EOF to avoid most potential undefined behavior. */
-//	for (i = 0; i < nbytes; i++)
-//	{
-//		/* If reached end of file, return. */
-//		if (buf_ptr[i] == TERM_EOF)
-//		{
-//			/* Reset keycode to prevent crash in event loop */
-//			if (cur_kbdcode == KBDENP)
-//			{
-//				cur_kbdcode = 0;
-//			}
-//			return (uint32_t)i;
-//		}
-//
-//		/* Only read to buffer when input buffer is NOT keyboard */
-//		/* If buffer is full, refuse new input. */
-//		if ((buf_ptr != term_buf) && (term_buf_index < BUF_SIZE - 1))
-//		{
-//			/* Store data into buffer and increment buffer index */
-//			term_buf[term_buf_index] = buf_ptr[i];
-//			term_buf_index++;
-//		}
-//
-//		/* If newline is reached, return. */
-//		if (buf_ptr[i] == ASCII_NL)
-//		{
-//			/* Reset keycode to prevent crash in event loop */
-//			if (cur_kbdcode == KBDENP)
-//			{
-//				cur_kbdcode = 0;
-//			}
-//			return (uint32_t)(i + 1);
-//		}
-//	}
-
-	/* Reset keycode to prevent crash in event loop */
-	if (cur_kbdcode == KBDENP)
+	enter_flag = 0;
+	
+	/* Always clear target buffer with NULL */
+	for (i = 0; i < nbytes; i++)
 	{
-		cur_kbdcode = 0;
+		buf_ptr[i] = 0x00;
 	}
-	return i;
+
+	/* Read from internal buffer. */
+	for (i = 0; i < BUF_SIZE; i++)
+	{
+		/* If end of file, return. */
+		if (term_buf[i] == TERM_EOF)
+		{
+			ps2_keyboard_clearbuf();
+			return i;
+		}
+
+		/* If target buffer size exceeds local size, return. */
+		if (i >= nbytes)
+		{
+			ps2_keyboard_clearbuf();
+			return nbytes;
+		}
+
+		buf_ptr[i] = term_buf[i];
+	}
+
+	/* Clear buffer and return. */
+	ps2_keyboard_clearbuf();
+	return BUF_SIZE;
 }
 
 /*

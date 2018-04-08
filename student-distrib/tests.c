@@ -542,9 +542,9 @@ int stdin_read_test(){
     stdin_open(0);
     while(1){
         int nchar=stdin_read(0,buffer,bufsize);
-        printf("size: %d",nchar);
+        printf("size: %d\n",nchar);
         int i;
-        printf("stdin_read: ");
+        printf("stdin_read:\n");
         for(i=0;i<nchar;i++)putc(buffer[i]);
         if(buffer[nchar-1]!='\n'){
             stdin_close(0);
@@ -643,5 +643,5 @@ void launch_tests(){
     /* other tests */
     //TEST_OUTPUT("Long printf test (terminal driver)", long_printf_test());
     //TEST_OUTPUT("RTC_test", RTC_test());
-    //TEST_OUTPUT("stdin read test", stdin_read_test());
+    TEST_OUTPUT("stdin read test", stdin_read_test());
 }
