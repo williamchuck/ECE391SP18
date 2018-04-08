@@ -18,18 +18,30 @@ int32_t system_execute(const int8_t* file_name){
 	fd = file.f_op->open(file_name);
 	if(fd == -1)
 		return -1;
+	if(pid == 0){
+		current_PCB->file_desc_arr[0].f_op = stdin_op;
+		current_PCB->file_desc_arr[0].inode = 0;
+		current_PCB->file_desc_arr[0].f_pos = 0;
+		current_PCB->file_desc_arr[0].flag = 1;
 
-	current_PCB->file_desc_arr[0].f_op = stdin_op;
-	current_PCB->file_desc_arr[0].inode = 0;
-	current_PCB->file_desc_arr[0].f_pos = 0;
-	current_PCB->file_desc_arr[0].flag = 1;
 
-
-	current_PCB->file_desc_arr[1].f_op = stdout_op;
-	current_PCB->file_desc_arr[1].inode = 0;
-	current_PCB->file_desc_arr[1].f_pos = 0;
-	current_PCB->file_desc_arr[1].flag = 1;
+		current_PCB->file_desc_arr[1].f_op = stdout_op;
+		current_PCB->file_desc_arr[1].inode = 0;
+		current_PCB->file_desc_arr[1].f_pos = 0;
+		current_PCB->file_desc_arr[1].flag = 1;	
+	}
+	else{
+		(current_PCB - 1)->file_desc_arr[0].f_op = stdin_op;
+		(current_PCB - 1)->file_desc_arr[0].inode = 0;
+		(current_PCB - 1)->file_desc_arr[0].f_pos = 0;
+		(current_PCB - 1)->file_desc_arr[0].flag = 1;
 	
+	
+		(current_PCB - 1)->file_desc_arr[1].f_op = stdout_op;
+		(current_PCB - 1)->file_desc_arr[1].inode = 0;
+		(current_PCB - 1)->file_desc_arr[1].f_pos = 0;
+		(current_PCB - 1)->file_desc_arr[1].flag = 1;
+	}
 
 	size = get_size(file_name);
 	uint8_t buf[size];
@@ -61,6 +73,7 @@ int32_t system_execute(const int8_t* file_name){
 }
 
 int32_t system_halt(uint8_t status){
+	pid--;
 	return -1;
 }
 

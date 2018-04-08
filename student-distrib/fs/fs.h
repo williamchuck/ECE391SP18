@@ -14,7 +14,7 @@ typedef struct file_desc{
 	struct file_op* f_op;
 	uint32_t inode;
 	uint32_t f_pos;
-	uint8_t flag;
+	uint32_t flag;
 } file_desc_t;
 
 typedef struct file_op{

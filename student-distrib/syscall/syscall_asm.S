@@ -21,7 +21,7 @@ arg3
 0x00     0x20     0x30     0x02
 00000000 00100000 00110000 00000010
 */
-#define EXEC_FLAG 0x00203002
+#define EXEC_FLAG 0x00203202
 
 //take 2 stack argument of EIP and ESP for user program
 .GLOBAL jump_to_user
@@ -83,7 +83,19 @@ syscall_asm:
   movl $-1,%eax
   iret
   1: //proceed to call
-  pushal
+  
+  pushl $0
+  pushl $0
+  pushl $0
+
+  pushl %eax
+  pushl %ebp
+  pushl %edi
+  pushl %esi
+  pushl %edx
+  pushl %ecx
+  pushl %ebx
+
   //arg 1 2 3 in ebx ecx edx respectively
   //will always push 3 arguments, callee will take appropriate number
   pushl %edx
@@ -91,7 +103,19 @@ syscall_asm:
   pushl %ebx
   call *syscall_table(,%eax,4)
   addl $12,%esp //pop arguments
-  popal
+
+  movl %eax, 24(%esp)
+
+  popl %ebx
+  popl %ecx
+  popl %edx
+  popl %esi
+  popl %edi
+  popl %ebp
+  popl %eax
+
+  addl $12, %esp
+
   iret
 
 syscall_table:
