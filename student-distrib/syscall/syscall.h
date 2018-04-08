@@ -23,4 +23,6 @@ extern int32_t system_read(int32_t fd, void* buf, uint32_t size);
 
 extern int32_t system_write(int32_t fd, const void* buf, uint32_t size);
 
+extern void jump_to_user(void* entry_point);
+
 #endif

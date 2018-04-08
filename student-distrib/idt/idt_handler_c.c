@@ -1,5 +1,8 @@
-#include "idt_handler_c.h"
 
+/* Include useful functions from c library, however, not entirely necessary. */
+#include "../lib.h"
+/* Include types in stdint.h. Again, not entirely necessary. */
+#include "../types.h"
 /*
  * idt/idt_handler_c.c
  * C implementation of system exception handlers.
@@ -177,10 +180,5 @@ void int_1E_c()
 void int_1F_c()
 {
   printf("Interrupt 31 - Reserved by Shintel.\n");
-  asm volatile ("1: hlt; jmp 1b;");
-}
-void int_80_c()
-{
-  printf("Interrupt 128 - System Call.\n");
   asm volatile ("1: hlt; jmp 1b;");
 }
