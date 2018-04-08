@@ -157,7 +157,8 @@ void int_ps2kbd_c() {
 		/* If ctrl + L is pressed, clear screen, reset cursor */
 		if ((ctrl_flag != FLAG_OFF) && (currentcode == KBDLP))
 		{
-			term_init();
+			cursor_reset();
+			clear();
 			return;
 		}
 
