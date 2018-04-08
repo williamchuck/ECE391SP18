@@ -16,38 +16,18 @@ arg2
 arg3
 */
 
-#define GEN_CALL(func, num)\
-.GLOBAL func;\
-func:\
-  pushl %ebx;\
-  movl $num, %eax;\
-  movl 4(%esp), %ebx;\
-  movl 8(%esp), %ecx;\
-  movl 12(%esp), %edx;\
-  int $0x80;\
-  popl %ebx;\
-  ret
-
-GEN_CALL(ece391_execute,SYS_EXECUTE)
-GEN_CALL(ece391_halt,SYS_HALT)
-GEN_CALL(ece391_read,SYS_READ)
-GEN_CALL(ece391_write,SYS_WRITE)
-GEN_CALL(ece391_open,SYS_OPEN)
-GEN_CALL(ece391_close,SYS_CLOSE)
-
-
 /* EFLAGS
 31:24    23:16    15:8     7:0
 0x00     0x20     0x30     0x02
 00000000 00100000 00110000 00000010
 */
 #define EXEC_FLAG 0x00203002
-#include "../x86_desc.h"
 
-//take 1 stack argument of location of user program entry
+//take 2 stack argument of EIP and ESP for user program
 .GLOBAL jump_to_user
 jump_to_user:
-  movl 4(%esp),%eax //get user program entry point address into eax
+  movl 4(%esp),%eax 	//get user program entry point address into eax
+  movl 8(%esp),%ebx 	//get user program stack pointer into ebx
   /*http://www.c-jump.com/CIS77/ASM/Memory/M77_0290_segment_registers_protected.htm
     segment selector format:
     15:3  2  1:0
@@ -68,8 +48,8 @@ jump_to_user:
     0        1  0   0   ?0 0  ?0 0  ?0 11    0  0  1  0  0  0   0   0   0   0  1 0
   */
   //stack grows to lower address (up in a sense)
-
   //chang segment selectors for user program
+
   xorl %ecx,%ecx
   movw $USER_DS, %cx
   movw %cx, %ds
@@ -77,20 +57,14 @@ jump_to_user:
   movw %cx, %fs
   movw %cx, %gs
 
-  //TODO: set up ebp to somewhere in the user page
-
-  //clear other registers for security I guess?
-  xorl %ebx, %ebx
-  xorl %edx, %edx
-  xorl %esi, %esi
-  xorl %edi, %edi
-
   //set up stack for iret
+
   pushl %ecx //SS
-  pushl //TODO: esp
+  pushl %ebx //ESP
   pushl $EXEC_FLAG //eflags
   pushl $USER_CS //CS
   pushl %eax //user prog entry
+
   iret
 
 

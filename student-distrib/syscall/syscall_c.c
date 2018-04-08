@@ -7,28 +7,6 @@
 
 int p_num = 0;
 
-//void jump_to_user(){
-//	asm volatile (
-//		"pushl %0\n"
-//		"pushl %1\n"
-//		"pushfl\n"
-//		"orl $0x200, (%%esp)\n"
-//		"pushl %2\n"
-//		"pushl %3\n"
-//		"iret\n"
-//		: //no output
-//		:"g"(USER_DS), "g"(USER_VIRT_BOT - 4), "g"(USER_CS), "g"(entry_point)
-//	);
-//}
-
-//uint32_t current_ESP(){
-//	asm volatile(
-//		"movl (%%esp), %eax\n"
-//		"ret\n"
-//		:""
-//		:"g"()
-//	);
-//}
 int32_t system_execute(const int8_t* file_name){
 	int fd, size, cur_p_num;
 	uint32_t* entry_addr;
@@ -76,7 +54,7 @@ int32_t system_execute(const int8_t* file_name){
 	current_ESP = _8MB - (cur_p_num * _8KB);
 	tss.esp0 = current_ESP;
 	
-	//jump_to_user();
+	jump_to_user((uint32_t*)(*entry_addr), (uint32_t*)(_128MB + _4MB - 8));
 
 	return 0;		
 }

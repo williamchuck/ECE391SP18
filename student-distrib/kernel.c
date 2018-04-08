@@ -14,7 +14,6 @@
 
 /* IDT loader, c handler, x86 wrappers */
 #include "idt/idt_main.h"
-#include "idt/idt_handler_c.h"
 #include "idt/idt_handler_asm.h"
 #include "idt/interrupt.h"
 
@@ -26,6 +25,9 @@
 
 /* File system */
 #include "fs/fs.h"
+
+#include "process/process.h"
+#include "syscall/syscall.h"
 
 /* Macros. */
 /* Check if the bit BIT in FLAGS is set. */
@@ -200,7 +202,7 @@ void entry(unsigned long magic, unsigned long addr) {
     launch_tests();
 #endif
     /* Execute the first program ("shell") ... */
-
+    system_execute("shell");
     /* Spin (nicely, so we don't chew up cycles) */
     asm volatile (".1: hlt; jmp .1;");
 }

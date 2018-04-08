@@ -1,5 +1,5 @@
 //copied from mp3/syscalls
-#if !defined(ECE391SYSNUM_H)
+#ifndef ECE391SYSNUM_H
 #define ECE391SYSNUM_H
 
 #define SYS_HALT    1
@@ -12,5 +12,7 @@
 #define SYS_VIDMAP  8
 #define SYS_SET_HANDLER  9
 #define SYS_SIGRETURN  10
+#define USER_CS     0x0023
+#define USER_DS     0x002B
 
 #endif /* ECE391SYSNUM_H */

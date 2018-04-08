@@ -8,7 +8,7 @@
 #define _128MB 0x80000000
 #define _8MB 0x800000
 #define _4MB 0x400000
-#define _8KB 
+#define _8KB 0x2000
 
 extern int p_num;
 
@@ -24,6 +24,6 @@ extern int32_t system_read(int32_t fd, void* buf, uint32_t size);
 
 extern int32_t system_write(int32_t fd, const void* buf, uint32_t size);
 
-extern void jump_to_user(void* entry_point);
+extern void jump_to_user(void* entry_point, void* ESP);
 
 #endif
