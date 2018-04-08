@@ -32,9 +32,9 @@ extern void fill_page_dir();
 /* Fill page table with zeros */
 extern void fill_page_table();
 /* Set a 4MB page */
-extern void set_4MB(uint32_t phys_mem, uint32_t virt_mem);
+extern void set_4MB(uint32_t phys_mem, uint32_t virt_mem, uint8_t level);
 /* Set a 4KB page */
-extern void setPTE(uint32_t phys_mem, uint32_t virt_mem);
+extern void set_4KB(uint32_t phys_mem, uint32_t virt_mem, uint8_t level);
 /* Load in new page directory table addr */
 extern void flush_TLB();
 /* Enable paging */

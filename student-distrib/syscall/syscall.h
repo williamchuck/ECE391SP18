@@ -5,7 +5,7 @@
 
 #define shell_PCB 0x7FE000
 #define ls_PCB 0x7FC000
-#define _128MB 0x80000000
+#define _128MB 0x8000000
 #define _8MB 0x800000
 #define _4MB 0x400000
 #define _8KB 0x2000

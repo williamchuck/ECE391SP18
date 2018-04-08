@@ -5,14 +5,12 @@
 #include "../x86_desc.h"
 #include "../process/process.h"
 
-int p_num = 0;
+int pid = 0;
 
 int32_t system_execute(const int8_t* file_name){
-	int fd, size, cur_p_num;
+	int fd, size;
 	uint32_t* entry_addr;
 	uint32_t current_ESP, user_ESP, phys_addr, virt_addr;
-
-	cur_p_num = p_num + 1;
 
 	file_desc_t file;
 
@@ -34,27 +32,30 @@ int32_t system_execute(const int8_t* file_name){
 	
 
 	size = get_size(file_name);
-	uint32_t buf[size];
+	uint8_t buf[size];
 	file.f_op->read(fd, &buf, size);
 
-	if(buf[0] != 0x464C457F)
-		return -1;
-
-	//if(buf[0] != 0x7F || buf[1] != 0x45 || buf[2] != 0x4C || buf[3] != 0x46)
+	//if(buf[0] != 0x464C457F)
 	//	return -1;
 
-	phys_addr = _8MB + (cur_p_num * _4MB) ;
-	virt_addr = _128MB;
-	set_4MB(phys_addr, virt_addr);
-	
-	entry_addr = &(buf[24]);
-	memcpy((uint32_t*)(phys_addr + 0x48000), &buf, size);
+	if(buf[0] != 0x7F || buf[1] != 0x45 || buf[2] != 0x4C || buf[3] != 0x46)
+		return -1;
 
-	user_ESP = phys_addr + _4MB;
-	current_ESP = _8MB - (cur_p_num * _8KB);
+	phys_addr = _8MB + (pid * _4MB) ;
+	virt_addr = _128MB;
+	set_4MB(phys_addr, virt_addr, 3);
+	
+	entry_addr = (uint32_t*)(&(buf[24]));
+	memcpy((uint8_t*)(virt_addr + 0x48000), &buf, size);
+
+	user_ESP = virt_addr + _4MB;
+	current_ESP = _8MB - (pid * _8KB);
+
+	pid++;
 	tss.esp0 = current_ESP;
 	
 	jump_to_user((uint32_t*)(*entry_addr), (uint32_t*)(_128MB + _4MB - 8));
+
 
 	return 0;		
 }

@@ -48,13 +48,16 @@ void fill_page_table(){
  * Output: None
  * Effect: A 4MB page only accessable by kernel is setuped
  */
-void set_4MB(uint32_t phys_mem, uint32_t virt_mem){
+void set_4MB(uint32_t phys_mem, uint32_t virt_mem, uint8_t level){
 	uint32_t pde_idx;
 
 	/* Get first 10-bits of virtual memory as the index into page directory */
 	pde_idx = virt_mem >> 22;
 	/* Directly map a 4MB page into page directory */
-	page_dir[pde_idx] = (phys_mem & 0xFFFFF000) | EN_P | EN_R | EN_S;
+	if(level == 0)
+		page_dir[pde_idx] = (phys_mem & 0xFFFFF000) | EN_P | EN_R | EN_S;
+	else if(level == 3)
+		page_dir[pde_idx] = (phys_mem & 0xFFFFF000) | EN_P | EN_R | EN_S | EN_U;
 	/* Flush TLB for cache */
 	flush_TLB();
 }
@@ -67,7 +70,7 @@ void set_4MB(uint32_t phys_mem, uint32_t virt_mem){
  * Output: None
  * Effect: A 4KB page only accessable by kernel is setuped
  */
-void set_4KB(uint32_t phys_mem, uint32_t virt_mem){
+void set_4KB(uint32_t phys_mem, uint32_t virt_mem, uint8_t level){
 	uint32_t pde_idx, pte_idx;
 
 	/* Get first 10-bits of virtual memory as the index into page directory */
@@ -75,10 +78,18 @@ void set_4KB(uint32_t phys_mem, uint32_t virt_mem){
 	/* Get next 10-bits of virtual memory as the index into page table */
 	pte_idx = (virt_mem & 0x003FFFFF) >> 12;
 
-	/* Set PDE points to page table addr */
-	page_dir[pde_idx] = ((uint32_t)page_table & 0xFFFFF000) | EN_P | EN_R;
-	/* Set PTE points to the pysical memory we want to map */
-	page_table[pte_idx] = (phys_mem & 0xFFFFF000) | EN_P | EN_R;
+	if(level == 3){
+		/* Set PDE points to page table addr */
+		page_dir[pde_idx] = ((uint32_t)page_table & 0xFFFFF000) | EN_P | EN_R | EN_U;
+		/* Set PTE points to the pysical memory we want to map */
+		page_table[pte_idx] = (phys_mem & 0xFFFFF000) | EN_P | EN_R | EN_U;
+	}
+	else if(level == 0){
+		/* Set PDE points to page table addr */
+		page_dir[pde_idx] = ((uint32_t)page_table & 0xFFFFF000) | EN_P | EN_R;
+		/* Set PTE points to the pysical memory we want to map */
+		page_table[pte_idx] = (phys_mem & 0xFFFFF000) | EN_P | EN_R;
+	}
 	/* Flush TLB for cache */
 	flush_TLB();
 }
@@ -98,9 +109,9 @@ void setup_page(){
 	fill_page_table();
 
 	/* Set up a 4MB page for kernel */
-	set_4MB(KERNEL_MEM, KERNEL_MEM);
+	set_4MB(KERNEL_MEM, KERNEL_MEM, 0);
 	/* Set up a 4KB page for video memory */
-	set_4KB(VIDEO_MEM, VIDEO_MEM);
+	set_4KB(VIDEO_MEM, VIDEO_MEM, 0);
 
 	/* Enable page */
 	enablePage();
