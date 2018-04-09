@@ -22,7 +22,7 @@ arg3
 00000000 00100000 00110000 00000010
 */
 #define EXEC_FLAG 0x00203202
-
+.GLOBAL return_from_int
 //take 2 stack argument of EIP and ESP for user program
 .GLOBAL jump_to_user
 jump_to_user:
@@ -96,6 +96,13 @@ syscall_asm:
   pushl %ecx
   pushl %ebx
 
+  movl %esp, %eax
+  andl $0xFFFFE000, %eax
+  subl $0x2000, %eax
+  movl %esp, 0(%eax)
+  movl 24(%esp), %eax
+
+
   //arg 1 2 3 in ebx ecx edx respectively
   //will always push 3 arguments, callee will take appropriate number
   pushl %edx
@@ -106,6 +113,7 @@ syscall_asm:
 
   movl %eax, 24(%esp)
 
+return_from_int:
   popl %ebx
   popl %ecx
   popl %edx
