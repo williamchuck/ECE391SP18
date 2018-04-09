@@ -6,6 +6,7 @@
 #include "stdout.h"
 #include "../fs/fs.h"
 
+/* Standard output file operation structure. */
 static file_op_t stdout_file_op = {
 	.open = stdout_open,
 	.read = stdout_read,
@@ -13,6 +14,7 @@ static file_op_t stdout_file_op = {
 	.close = stdout_close
 };
 
+/* Pointer to file operation structure. */
 file_op_t* stdout_op = &stdout_file_op;
 
  /*

@@ -6,6 +6,7 @@
 #include "stdin.h"
 #include "../fs/fs.h"
 
+/* Standard input file operation structure. */
 static file_op_t stdin_file_op = {
 	.open = stdin_open,
 	.read = stdin_read,
@@ -13,10 +14,9 @@ static file_op_t stdin_file_op = {
 	.close = stdin_close
 };
 
+/* Pointer to file operation structure. */
 file_op_t* stdin_op = &stdin_file_op;
 
-/* Current code */
-unsigned char cur_kbdcode;
 /*
  * stdin_open
  * DESCRIPTION: "open" system call handler for standard input
