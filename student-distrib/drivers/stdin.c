@@ -48,11 +48,11 @@ int32_t stdin_close(int32_t fd)
  * stdin_read
  * DESCRIPTION: "read" system call handler for standard input
  * INPUT: fd - file descriptor
- *		  buf - incoming data stream (buffer) to be read
+ *		  buf - target buffer to be stored into
  *		  nbytes - number of bytes to be read
  * OUTPUT: none.
  * RETURN VALUE: number of bytes read on success, -1 on failure.
- * SIDE EFFECTS: Data will be stored into buffer. Return value affects sys. call.
+ * SIDE EFFECTS: Data will be stored into target buffer. Return value affects sys. call.
  */
 int32_t stdin_read(int32_t fd, void* buf, uint32_t nbytes)
 {
@@ -77,6 +77,7 @@ int32_t stdin_read(int32_t fd, void* buf, uint32_t nbytes)
 
 	}
 
+	/* Reset enter flag to avoid potential race conditions. */
 	enter_flag = 0;
 	
 	/* Always clear target buffer with NULL */
@@ -91,6 +92,7 @@ int32_t stdin_read(int32_t fd, void* buf, uint32_t nbytes)
 		/* If end of file, return. */
 		if (term_buf[i] == TERM_EOF)
 		{
+			/* Clear buffer and return. */
 			ps2_keyboard_clearbuf();
 			return i;
 		}
@@ -98,10 +100,12 @@ int32_t stdin_read(int32_t fd, void* buf, uint32_t nbytes)
 		/* If target buffer size exceeds local size, return. */
 		if (i >= nbytes)
 		{
+			/* Clear buffer and return. */
 			ps2_keyboard_clearbuf();
 			return nbytes;
 		}
 
+		/* Copy terminal buffer into target buffer. */
 		buf_ptr[i] = term_buf[i];
 	}
 

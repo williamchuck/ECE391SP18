@@ -119,15 +119,26 @@ void ps2_keyboard_init() {
 	request_irq(KBD_IRQ, &int_ps2kbd_c);
 }
 
+/*
+ * ps2_keyboard_clearbuf
+ * DESCRIPTION: Clears keyboard (terminal) buffer with EOF(0xFF)
+ * ARGUMENTS: none.
+ * OUTPUT: none.
+ * RETURN VALUE: none.
+ * SIDE EFFECTS: none.
+ */
 void ps2_keyboard_clearbuf()
 {
+	/* Loop var. */
 	int i;
-
+	
+	/* Clear terminal buffer. */
 	for (i = 0; i < BUF_SIZE; i++)
 	{
 		term_buf[i] = TERM_EOF;
 	}
 	
+	/* Reset index. */
 	term_buf_index = 0;
 }
 
@@ -202,7 +213,7 @@ void int_ps2kbd_c() {
 		/* Enter key does not count as key count. */
 		if (currentchar != ASCII_NL)
 		{
-			/* Increment count */
+			/* Increment keypress count */
 			afterenter_count++;
 		}
 

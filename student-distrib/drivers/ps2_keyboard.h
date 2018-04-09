@@ -44,5 +44,6 @@ extern void int_ps2kbd_c();
 uint8_t enter_flag;
 
 /* Counter for all char entered after last enter keypress */
+/* This is not index of keyboard buffer. */
 uint32_t afterenter_count;
 #endif
