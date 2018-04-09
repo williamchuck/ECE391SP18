@@ -172,6 +172,7 @@ void entry(unsigned long magic, unsigned long addr) {
 	/* Initialize file system */
 	init_fs(file_system_addr);
 
+	/* Initialize process control */
 	init_process();
 
 #if NOT_SHOW_MESSAGE

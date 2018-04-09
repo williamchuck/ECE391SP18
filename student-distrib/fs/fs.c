@@ -94,7 +94,7 @@ int32_t read_dentry_by_name(const int8_t* fname, dentry_t* dentry){
 	/* Initialize variables */
 	uint8_t* addr;
 	uint8_t str[FILE_NAME_LENGTH];
-	int i, j, size;
+	int i, j, size, fname_size;
 
 	/* Check for size of input fname */
 	size = 0;
@@ -112,6 +112,18 @@ int32_t read_dentry_by_name(const int8_t* fname, dentry_t* dentry){
 	for(i = 0; i < dentry_count; i++){
 		/* Temporary pointer to file name */
 		const int8_t* name = fname;
+
+		/* Get file name size in file img*/
+		fname_size = 0;
+		while(*(addr + fname_size) != '\0')
+			fname_size++;
+		
+		/* If the size is different, move to next dentry*/
+		if(fname_size != size){
+			addr += BOOT_BLOCK_ENTRY_SIZE;
+			continue;
+		}
+
 		/* Flag to check for match */
 		uint8_t same = 1;
 		/* Check if file name is the same */

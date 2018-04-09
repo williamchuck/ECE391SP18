@@ -10,6 +10,8 @@
 #ifndef SYSCALL_USER_H_
 #define SYSCALL_USER_H_
 #include "../types.h"
+
+/* User function for system calls */
 extern int32_t ece391_execute(const int8_t* file_name);
 
 extern int32_t ece391_halt(uint8_t status);

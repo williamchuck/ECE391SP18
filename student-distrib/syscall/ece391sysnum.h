@@ -1,7 +1,8 @@
-//copied from mp3/syscalls
+/* copied from mp3/syscalls */
 #ifndef ECE391SYSNUM_H
 #define ECE391SYSNUM_H
 
+/* Define syscall numbers */
 #define SYS_HALT    1
 #define SYS_EXECUTE 2
 #define SYS_READ    3
