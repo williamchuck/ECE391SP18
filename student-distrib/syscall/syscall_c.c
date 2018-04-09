@@ -19,7 +19,7 @@ int32_t get_free_pid(){
 
 int32_t system_execute(const int8_t* file_name){
 	int fd, size, child_pid, i;
-	uint32_t* entry_addr;
+	void* entry_addr;
 	uint32_t child_kernel_ESP, user_ESP, phys_addr, virt_addr, pid;
 	file_desc_t file;
 	//get pid for child
@@ -28,7 +28,7 @@ int32_t system_execute(const int8_t* file_name){
         return -1;
     }
 
-	//read executable file
+	//open file
 	file.f_op = data_op;
     fd = system_open(file_name);
     if(fd == -1)
@@ -37,28 +37,33 @@ int32_t system_execute(const int8_t* file_name){
         system_close(fd);
         return -1;
     }
-	size = get_size(file_name);
-    uint8_t buf[size];
-    system_read(fd, &buf, size);
+
+
+    //get current pid
+    pid = current_PCB->pid;
+    //get file size before switching page since the string wouldn't be accessible once page is switched
+    size = get_size(file_name);
+
+    phys_addr = _8MB + (child_pid * _4MB);//user space stack and prog image
+    virt_addr = _128MB;//swap all child proc on this page
+    set_4MB(phys_addr, virt_addr, 3);
+
+    //application load location
+    uint8_t* buf=(uint8_t*)(virt_addr + 0x48000);
+    system_read(fd, buf, size);
 
     //check executable magic
     if(buf[0] != 0x7F || buf[1] != 0x45 || buf[2] != 0x4C || buf[3] != 0x46){
         system_close(fd);
+        set_4MB(_8MB + (pid * _4MB), virt_addr, 3);//revert page back
         return -1;
     }
 
     //mark pid used
     process_desc_arr[child_pid].flag = 1;
 
-    //get current pid
-	pid = current_PCB->pid;
-
-	phys_addr = _8MB + (child_pid * _4MB);//user space stack and prog image
-    virt_addr = _128MB;//swap all child proc on this page
-    set_4MB(phys_addr, virt_addr, 3);
-
-    entry_addr = (uint32_t*)(&(buf[24]));
-    memcpy((uint8_t*)(virt_addr + 0x48000), &buf, size);
+    //get address of buf[24], reinterpret that as a double pointer, dereference it to get entry addr
+    entry_addr = *((void**)(&(buf[24])));
 
 
     user_ESP = virt_addr + _4MB - 8;//user stack at 128MB page+4MB, -8 so it doesnt go over page limit
@@ -89,7 +94,7 @@ int32_t system_execute(const int8_t* file_name){
 	if(system_close(fd) == -1)
 		return -1;
 	
-	return jump_to_user((uint32_t*)(*entry_addr), (uint32_t*)user_ESP, &(child_PCB->halt_back_ESP));
+	return jump_to_user(entry_addr, (uint32_t*)user_ESP, &(child_PCB->halt_back_ESP));
 }
 
 int32_t system_halt(uint8_t status){
