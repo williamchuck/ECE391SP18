@@ -76,14 +76,15 @@ jump_to_user:
 .GLOBAL syscall_asm
 syscall_asm:
   cmpl $MAXSYSCALL,%eax //check within range
-  jbe 1f
+  ja 1f
   cmpl $SYS_HALT,%eax
-  jae 1f
-  //bad syscall number
+  jae 2f
+
+  1: //bad syscall number
   movl $-1,%eax
   iret
-  1: //proceed to call
   
+  2: //proceed to call
   pushl $0
   pushl $0
   pushl $0
