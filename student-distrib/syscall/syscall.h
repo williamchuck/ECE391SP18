@@ -12,11 +12,8 @@
 #define _4MB 0x400000
 #define _8KB 0x2000
 #define OFFSET 0x48000
-#define EXE_MAGIC_0 0x7F
-#define EXE_MAGIC_1 0x45
-#define EXE_MAGIC_2 0x4C
-#define EXE_MAGIC_3 0x46
-#define ENTRY_POS 24
+#define EXE_MAGIC 0x464C457F
+#define ENTRY_POS_OFFSET 24
 
 /* Kernel functions for system calls */
 extern int32_t system_execute(const int8_t* file_name);

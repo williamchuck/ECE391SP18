@@ -17,7 +17,29 @@ arg1
 arg2
 arg3
 */
-//segment descriptor
+/*
+//doesn't seem like we can link user programs for now so leaving these commented out
+#define GEN_CALL(func, num)\
+.GLOBAL func;\
+func:\
+  pushl %ebx;\
+  movl $num, %eax;\
+  movl 4(%esp), %ebx;\
+  movl 8(%esp), %ecx;\
+  movl 12(%esp), %edx;\
+  int $0x80;\
+  popl %ebx;\
+  ret
+
+GEN_CALL(ece391_execute,SYS_EXECUTE)
+GEN_CALL(ece391_halt,SYS_HALT)
+GEN_CALL(ece391_read,SYS_READ)
+GEN_CALL(ece391_write,SYS_WRITE)
+GEN_CALL(ece391_open,SYS_OPEN)
+GEN_CALL(ece391_close,SYS_CLOSE)
+*/
+
+//segment descriptors include
 #include "../x86_desc.h"
 
 /* EFLAGS

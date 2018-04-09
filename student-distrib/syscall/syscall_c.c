@@ -34,8 +34,7 @@ int32_t get_free_pid(){
 int32_t system_execute(const int8_t* file_name){
     int fd, size, child_pid, i;
     void* entry_addr;
-    uint32_t child_kernel_ESP, user_ESP, phys_addr, virt_addr, pid;
-    file_desc_t file;
+    uint32_t child_kernel_ESP, user_ESP, phys_addr, virt_addr;
 
     /* Get pid for child */
     child_pid = get_free_pid();
@@ -44,21 +43,23 @@ int32_t system_execute(const int8_t* file_name){
         return -1;
     }
 
+
+
     /* open file */
-    file.f_op = data_op;
     fd = system_open(file_name);
     if(fd == -1)
         return -1;
+    //check that it's a data file
     if(current_PCB->file_desc_arr[fd].f_op != data_op){
         system_close(fd);
         return -1;
     }
-
-
-    /* Get current pid */
-    pid = current_PCB->pid;
     /* Get file size before switching page since the string wouldn't be accessible once page is switched */
     size = get_size(file_name);
+    if(size<ENTRY_POS_OFFSET){//if the file didn't reach the size where entry location is recorded, then it's not executable
+        system_close(fd);
+        return -1;
+    }
 
     /* Set up correct memory mapping for child process */
     phys_addr = _8MB + (child_pid * _4MB);
@@ -68,21 +69,24 @@ int32_t system_execute(const int8_t* file_name){
     /* Load user program */
     uint8_t* buf=(uint8_t*)(virt_addr + OFFSET);
     system_read(fd, buf, size);
+    //close file as we have finished loading the contents
+    system_close(fd);
 
     /* Check if file is executable */
-    if(buf[0] != EXE_MAGIC_0 || buf[1] != EXE_MAGIC_1 || buf[2] != EXE_MAGIC_2 || buf[3] != EXE_MAGIC_3){
-	/* Close file */
-        system_close(fd);
-	/* Remap memory back to current process */
-        set_4MB(_8MB + (pid * _4MB), virt_addr, 3);
+    if( *((uint32_t*)buf) != EXE_MAGIC){
+	    /* Remap memory back to current process */
+        set_4MB(_8MB + (current_PCB->pid * _4MB), virt_addr, 3);
         return -1;
     }
 
     /* Mark child pid as used */
     process_desc_arr[child_pid].flag = 1;
 
-    /* Get the address of entry addr */
-    entry_addr = *((void**)(&(buf[ENTRY_POS])));
+    /* Get the entry addr:
+     * get address of buf[ENTRY_POS_OFFSET],
+     * reinterpret that as a double pointer,
+     * dereference it to get entry addr */
+    entry_addr = *((void**)(&(buf[ENTRY_POS_OFFSET])));
 
     /* Set up user esp at the bottom of the user page, -8 so it doesnt go over page limit */
     user_ESP = virt_addr + _4MB - 8;
@@ -92,7 +96,9 @@ int32_t system_execute(const int8_t* file_name){
     /* Set TSS esp0 to child process kernel stack */
     tss.esp0 = child_kernel_ESP;
 
-	/* Calculate location of child PCB */
+	/* Calculate location of child PCB
+	 * top of the 8KB child kernel stack region is for PCB
+	 * as outlined in get_current_PCB */
 	PCB_block_t* child_PCB;
 	child_PCB = (PCB_block_t*)(child_kernel_ESP - _8KB + 8);
 
@@ -114,10 +120,6 @@ int32_t system_execute(const int8_t* file_name){
 	child_PCB->parent_PCB = current_PCB;
 	child_PCB->pid = child_pid;
 
-	/* Close the file */
-	if(system_close(fd) == -1)
-		return -1;
-	
 	/* Jump to user space */
 	return jump_to_user(entry_addr, (uint32_t*)user_ESP, &(child_PCB->halt_back_ESP));
 }
