@@ -204,7 +204,7 @@ void entry(unsigned long magic, unsigned long addr) {
     launch_tests();
 #endif
     /* Execute the first program ("shell") ... */
-    system_execute("shell");
+    while(1)system_execute("shell");
     /* Spin (nicely, so we don't chew up cycles) */
     asm volatile (".1: hlt; jmp .1;");
 }

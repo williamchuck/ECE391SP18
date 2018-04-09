@@ -5,6 +5,8 @@
  *      Author: Dennis
  */
 
+
+#define ASM
 //syscall numbers
 #include "ece391sysnum.h"
 //generate userland function for syscall
@@ -15,6 +17,8 @@ arg1
 arg2
 arg3
 */
+//segment descriptor
+#include "../x86_desc.h"
 
 /* EFLAGS
 31:24    23:16    15:8     7:0
@@ -22,12 +26,18 @@ arg3
 00000000 00100000 00110000 00000010
 */
 #define EXEC_FLAG 0x00203202
-.GLOBAL return_from_int
 //take 2 stack argument of EIP and ESP for user program
 .GLOBAL jump_to_user
 jump_to_user:
   movl 4(%esp),%eax 	//get user program entry point address into eax
-  movl 8(%esp),%ebx 	//get user program stack pointer into ebx
+  movl 12(%esp),%ecx    //get halt back ESP location
+  movl 8(%esp),%edx 	//get user program stack pointer into edx
+  //save callee saved regs and ebp for later return from halt
+  pushl %ebx
+  pushl %esi
+  pushl %edi
+  pushl %ebp
+  movl %esp,(%ecx) //save halt back ESP
   /*http://www.c-jump.com/CIS77/ASM/Memory/M77_0290_segment_registers_protected.htm
     segment selector format:
     15:3  2  1:0
@@ -48,8 +58,8 @@ jump_to_user:
     0        1  0   0   ?0 0  ?0 0  ?0 11    0  0  1  0  0  0   0   0   0   0  1 0
   */
   //stack grows to lower address (up in a sense)
-  //chang segment selectors for user program
 
+  //chang segment selectors for user program
   xorl %ecx,%ecx
   movw $USER_DS, %cx
   movw %cx, %ds
@@ -60,14 +70,23 @@ jump_to_user:
   //set up stack for iret
 
   pushl %ecx //SS
-  pushl %ebx //ESP
+  pushl %edx //ESP
   pushl $EXEC_FLAG //eflags
   pushl $USER_CS //CS
   pushl %eax //user prog entry
 
   iret
 
-
+.GLOBAL halt_ret_exec
+halt_ret_exec:
+  movl 8(%esp),%eax //save status code
+  movl 4(%esp),%esp //restore esp to status at jump to user
+  //restore callee saved regs
+  popl %ebp
+  popl %edi
+  popl %esi
+  popl %ebx
+  ret //return to syscall exec
 
 //the largest syscall number
 #define MAXSYSCALL SYS_CLOSE
@@ -85,24 +104,12 @@ syscall_asm:
   iret
   
   2: //proceed to call
-  pushl $0
-  pushl $0
-  pushl $0
-
-  pushl %eax
-  pushl %ebp
-  pushl %edi
-  pushl %esi
-  pushl %edx
-  pushl %ecx
+  //save all regs except eax for return value
   pushl %ebx
-
-  movl %esp, %eax
-  andl $0xFFFFE000, %eax
-  subl $0x2000, %eax
-  movl %esp, 0(%eax)
-  movl 24(%esp), %eax
-
+  pushl %ecx
+  pushl %edx
+  pushl %esi
+  pushl %edi
 
   //arg 1 2 3 in ebx ecx edx respectively
   //will always push 3 arguments, callee will take appropriate number
@@ -112,18 +119,12 @@ syscall_asm:
   call *syscall_table(,%eax,4)
   addl $12,%esp //pop arguments
 
-  movl %eax, 24(%esp)
-
-return_from_int:
-  popl %ebx
-  popl %ecx
-  popl %edx
-  popl %esi
+  //restore regs
   popl %edi
-  popl %ebp
-  popl %eax
-
-  addl $12, %esp
+  popl %esi
+  popl %edx
+  popl %ecx
+  popl %ebx
 
   iret
 

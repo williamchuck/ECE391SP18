@@ -9,7 +9,7 @@ int32_t get_free_pid(){
 	int i;
 	for(i = 0; i < 6; i++){
 		if(process_desc_arr[i].flag == 0){
-			process_desc_arr[i].flag = 1;
+			//process_desc_arr[i].flag = 1;
 			return i;
 		}
 	}
@@ -20,25 +20,58 @@ int32_t get_free_pid(){
 int32_t system_execute(const int8_t* file_name){
 	int fd, size, child_pid, i;
 	uint32_t* entry_addr;
-	uint32_t current_ESP, user_ESP, phys_addr, virt_addr, pid;
+	uint32_t child_kernel_ESP, user_ESP, phys_addr, virt_addr, pid;
 	file_desc_t file;
+	//get pid for child
+    child_pid = get_free_pid();
+    if(child_pid == -1){//check if new proc can be started
+        return -1;
+    }
 
-	child_pid = get_free_pid();
+	//read executable file
+	file.f_op = data_op;
+    fd = system_open(file_name);
+    if(fd == -1)
+        return -1;
+    if(current_PCB->file_desc_arr[fd].f_op!=data_op){
+        system_close(fd);
+        return -1;
+    }
+	size = get_size(file_name);
+    uint8_t buf[size];
+    system_read(fd, &buf, size);
 
-	if(child_pid == -1)
-		return -1;
+    //check executable magic
+    if(buf[0] != 0x7F || buf[1] != 0x45 || buf[2] != 0x4C || buf[3] != 0x46){
+        system_close(fd);
+        return -1;
+    }
 
+    //mark pid used
+    process_desc_arr[child_pid].flag = 1;
+
+    //get current pid
 	pid = current_PCB->pid;
+
+	phys_addr = _8MB + (child_pid * _4MB);//user space stack and prog image
+    virt_addr = _128MB;//swap all child proc on this page
+    set_4MB(phys_addr, virt_addr, 3);
+
+    entry_addr = (uint32_t*)(&(buf[24]));
+    memcpy((uint8_t*)(virt_addr + 0x48000), &buf, size);
+
+
+    user_ESP = virt_addr + _4MB - 8;//user stack at 128MB page+4MB, -8 so it doesnt go over page limit
+    child_kernel_ESP = _8MB - (child_pid * _8KB) - 8;//kernel mode stack, ditto
+
+    tss.esp0 = child_kernel_ESP;//esp for child's kernel mode stack
+
+	//calculate location of child PCB
 	PCB_block_t* child_PCB;
-	child_PCB = current_PCB - child_pid + pid;
+	child_PCB = (PCB_block_t*)(child_kernel_ESP - _8KB + 8);//top of the child kernel stack region is for PCB
 
 	for(i = 0; i < 8; i++)
 		child_PCB->file_desc_arr[i].flag = 0;
-
-	file.f_op = data_op;
-	fd = file.f_op->open(file_name);
-	if(fd == -1)
-		return -1;
 
 	child_PCB->file_desc_arr[0].f_op = stdin_op;
 	child_PCB->file_desc_arr[0].inode = 0;
@@ -52,60 +85,28 @@ int32_t system_execute(const int8_t* file_name){
 
 	child_PCB->parent_PCB = current_PCB;
 	child_PCB->pid = child_pid;
-	size = get_size(file_name);
-	uint8_t buf[size];
-	file.f_op->read(fd, &buf, size);
 
-	if(buf[0] != 0x7F || buf[1] != 0x45 || buf[2] != 0x4C || buf[3] != 0x46)
-		return -1;
-
-	phys_addr = _8MB + (child_pid * _4MB) ;
-	virt_addr = _128MB;
-	set_4MB(phys_addr, virt_addr, 3);
-	
-	entry_addr = (uint32_t*)(&(buf[24]));
-	memcpy((uint8_t*)(virt_addr + 0x48000), &buf, size);
-
-	user_ESP = virt_addr + _4MB;
-	current_ESP = _8MB - (child_pid * _8KB);
-
-	tss.esp0 = current_ESP;
-
-	if(file.f_op->close(fd) == -1)
+	if(system_close(fd) == -1)
 		return -1;
 	
-	jump_to_user((uint32_t*)(*entry_addr), (uint32_t*)(_128MB + _4MB - 8));
-
-	return 0;		
+	return jump_to_user((uint32_t*)(*entry_addr), (uint32_t*)user_ESP, &(child_PCB->halt_back_ESP));
 }
 
 int32_t system_halt(uint8_t status){
-	uint32_t pid, phys_addr, virt_addr, parent_pid, p_ESP;
+	uint32_t pid, phys_addr, virt_addr, parent_pid;
 	pid = current_PCB->pid;
-	parent_pid = current_PCB->parent_PCB->pid;
-	p_ESP = current_PCB->parent_ESP;
+	process_desc_arr[pid].flag = 0;//unset flag for pid
 
-	phys_addr = _8MB + (parent_pid * _4MB);
+	parent_pid = current_PCB->parent_PCB->pid;
+
+	phys_addr = _8MB + (parent_pid * _4MB);//get parent's userspace mem addr to remap
 	virt_addr = _128MB;
 	set_4MB(phys_addr, virt_addr, 3);
 	
-	process_desc_arr[current_PCB->pid].flag = 0;
-	tss.esp0 = _8MB - (parent_pid * _8KB); 
 
-	process_desc_arr[pid].flag = 0;
-		
-	if(pid == 0){
-		process_desc_arr[0].flag = 0;
-		return system_execute("shell");
-	}
+	tss.esp0 = (uint32_t)(_8MB - (parent_pid * _8KB)-8);
 	
-	asm volatile(
-		"movl %0, %%esp\n"
-		"movl %1, 24(%%esp)\n"
-		"jmp return_from_int\n"
-		:
-		: "g"(p_ESP), "g"((uint32_t)status)
-	);	
+	halt_ret_exec(current_PCB->halt_back_ESP, status);
 
 	return -1;
 }
