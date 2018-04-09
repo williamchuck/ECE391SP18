@@ -15,6 +15,9 @@
 #define EXE_MAGIC 0x464C457F
 #define ENTRY_POS_OFFSET 24
 
+#define FD_MIN 0
+#define FD_MAX 7
+
 /* Kernel functions for system calls */
 extern int32_t system_execute(const int8_t* file_name);
 

@@ -193,6 +193,10 @@ int32_t system_open(const int8_t* fname){
  * Effect: Read the file
  */
 int32_t system_read(int32_t fd, void* buf, uint32_t size){
+    //fd range check
+    if(fd<FD_MIN||fd>FD_MAX)return -1;
+    //check if fd loaded
+    if(!current_PCB->file_desc_arr[fd].flag)return -1;
 	/* Call corresponding read serivice call */
 	return current_PCB->file_desc_arr[fd].f_op->read(fd, buf, size);
 }
@@ -206,6 +210,10 @@ int32_t system_read(int32_t fd, void* buf, uint32_t size){
  * Effect: Write the file
  */
 int32_t system_write(int32_t fd, const void* buf, uint32_t size){
+    //fd range check
+    if(fd<FD_MIN||fd>FD_MAX)return -1;
+    //check if fd loaded
+    if(!current_PCB->file_desc_arr[fd].flag)return -1;
 	/* Call corresponding write serivice call */
 	return current_PCB->file_desc_arr[fd].f_op->write(fd, buf, size);	
 }
@@ -218,6 +226,12 @@ int32_t system_write(int32_t fd, const void* buf, uint32_t size){
  * Effect: Close the file
  */
 int32_t system_close(int32_t fd){
+    //fd range check
+    if(fd<FD_MIN||fd>FD_MAX)return -1;
+    //check if fd loaded
+    if(!current_PCB->file_desc_arr[fd].flag)return -1;
+    //stdin and out can't be closed
+    if(fd==0||fd==1)return -1;
 	/* Call corresponding close serivice call */
 	return current_PCB->file_desc_arr[fd].f_op->close(fd);	
 }
