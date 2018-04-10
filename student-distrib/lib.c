@@ -584,6 +584,25 @@ int32_t strncmp(const int8_t* s1, const int8_t* s2, uint32_t n) {
 	return 0;
 }
 
+int32_t strcmp(const int8_t* s1, const int8_t* s2)
+{
+	int32_t i;
+	i = 0;
+	while (1)
+	{
+		if (s1[i] == '\0' && s2[i] == '\0')
+		{
+			return 0;
+		}
+		if (s1[i] != s2[i])
+		{
+			return s1[i] - s2[i];
+		}
+		i++;
+	}
+	return 0;
+}
+
 /* int8_t* strcpy(int8_t* dest, const int8_t* src)
  * Inputs:      int8_t* dest = destination string of copy
  *         const int8_t* src = source string of copy
