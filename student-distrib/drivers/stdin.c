@@ -76,9 +76,6 @@ int32_t stdin_read(int32_t fd, void* buf, uint32_t nbytes)
 	{
 
 	}
-
-	/* Reset enter flag to avoid potential race conditions. */
-	enter_flag = 0;
 	
 	/* Always clear target buffer with NULL */
 	for (i = 0; i < nbytes; i++)
@@ -92,6 +89,9 @@ int32_t stdin_read(int32_t fd, void* buf, uint32_t nbytes)
 		/* If end of file, return. */
 		if (term_buf[i] == TERM_EOF)
 		{
+			/* Reset enter flag to avoid potential race conditions. */
+			enter_flag = 0;
+
 			/* Clear buffer and return. */
 			ps2_keyboard_clearbuf();
 			return i;
@@ -100,6 +100,9 @@ int32_t stdin_read(int32_t fd, void* buf, uint32_t nbytes)
 		/* If target buffer size exceeds local size, return. */
 		if (i >= nbytes)
 		{
+			/* Reset enter flag to avoid potential race conditions. */
+			enter_flag = 0;
+
 			/* Clear buffer and return. */
 			ps2_keyboard_clearbuf();
 			return nbytes;
@@ -108,6 +111,9 @@ int32_t stdin_read(int32_t fd, void* buf, uint32_t nbytes)
 		/* Copy terminal buffer into target buffer. */
 		buf_ptr[i] = term_buf[i];
 	}
+
+	/* Reset enter flag to avoid potential race conditions. */
+	enter_flag = 0;
 
 	/* Clear buffer and return. */
 	ps2_keyboard_clearbuf();

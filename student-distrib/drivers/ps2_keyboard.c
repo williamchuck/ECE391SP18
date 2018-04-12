@@ -152,9 +152,6 @@ void ps2_keyboard_clearbuf()
  */
 void int_ps2kbd_c() {
 
-	/* Set enter flag to off. */
-	enter_flag = FLAG_OFF;
-
 	/* Get current scan code and initialize current char */
 	currentcode = ps2_keyboard_getscancode();
 
