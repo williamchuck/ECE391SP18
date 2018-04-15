@@ -38,6 +38,7 @@ GEN_CALL(ece391_write,SYS_WRITE)
 GEN_CALL(ece391_open,SYS_OPEN)
 GEN_CALL(ece391_close,SYS_CLOSE)
 GEN_CALL(ece391_getargs, SYS_GETARGS)
+GEN_CALL(ece391_vidmap, SYS_VIDMAP)
 */
 
 //segment descriptors include
@@ -112,7 +113,7 @@ halt_ret_exec:
   ret //return to syscall exec
 
 //the largest syscall number
-#define MAXSYSCALL SYS_GETARGS
+#define MAXSYSCALL SYS_VIDMAP
 //system call linkage
 /* Interrupt 128 - System Call */
 .GLOBAL syscall_asm
@@ -160,6 +161,6 @@ syscall_table:
   .long system_open
   .long system_close
   .long system_getargs
-  .long 0 //vidmap ditto
+  .long system_vidmap
   .long 0 //set handler ditto
   .long 0 //sigreturn ditto

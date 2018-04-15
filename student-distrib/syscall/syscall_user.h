@@ -26,6 +26,8 @@ extern int32_t ece391_write(int32_t fd, const void* buf, uint32_t size);
 
 extern int32_t ece391_getargs(uint8_t* buf, int32_t nbytes);
 
+extern int32_t ece391_vidmap(uint8_t** screen_start);
+
 
 
 #endif /* SYSCALL_USER_H_ */

@@ -51,11 +51,11 @@ void init_fs(uint32_t* file_system_addr){
 	/* Read dentry count */
 	addr = fs_addr;
 	dentry_count = *addr;
-	
+
 	/* Read inode count */
 	addr++;
 	inode_count = *addr;
-	
+
 	/* Read data block count */
 	addr++;
 	data_block_count = *addr;
@@ -76,7 +76,7 @@ uint32_t get_size(const int8_t* fname){
 	/* Fill in dentry */
 	if(read_dentry_by_name(fname, &dentry) == -1)
 		return -1;
-	
+
 	/* Read size according to inode */
 	addr = fs_addr + INT_PER_BLOCK * (dentry.inode + 1);
 
@@ -117,7 +117,13 @@ int32_t read_dentry_by_name(const int8_t* fname, dentry_t* dentry){
 		fname_size = 0;
 		while(*(addr + fname_size) != '\0')
 			fname_size++;
-		
+
+		/* Truncate file name in case of failed null term string. */
+		if (fname_size >= FILE_NAME_LENGTH)
+		{
+			fname_size = FILE_NAME_LENGTH;
+		}
+
 		/* If the size is different, move to next dentry*/
 		if(fname_size != size){
 			addr += BOOT_BLOCK_ENTRY_SIZE;
@@ -141,7 +147,7 @@ int32_t read_dentry_by_name(const int8_t* fname, dentry_t* dentry){
 			addr++;
 			name++;
 		}
-		
+
 		/* If same, then fill in the dentry and return 0 */
 		if(same){
 			/* Fill in dentry file_name */
@@ -247,7 +253,7 @@ int32_t read_data(uint32_t inode, uint32_t offset, uint8_t* buf, uint32_t length
 		temp++;
 	}
 
-	/* Set data_block_number */	
+	/* Set data_block_number */
 	data_block_number = *(inode_addr + (offset/BLOCK_SIZE));
 	/* Set bytes left to read in current data block */
 	byte_left = file_size - BLOCK_SIZE * (offset/BLOCK_SIZE);
@@ -266,7 +272,7 @@ int32_t read_data(uint32_t inode, uint32_t offset, uint8_t* buf, uint32_t length
 			offset = offset + i;
 			/* Reset position in data block to 0 */
 			j = 0;
-			/* Reset data_block_number */	
+			/* Reset data_block_number */
 			data_block_number = *(inode_addr + (offset/BLOCK_SIZE));
 			/* Reset bytes left to read in current data block */
 			byte_left = file_size - BLOCK_SIZE * (offset/BLOCK_SIZE);
@@ -441,7 +447,10 @@ int32_t dir_read(int32_t fd, void* buf, uint32_t size){
 	for(i = 0; i < size; i++){
 		/* No more than 32 bytes is allowed */
 		if(i >= FILE_NAME_LENGTH)
+		{
+			((uint8_t*)buf)[FILE_NAME_LENGTH] = 0x00;
 			break;
+		}
 		/* Copy filename to buf */
 		((uint8_t*)buf)[i] = dentry.file_name[i];
 	}
@@ -476,7 +485,7 @@ int32_t dir_close(int32_t fd){
 	/* If file is already closed, return -1 */
 	if(current_PCB->file_desc_arr[fd].flag == 0)
 		return -1;
-	
+
 	/* Clean up file desc array entry */
 	current_PCB->file_desc_arr[fd].f_op = NULL;
 	current_PCB->file_desc_arr[fd].inode = 0;
@@ -484,18 +493,5 @@ int32_t dir_close(int32_t fd){
 	current_PCB->file_desc_arr[fd].flag = 0;
 
 	/* Return 0 on success */
-	return 0;	
+	return 0;
 }
-
-
-
-
-
-
-
-
-
-
-
-
-

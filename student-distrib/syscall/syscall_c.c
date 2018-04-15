@@ -300,6 +300,12 @@ int32_t system_getargs(uint8_t* buf, int32_t nbytes)
 
 	for (i = 0; i < BUF_SIZE; i++)
 	{
+		if (shell_buf[i] == 0x00)
+		{
+			arg_finished = 1;
+			arg_finishindex = i;
+			break;
+		}
 		if ((cmd_started == 0) && shell_buf[i] != ASCII_SPACE)
 		{
 			cmd_started = 1;
@@ -315,12 +321,6 @@ int32_t system_getargs(uint8_t* buf, int32_t nbytes)
 			arg_started = 1;
 			arg_startindex = i;
 			continue;
-		}
-		if (shell_buf[i] == 0x00)
-		{
-			arg_finished = 1;
-			arg_finishindex = i;
-			break;
 		}
 	}
 
@@ -344,5 +344,16 @@ int32_t system_getargs(uint8_t* buf, int32_t nbytes)
 		buf[i - arg_startindex] = shell_buf[i];
 	}
 
+	return 0;
+}
+
+int32_t system_vidmap(uint8_t** screen_start)
+{
+	if ((screen_start < (uint8_t**)_128MB) || (screen_start >= (uint8_t**)(_128MB + _4MB)))
+	{
+		return -1;
+	}
+	set_4KB(VIDEO_MEM, _128MB + _4MB, 3);
+	*screen_start = (uint8_t*)(_128MB + _4MB);
 	return 0;
 }

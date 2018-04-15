@@ -35,6 +35,8 @@ extern int32_t system_write(int32_t fd, const void* buf, uint32_t size);
 
 extern int32_t system_getargs(uint8_t* buf, int32_t nbytes);
 
+extern int32_t system_vidmap(uint8_t** screen_start);
+
 /* Return to user space */
 extern int32_t jump_to_user(void* entry_point, void* ESP, void** haltESP_loc);
 /* Return from execute */
