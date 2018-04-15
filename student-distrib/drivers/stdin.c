@@ -58,7 +58,7 @@ int32_t stdin_read(int32_t fd, void* buf, uint32_t nbytes)
 {
 	/* Pointer to data stream to be read */
 	unsigned char* buf_ptr;
-	
+
 	/* Loop var. */
 	int i=0;
 
@@ -76,11 +76,17 @@ int32_t stdin_read(int32_t fd, void* buf, uint32_t nbytes)
 	{
 
 	}
-	
+
 	/* Always clear target buffer with NULL */
 	for (i = 0; i < nbytes; i++)
 	{
 		buf_ptr[i] = 0x00;
+	}
+
+	/* Copy entire terminal buffer to shell buffer. */
+	for (i = 0; i < BUF_SIZE; i++)
+	{
+		shell_buf[i] = term_buf[i];
 	}
 
 	/* Read from internal buffer. */

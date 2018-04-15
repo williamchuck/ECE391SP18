@@ -22,6 +22,10 @@
 #include "drivers/ps2_keyboard.h"
 #include "drivers/ps2_controller.h"
 #include "drivers/rtc.h"
+#include "drivers/stdin.h"
+#include "drivers/stdout.h"
+
+#include "syscall/syscall_user.h"
 
 /* File system */
 #include "fs/fs.h"
@@ -196,6 +200,22 @@ void entry(unsigned long magic, unsigned long addr) {
 
     printf("Enabling Interrupts\n");
     sti();
+
+    int32_t cnt;
+    uint8_t commandbuf[1024];
+    uint8_t argbuf[1024];
+
+    /*while(1)
+    {
+      puts("testOS>");
+      if (-1 == (cnt = stdin_read(0, commandbuf, 1023)))
+      {
+        puts("Error\n");
+        break;
+      }
+      system_getargs((int8_t*)argbuf, 1024);
+      puts(argbuf);
+    }*/
 
 #if RUN_TESTS
     /* Run tests */

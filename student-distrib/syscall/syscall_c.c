@@ -4,6 +4,8 @@
 #include "../lib.h"
 #include "../x86_desc.h"
 #include "../process/process.h"
+#include "../drivers/stdin.h"
+#include "../drivers/stdout.h"
 
 /*
  * get_free_pid:
@@ -29,7 +31,7 @@ int32_t get_free_pid(){
  * Description: Execute system call kernel function
  * Input: File name of the file want to execute
  * Output: -1 on fail, 0 on success
- * Effect: Execute the file 
+ * Effect: Execute the file
  */
 int32_t system_execute(const int8_t* file_name){
     int fd, size, child_pid, i;
@@ -145,10 +147,10 @@ int32_t system_halt(uint8_t status){
 	phys_addr = _8MB + (parent_pid * _4MB);
 	virt_addr = _128MB;
 	set_4MB(phys_addr, virt_addr, 3);
-	
+
 	/* Set up parent kernel stack addr for TSS */
 	tss.esp0 = (uint32_t)(_8MB - (parent_pid * _8KB)-8);
-	
+
 	/* Jump to return from execute */
 	halt_ret_exec(current_PCB->halt_back_ESP, status);
 
@@ -169,7 +171,7 @@ int32_t system_open(const int8_t* fname){
 
 	/* Get dentry of the file */
 	read_dentry_by_name(fname, &dentry);
-	
+
 	/* Assign correct file operations */
 	if(dentry.file_type == 0)
 		file.f_op = rtc_op;
@@ -187,7 +189,7 @@ int32_t system_open(const int8_t* fname){
 /*
  * system_read:
  * Description: Read system call kernel function
- * Input: File descirptor of the file to read, a pointer to a buffer to read into 
+ * Input: File descirptor of the file to read, a pointer to a buffer to read into
  * 	  and the number of bytes to read
  * Output: -1 on fail, number of bytes actually read on success
  * Effect: Read the file
@@ -215,7 +217,7 @@ int32_t system_write(int32_t fd, const void* buf, uint32_t size){
     //check if fd loaded
     if(!current_PCB->file_desc_arr[fd].flag)return -1;
 	/* Call corresponding write serivice call */
-	return current_PCB->file_desc_arr[fd].f_op->write(fd, buf, size);	
+	return current_PCB->file_desc_arr[fd].f_op->write(fd, buf, size);
 }
 
 /*
@@ -233,12 +235,82 @@ int32_t system_close(int32_t fd){
     //stdin and out can't be closed
     if(fd==0||fd==1)return -1;
 	/* Call corresponding close serivice call */
-	return current_PCB->file_desc_arr[fd].f_op->close(fd);	
+	return current_PCB->file_desc_arr[fd].f_op->close(fd);
 }
 
+/*
+ * system_getargs
+ * DESCRIPTION: get arguments in a comman line
+ * INPUTS: buf - target buffer to be copied to.
+ * 				 nbytes - number of bytes in target buffer
+ * OUTPUT: none.
+ * RETURN VALUE: -1 when failed. number of bytes copied when success.
+ * SIDE EFFECTS: none.
+ */
+int32_t system_getargs(uint8_t* buf, int32_t nbytes)
+{
+	int arg_startindex;
+	int arg_finishindex;
+	int i;
+	uint8_t cmd_started;
+	uint8_t cmd_finished;
+	uint8_t arg_started;
+	uint8_t arg_finished;
 
+	cmd_started = 0;
+	cmd_finished = 0;
+	arg_started = 0;
+	arg_finished = 0;
+	arg_startindex = -1;
+	arg_finishindex = -1;
 
+	for (i = 0; i < BUF_SIZE; i++)
+	{
+		if ((cmd_started == 0) && shell_buf[i] != ASCII_SPACE)
+		{
+			cmd_started = 1;
+			continue;
+		}
+		if ((cmd_started == 1) && (cmd_finished == 0) && (shell_buf[i] == ASCII_SPACE))
+		{
+			cmd_finished = 1;
+			continue;
+		}
+		if ((cmd_finished == 1) && (arg_started == 0) && (shell_buf[i] != ASCII_SPACE))
+		{
+			arg_started = 1;
+			arg_startindex = i;
+			continue;
+		}
+		if ((arg_started == 1) && (arg_finished == 0) && (shell_buf[i] == ASCII_NL))
+		{
+			arg_finished = 1;
+			arg_finishindex = i;
+			break;
+		}
+	}
 
+	if (arg_startindex == -1)
+	{
+		return -1;
+	}
 
+	if (arg_finishindex - arg_startindex + 1 > nbytes)
+	{
+		return -1;
+	}
 
+	for (i = 0; i < nbytes; i++)
+	{
+		buf[i] = 0x00;
+	}
 
+	for (i = arg_startindex; i <= arg_finishindex; i++)
+	{
+		buf[i - arg_startindex] = shell_buf[i];
+	}
+
+	buf[arg_finishindex - arg_startindex] = 0x00;
+
+	return (int32_t)(arg_finishindex - arg_startindex + 1);
+}

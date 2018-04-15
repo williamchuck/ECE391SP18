@@ -124,7 +124,7 @@ syscall_asm:
   1: //bad syscall number
   movl $-1,%eax
   iret
-  
+
   2: //proceed to call
   //save all regs except eax for return value
   pushl %ebx
@@ -158,7 +158,7 @@ syscall_table:
   .long system_write
   .long system_open
   .long system_close
-  .long 0 //getargs not implemented yet
+  .long 0 //system_getargs
   .long 0 //vidmap ditto
   .long 0 //set handler ditto
   .long 0 //sigreturn ditto

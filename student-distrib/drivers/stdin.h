@@ -11,6 +11,7 @@
 #include "../lib.h"
 #include "../types.h"
 #include "stdout.h"
+#include "../syscall/syscall.h"
 
 /* Some constants */
 /* VGA data ports and index for cursor control */
@@ -24,7 +25,7 @@
 #define VGA_HEIGHT         25
 
 /* ASCII constants, We use 0xFF as EOF in this system */
-#define ASCII_NL		   0x0A
+#define ASCII_NL		       0x0A
 #define TERM_EOF           0xFF
 
 /* File Descriptors for Input and Output */
@@ -32,10 +33,10 @@
 #define TERM_OUT_FD        0x01
 
 /* Buffer size is 128 bytes */
-#define BUF_SIZE		   128
+#define BUF_SIZE		       128
 
 /* Keycode of enter key */
-#define KBDENP			   0x1C
+#define KBDENP			       0x1C
 
 /* Open handler for standard input */
 extern int32_t stdin_open(const int8_t* filename);
