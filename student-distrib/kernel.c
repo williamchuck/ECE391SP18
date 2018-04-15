@@ -201,9 +201,9 @@ void entry(unsigned long magic, unsigned long addr) {
     printf("Enabling Interrupts\n");
     sti();
 
-    int32_t cnt;
+    /* int32_t cnt;
     uint8_t commandbuf[1024];
-    uint8_t argbuf[1024];
+    uint8_t argbuf[1024]; */
 
     /*while(1)
     {

@@ -34,9 +34,11 @@ int32_t get_free_pid(){
  * Effect: Execute the file
  */
 int32_t system_execute(const int8_t* file_name){
-    int fd, size, child_pid, i;
+    int fd, size, child_pid, i, j;
     void* entry_addr;
     uint32_t child_kernel_ESP, user_ESP, phys_addr, virt_addr;
+		int8_t command[BUF_SIZE];
+		int8_t cmd_started;
 
     /* Get pid for child */
     child_pid = get_free_pid();
@@ -45,10 +47,42 @@ int32_t system_execute(const int8_t* file_name){
         return -1;
     }
 
+		/* Copy filename to shell buffer */
+		/* Also clears command var. */
+		for (i = 0; i < BUF_SIZE; i++)
+		{
+			shell_buf[i] = file_name[i];
+			command[i] = 0x00;
+		}
 
+		/* Extract actual command from entire shell line. */
+		cmd_started = 0;
+		j = 0;
+
+		for (i = 0; i < BUF_SIZE; i++)
+		{
+			if (file_name[i] == 0x00)
+			{
+				break;
+			}
+
+			if (file_name[i] != ASCII_SPACE)
+			{
+				if (cmd_started == 0)
+				{
+					cmd_started = 1;
+				}
+				command[j] = file_name[i];
+				j++;
+			}
+			else if ((file_name[i] == ASCII_SPACE) && (cmd_started == 1))
+			{
+				break;
+			}
+		}
 
     /* open file */
-    fd = system_open(file_name);
+    fd = system_open(command);
     if(fd == -1)
         return -1;
     //check that it's a data file
@@ -57,7 +91,7 @@ int32_t system_execute(const int8_t* file_name){
         return -1;
     }
     /* Get file size before switching page since the string wouldn't be accessible once page is switched */
-    size = get_size(file_name);
+    size = get_size(command);
     if(size<ENTRY_POS_OFFSET){//if the file didn't reach the size where entry location is recorded, then it's not executable
         system_close(fd);
         return -1;
@@ -282,7 +316,7 @@ int32_t system_getargs(uint8_t* buf, int32_t nbytes)
 			arg_startindex = i;
 			continue;
 		}
-		if ((arg_started == 1) && (arg_finished == 0) && (shell_buf[i] == ASCII_NL))
+		if (shell_buf[i] == 0x00)
 		{
 			arg_finished = 1;
 			arg_finishindex = i;
@@ -290,7 +324,7 @@ int32_t system_getargs(uint8_t* buf, int32_t nbytes)
 		}
 	}
 
-	if (arg_startindex == -1)
+	if ((arg_startindex == -1) || arg_finishindex < arg_startindex)
 	{
 		return -1;
 	}
@@ -310,7 +344,5 @@ int32_t system_getargs(uint8_t* buf, int32_t nbytes)
 		buf[i - arg_startindex] = shell_buf[i];
 	}
 
-	buf[arg_finishindex - arg_startindex] = 0x00;
-
-	return (int32_t)(arg_finishindex - arg_startindex + 1);
+	return 0;
 }

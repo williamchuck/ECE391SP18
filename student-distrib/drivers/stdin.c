@@ -83,12 +83,6 @@ int32_t stdin_read(int32_t fd, void* buf, uint32_t nbytes)
 		buf_ptr[i] = 0x00;
 	}
 
-	/* Copy entire terminal buffer to shell buffer. */
-	for (i = 0; i < BUF_SIZE; i++)
-	{
-		shell_buf[i] = term_buf[i];
-	}
-
 	/* Read from internal buffer. */
 	for (i = 0; i < BUF_SIZE; i++)
 	{

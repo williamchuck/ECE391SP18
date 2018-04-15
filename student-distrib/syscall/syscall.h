@@ -40,6 +40,6 @@ extern int32_t jump_to_user(void* entry_point, void* ESP, void** haltESP_loc);
 /* Return from execute */
 extern void halt_ret_exec(void* back_ESP, uint32_t status);
 
-/* Buffer for shell command. Copied from terminal buffer upon enter key press */
+/* Buffer for shell command. Copied from terminal buffer upon execution */
 uint8_t shell_buf[BUF_SIZE];
 #endif
