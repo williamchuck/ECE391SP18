@@ -196,6 +196,16 @@ void int_ps2kbd_c() {
 			term_buf[term_buf_index] = currentchar;
 			term_buf_index++;
 
+			/* Enter key does not count as key count. */
+			if (currentchar != ASCII_NL)
+			{
+				/* Increment keypress count */
+				afterenter_count++;
+			}
+
+			/* Echo character using putc. */
+			putc(currentchar);
+
 			/* If enter key is pressed, toggle enter flag on. */
 			if (currentchar == ASCII_NL)
 			{
@@ -203,17 +213,6 @@ void int_ps2kbd_c() {
 				enter_flag = FLAG_ON;
 			}
 		}
-
-		/* Echo character using putc. */
-		putc(currentchar);
-
-		/* Enter key does not count as key count. */
-		if (currentchar != ASCII_NL)
-		{
-			/* Increment keypress count */
-			afterenter_count++;
-		}
-
 
 	}
 	/* EOI is handled by general irq handler. Hence send_eoi is NOT needed */
