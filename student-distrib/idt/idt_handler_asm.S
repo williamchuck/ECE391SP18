@@ -185,6 +185,7 @@ int_E_asm:
   pushal
   call int_E_c
   popal
+  addl $4,%esp
   iret
 
 /* Interrupt 15 - Reserved by Shintel */

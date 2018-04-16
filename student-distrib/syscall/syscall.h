@@ -25,6 +25,8 @@ extern int32_t system_execute(const int8_t* file_name);
 
 extern int32_t system_halt(uint8_t status);
 
+extern int32_t system_internal_halt(uint32_t status);
+
 extern int32_t system_open(const int8_t* fname);
 
 extern int32_t system_close(int32_t fd);
