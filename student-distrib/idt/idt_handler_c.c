@@ -27,6 +27,7 @@
 void int_0_c()
 {
   printf("Interrupt 0 - Fault - Divide Error Exception (#DE).\n");
+  system_internal_halt(256);
   asm volatile ("1: hlt; jmp 1b;");
 }
 void int_1_c()
@@ -57,6 +58,7 @@ void int_5_c()
 void int_6_c()
 {
   printf("Interrupt 6 - Fault - Invalid Opcode Exception.\n");
+  system_internal_halt(256);
   asm volatile ("1: hlt; jmp 1b;");
 }
 void int_7_c()
@@ -92,11 +94,12 @@ void int_C_c()
 void int_D_c()
 {
   printf("Interrupt 13 - Fault - General Protection Exception.\n");
+  system_internal_halt(256);
   asm volatile ("1: hlt; jmp 1b;");
 }
 void int_E_c()
 {
-  printf("Interrupt 14 - Fault - Page-Fault Exception.\n");
+  printf("Segmentation Fault (Core not dumped)\n");
   //halt application for segfault
   system_internal_halt(256);
   asm volatile ("1: hlt; jmp 1b;");
