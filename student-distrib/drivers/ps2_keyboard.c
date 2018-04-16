@@ -5,7 +5,7 @@
  */
 #include "ps2_keyboard.h"
 
-/* Keycode set 1. Only for displaying the asciis. */
+ /* Keycode set 1. Only for displaying the asciis. */
 static unsigned char set1_code[89] = {
 0, 0, '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '-', '=', 0,
 0, 'q', 'w', 'e', 'r', 't', 'y', 'u', 'i', 'o', 'p', '[', ']', 0x0A,
@@ -57,10 +57,6 @@ static unsigned char set1_code_toggled[89] = {
 #define RSHIFTR                       0xB6
 #define ALTR                          0xB8
 #define CTRLR                         0x9D
-
-/* ON and OFF state for keyboard flags */
-#define FLAG_ON						  0xFF
-#define FLAG_OFF					  0x00
 
 /* Range for scancode numpad */
 #define SCAN_NUMP_UP				  0x53
@@ -114,6 +110,9 @@ void ps2_keyboard_init() {
 	numpad_flag = FLAG_OFF;
 	enter_flag = FLAG_OFF;
 
+	/* Clear Read flag */
+	read_flag = FLAG_OFF;
+
 	/* enable_irq unused, use reques_irq for installation and enabling. */
 	//enable_irq(KBD_IRQ);
 	request_irq(KBD_IRQ, &int_ps2kbd_c);
@@ -131,13 +130,13 @@ void ps2_keyboard_clearbuf()
 {
 	/* Loop var. */
 	int i;
-	
+
 	/* Clear terminal buffer. */
 	for (i = 0; i < BUF_SIZE; i++)
 	{
 		term_buf[i] = TERM_EOF;
 	}
-	
+
 	/* Reset index. */
 	term_buf_index = 0;
 }
@@ -161,6 +160,12 @@ void int_ps2kbd_c() {
 		/* Process toggle flags first */
 		ps2_keyboard_processflags(currentcode);
 
+		/* Keyboard input only has real effect when stdin_read is in use. */
+		if (read_flag == FLAG_OFF)
+		{
+			return;
+		}
+
 		/* Special handler for clearing screens */
 		/* If ctrl + L is pressed, clear screen, reset cursor */
 		if ((ctrl_flag != FLAG_OFF) && (currentcode == KBDLP))
@@ -170,8 +175,8 @@ void int_ps2kbd_c() {
 			return;
 		}
 
-		/* 
-		 * If backspace is pressed, delete current char before cursor 
+		/*
+		 * If backspace is pressed, delete current char before cursor
 		 * and update cursor position.
 		 */
 		if (currentcode == KBDBKP)
@@ -187,7 +192,6 @@ void int_ps2kbd_c() {
 	/* If this key has displable ascii code, print it out! */
 	if (currentchar != 0)
 	{
-
 		/* Add char into terminal(keyboard) buffer. */
 		/* If current buffer is full, do nothing. */
 		if (term_buf_index < BUF_SIZE - 1 || currentchar == ASCII_NL)
@@ -213,7 +217,6 @@ void int_ps2kbd_c() {
 				enter_flag = FLAG_ON;
 			}
 		}
-
 	}
 	/* EOI is handled by general irq handler. Hence send_eoi is NOT needed */
 	//send_eoi(KBD_IRQ);
@@ -252,7 +255,7 @@ unsigned char ps2_keyboard_getchar(unsigned char scancode) {
 	/* If the key pressed has a corresponding value, return it */
 	if (scancode <= 90) {
 
-		/* 
+		/*
 		 * If Numlock is ON and a numpad key is pressed,
 		 * display toggled char.
 		 */
@@ -261,7 +264,7 @@ unsigned char ps2_keyboard_getchar(unsigned char scancode) {
 			return set1_code_toggled[scancode];
 		}
 
-		/* 
+		/*
 		 * If only shift is pressed,
 		 * displayed toggled char.
 		 */
@@ -286,7 +289,7 @@ unsigned char ps2_keyboard_getchar(unsigned char scancode) {
 			}
 		}
 		/*
-		 * If shift is not pressed but Capslock is ON, 
+		 * If shift is not pressed but Capslock is ON,
 		 */
 		if (shift_flag == FLAG_OFF && capsl_flag != FLAG_OFF)
 		{

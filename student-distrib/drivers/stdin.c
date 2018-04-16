@@ -62,12 +62,16 @@ int32_t stdin_read(int32_t fd, void* buf, uint32_t nbytes)
 	/* Loop var. */
 	int i=0;
 
+	/* Set read flag to on */
+	read_flag = FLAG_ON;
+
 	/* Cast void* to unsigned char* */
 	buf_ptr = (unsigned char*)buf;
 
 	/* If input stream pointer is NULL, return error. */
 	if (buf_ptr == NULL)
 	{
+		read_flag = FLAG_OFF;
 		return -1;
 	}
 
@@ -94,6 +98,7 @@ int32_t stdin_read(int32_t fd, void* buf, uint32_t nbytes)
 
 			/* Clear buffer and return. */
 			ps2_keyboard_clearbuf();
+			read_flag = FLAG_OFF;
 			return i;
 		}
 
@@ -105,6 +110,7 @@ int32_t stdin_read(int32_t fd, void* buf, uint32_t nbytes)
 
 			/* Clear buffer and return. */
 			ps2_keyboard_clearbuf();
+			read_flag = FLAG_OFF;
 			return nbytes;
 		}
 
@@ -117,6 +123,7 @@ int32_t stdin_read(int32_t fd, void* buf, uint32_t nbytes)
 
 	/* Clear buffer and return. */
 	ps2_keyboard_clearbuf();
+	read_flag = FLAG_OFF;
 	return BUF_SIZE;
 }
 
