@@ -124,10 +124,10 @@ int32_t system_execute(const int8_t* file_name){
      * dereference it to get entry addr */
     entry_addr = *((void**)(&(buf[ENTRY_POS_OFFSET])));
 
-    /* Set up user esp at the bottom of the user page, -8 so it doesnt go over page limit */
-    user_ESP = virt_addr + _4MB - 8;
+    /* Set up user esp at the bottom of the user page */
+    user_ESP = virt_addr + _4MB;
     /* Set up child process kernel esp at the bottom of the 8KB block */
-    child_kernel_ESP = _8MB - (child_pid * _8KB) - 8;
+    child_kernel_ESP = _8MB - (child_pid * _8KB);
 
     /* Set TSS esp0 to child process kernel stack */
     tss.esp0 = child_kernel_ESP;
@@ -136,7 +136,7 @@ int32_t system_execute(const int8_t* file_name){
 	 * top of the 8KB child kernel stack region is for PCB
 	 * as outlined in get_current_PCB */
 	PCB_block_t* child_PCB;
-	child_PCB = (PCB_block_t*)(child_kernel_ESP - _8KB + 8);
+	child_PCB = (PCB_block_t*)((child_kernel_ESP-1) & _8KB_MASK);
 
 	/* Initialize file_desc_arr for child process */
 	for(i = 0; i < 8; i++)
@@ -177,13 +177,20 @@ int32_t system_halt(uint8_t status){
 	/* Get parent pid */
 	parent_pid = current_PCB->parent_PCB->pid;
 
-	/* Get parent's userspace mem addr to remap */
-	phys_addr = _8MB + (parent_pid * _4MB);
-	virt_addr = _128MB;
-	set_4MB(phys_addr, virt_addr, 3);
+	if(parent_pid!=0){//if parent process is a user program
+        /* Get parent's userspace mem addr to remap */
+        phys_addr = _8MB + (parent_pid * _4MB);
+        virt_addr = _128MB;
+        set_4MB(phys_addr, virt_addr, 3);
+	}
+	else{//if no more user program running
+	    free_4MB(_128MB);//free the 4MB page at 128MB
+	}
+
+	free_4KB(_128MB+_4MB);//free the vidmap for user program
 
 	/* Set up parent kernel stack addr for TSS */
-	tss.esp0 = (uint32_t)(_8MB - (parent_pid * _8KB)-8);
+	tss.esp0 = (uint32_t)(_8MB - (parent_pid * _8KB));
 
 	/* Jump to return from execute */
 	halt_ret_exec(current_PCB->halt_back_ESP, status);

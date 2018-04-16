@@ -4,6 +4,10 @@
 #include "../fs/fs.h"
 #include "../types.h"
 
+//0 is not used for user process, so actually only 6 proc can be ran
+#define NUM_PROC 7
+
+#define _8KB_MASK 0xFFFFE000
 typedef struct PCB_block
  {
     void* halt_back_ESP;
@@ -27,12 +31,12 @@ typedef struct process_desc{
 /* Get 8KB block starting address */
 static inline uint32_t get_current_PCB() {
 	uint32_t i, mask;
-	mask = 0xFFFFE000;
+	mask = _8KB_MASK;
 	return ((uint32_t)(&i)) & mask;
 }
 
 /* Procee_desc_arr */
-extern process_desc_t process_desc_arr[6];
+extern process_desc_t process_desc_arr[NUM_PROC];
 
 /* Initialize process control */
 extern void init_process();
