@@ -173,7 +173,6 @@ int32_t system_execute(const int8_t* file_name){
  * Effect: Halt the file
  */
 int32_t system_halt(uint8_t status){
-    int i;
     system_internal_halt(status);
     return -1;
 }
@@ -187,10 +186,6 @@ int32_t system_halt(uint8_t status){
 int32_t system_internal_halt(uint32_t status){
 	uint32_t pid, phys_addr, virt_addr, parent_pid;
 	pid = current_PCB->pid;
-
-	/* Clear up current file_desc_arr*/
-	for(i = 0; i < 8; i++)
-		current_PCB->file_desc_arr[i].flag = 0;
 
 	/* Unset flag for current pid */
 	process_desc_arr[pid].flag = 0;
