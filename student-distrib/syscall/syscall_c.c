@@ -16,7 +16,7 @@
  */
 int32_t get_free_pid(){
 	int i;
-	for(i = 0; i < 6; i++){
+	for(i = 0; i < NUM_PROC; i++){
 		if(process_desc_arr[i].flag == 0){
 			//process_desc_arr[i].flag = 1;
 			return i;
