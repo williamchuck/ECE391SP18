@@ -160,18 +160,18 @@ void int_ps2kbd_c() {
 		/* Process toggle flags first */
 		ps2_keyboard_processflags(currentcode);
 
-		/* Keyboard input only has real effect when stdin_read is in use. */
-		if (read_flag == FLAG_OFF)
-		{
-			return;
-		}
-
 		/* Special handler for clearing screens */
 		/* If ctrl + L is pressed, clear screen, reset cursor */
 		if ((ctrl_flag != FLAG_OFF) && (currentcode == KBDLP))
 		{
 			cursor_reset();
 			clear();
+			return;
+		}
+
+		/* Keyboard input only has real effect when stdin_read is in use. */
+		if (read_flag == FLAG_OFF)
+		{
 			return;
 		}
 
