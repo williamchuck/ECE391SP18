@@ -22,6 +22,10 @@
 /* Size of buffer is 128 */
 #define BUF_SIZE    128
 
+/* Flag on/off definition */
+#define FLAG_ON		0xFF
+#define FLAG_OFF	0x00
+
 /* Initialize keyboard */
 void ps2_keyboard_init();
 

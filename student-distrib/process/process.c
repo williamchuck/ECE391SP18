@@ -1,12 +1,12 @@
 #include "process.h"
 
 /* Process_desc_arr to contorl processes */
-process_desc_t process_desc_arr[6];
+process_desc_t process_desc_arr[NUM_PROC];
 
 void init_process(){
 	/* Initilize process_desc_arr */
 	int i;
-	for(i = 0; i < 6; i++)
+	for(i = 0; i < NUM_PROC; i++)
 		process_desc_arr[i].flag = 0;
 
 	/* use pid 0 as sentinel process */

@@ -14,7 +14,7 @@
 /* Some constants */
 /* VGA data ports and index for cursor control */
 #define TEXT_IN_ADDR       0x03D4
-#define TEXT_IN_DATA	   0x03D5
+#define TEXT_IN_DATA	     0x03D5
 #define CURSOR_HIGH        0x0E
 #define CURSOR_LOW         0x0F
 
@@ -23,8 +23,9 @@
 #define VGA_HEIGHT         25
 
 /* ASCII constants, We use 0xFF as EOF in this system */
-#define ASCII_NL		   0x0A
+#define ASCII_NL		       0x0A
 #define TERM_EOF           0xFF
+#define ASCII_SPACE        0x20
 
 /* File Descriptors for Input and Output */
 #define TERM_IN_FD         0x00

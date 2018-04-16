@@ -182,7 +182,7 @@ void term_init()
  */
 void term_del()
 {
-	/* If keyboard not pressed yet, do nothing. */
+	/* If keyboard buffer is empty, do nothing. */
 	if (term_buf_index == 0)
 	{
 		return;
@@ -198,27 +198,26 @@ void term_del()
 	y = get_y();
 	pos = y * VGA_WIDTH + x;
 
-	/* If current cursor is at (0, 0), just do nothing. */
-	if (pos == 0)
-	{
-		return;
-	}
-	else
+	/* Cursor manipulation is separated from buffer manipulation. */
+	/* If current position is 0, do nothing to cursor. */
+	if (pos != 0)
 	{
 		/* Decrement position and calculate new cursor coordinates. */
 		pos--;
 		x = pos % VGA_WIDTH;
 		y = pos / VGA_WIDTH;
+
+		/* Set new cursor position to write over (delete) char on screen. */
+		set_xy(x, y);
+
+		/* Use NULL character to erase character to be deleted */
+		putc(0x00);
+
+		/* Set coordinates to decremented position again. */
+		set_xy(x, y);
 	}
 
-	/* Set new cursor position to write over (delete) char on screen. */
-	set_xy(x, y);
-
-	/* Use NULL character to erase character to be deleted */
-	putc(0x00);
-
-	/* Set coordinates to decremented position again. */
-	set_xy(x, y);
+	
 
 	/* If user has exceeded maximum buffer size. Do not modify buffer. */
 	/* Only decrement keypress count. */

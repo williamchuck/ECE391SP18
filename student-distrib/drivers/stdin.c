@@ -58,9 +58,12 @@ int32_t stdin_read(int32_t fd, void* buf, uint32_t nbytes)
 {
 	/* Pointer to data stream to be read */
 	unsigned char* buf_ptr;
-	
+
 	/* Loop var. */
 	int i=0;
+
+	/* Set read flag to on */
+	read_flag = FLAG_ON;
 
 	/* Cast void* to unsigned char* */
 	buf_ptr = (unsigned char*)buf;
@@ -68,6 +71,7 @@ int32_t stdin_read(int32_t fd, void* buf, uint32_t nbytes)
 	/* If input stream pointer is NULL, return error. */
 	if (buf_ptr == NULL)
 	{
+		read_flag = FLAG_OFF;
 		return -1;
 	}
 
@@ -77,9 +81,6 @@ int32_t stdin_read(int32_t fd, void* buf, uint32_t nbytes)
 
 	}
 
-	/* Reset enter flag to avoid potential race conditions. */
-	enter_flag = 0;
-	
 	/* Always clear target buffer with NULL */
 	for (i = 0; i < nbytes; i++)
 	{
@@ -92,16 +93,24 @@ int32_t stdin_read(int32_t fd, void* buf, uint32_t nbytes)
 		/* If end of file, return. */
 		if (term_buf[i] == TERM_EOF)
 		{
+			/* Reset enter flag to avoid potential race conditions. */
+			enter_flag = 0;
+
 			/* Clear buffer and return. */
 			ps2_keyboard_clearbuf();
+			read_flag = FLAG_OFF;
 			return i;
 		}
 
 		/* If target buffer size exceeds local size, return. */
 		if (i >= nbytes)
 		{
+			/* Reset enter flag to avoid potential race conditions. */
+			enter_flag = 0;
+
 			/* Clear buffer and return. */
 			ps2_keyboard_clearbuf();
+			read_flag = FLAG_OFF;
 			return nbytes;
 		}
 
@@ -109,8 +118,12 @@ int32_t stdin_read(int32_t fd, void* buf, uint32_t nbytes)
 		buf_ptr[i] = term_buf[i];
 	}
 
+	/* Reset enter flag to avoid potential race conditions. */
+	enter_flag = 0;
+
 	/* Clear buffer and return. */
 	ps2_keyboard_clearbuf();
+	read_flag = FLAG_OFF;
 	return BUF_SIZE;
 }
 
