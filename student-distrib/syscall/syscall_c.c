@@ -59,13 +59,16 @@ int32_t system_execute(const int8_t* file_name){
 		cmd_started = 0;
 		j = 0;
 
+		/* Read command. (First word starting with non-space/null and terminated by space/null */
 		for (i = 0; i < BUF_SIZE; i++)
 		{
+			/* If reaching NULL, break. */
 			if (file_name[i] == 0x00)
 			{
 				break;
 			}
 
+			/* When reach non-space chars, copy command. */
 			if (file_name[i] != ASCII_SPACE)
 			{
 				if (cmd_started == 0)
@@ -75,6 +78,8 @@ int32_t system_execute(const int8_t* file_name){
 				command[j] = file_name[i];
 				j++;
 			}
+
+			/* When encounter space separating command and arg, break. */
 			else if ((file_name[i] == ASCII_SPACE) && (cmd_started == 1))
 			{
 				break;
@@ -301,14 +306,20 @@ int32_t system_close(int32_t fd){
  */
 int32_t system_getargs(uint8_t* buf, int32_t nbytes)
 {
+	/* Starting and Finising index of argument in buffer. */
 	int arg_startindex;
 	int arg_finishindex;
+
+	/* Loop var.*/
 	int i;
+
+	/* Flags for traversing through buffer. */
 	uint8_t cmd_started;
 	uint8_t cmd_finished;
 	uint8_t arg_started;
 	uint8_t arg_finished;
 
+	/* Reset arguments and indexes. */
 	cmd_started = 0;
 	cmd_finished = 0;
 	arg_started = 0;
@@ -316,24 +327,29 @@ int32_t system_getargs(uint8_t* buf, int32_t nbytes)
 	arg_startindex = -1;
 	arg_finishindex = -1;
 
+	/* Traverse through entire buffer. Shell lines are always NULL terminated. */
 	for (i = 0; i < BUF_SIZE; i++)
 	{
+		/* When reach newline, finish traversing. */
 		if (shell_buf[i] == 0x00)
 		{
 			arg_finished = 1;
 			arg_finishindex = i;
 			break;
 		}
+		/* If command has been read, set flag. */
 		if ((cmd_started == 0) && shell_buf[i] != ASCII_SPACE)
 		{
 			cmd_started = 1;
 			continue;
 		}
+		/* If command has ended (space), set flag. */
 		if ((cmd_started == 1) && (cmd_finished == 0) && (shell_buf[i] == ASCII_SPACE))
 		{
 			cmd_finished = 1;
 			continue;
 		}
+		/* If argument has started, set index and flag. */
 		if ((cmd_finished == 1) && (arg_started == 0) && (shell_buf[i] != ASCII_SPACE))
 		{
 			arg_started = 1;
@@ -342,35 +358,51 @@ int32_t system_getargs(uint8_t* buf, int32_t nbytes)
 		}
 	}
 
+	/* If no argument or invalid argument, return error. */
 	if ((arg_startindex == -1) || arg_finishindex < arg_startindex)
 	{
 		return -1;
 	}
 
+	/* If argument too large for buffer, return -1. */
 	if (arg_finishindex - arg_startindex + 1 > nbytes)
 	{
 		return -1;
 	}
 
+	/* Clear target buffer with NULL char. */
 	for (i = 0; i < nbytes; i++)
 	{
 		buf[i] = 0x00;
 	}
 
+	/* Copy argument into target buffer. */
 	for (i = arg_startindex; i <= arg_finishindex; i++)
 	{
 		buf[i - arg_startindex] = shell_buf[i];
 	}
 
+	/* Return success. */
 	return 0;
 }
 
+/*
+ * system_vidmap
+ * DESCRIPTION: maps the text-mode video memory into user space at a pre-set virtual address.
+ * INPUTS: screen_start: virtual address of video memory.
+ * OUTPUT: none.
+ * RETURN VALUE: -1 when failed. 0 when success.
+ * SIDE EFFECTS: Text-mode video memory is mapped into user space.
+ */
 int32_t system_vidmap(uint8_t** screen_start)
 {
+	/* If user space address is not valid, return error. */
 	if ((screen_start < (uint8_t**)_128MB) || (screen_start >= (uint8_t**)(_128MB + _4MB)))
 	{
 		return -1;
 	}
+
+	/* Map vmem into user space address. */
 	set_4KB(VIDEO_MEM, _128MB + _4MB, 3);
 	*screen_start = (uint8_t*)(_128MB + _4MB);
 	return 0;
