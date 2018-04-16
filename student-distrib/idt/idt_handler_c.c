@@ -98,7 +98,7 @@ void int_E_c()
 {
   printf("Interrupt 14 - Fault - Page-Fault Exception.\n");
   //halt application for segfault
-  halt_ret_exec(current_PCB->halt_back_ESP,256);
+  system_internal_halt(256);
   asm volatile ("1: hlt; jmp 1b;");
 }
 void int_F_c()

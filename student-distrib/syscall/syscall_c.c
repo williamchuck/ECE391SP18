@@ -168,6 +168,17 @@ int32_t system_execute(const int8_t* file_name){
  * Effect: Halt the file
  */
 int32_t system_halt(uint8_t status){
+    system_internal_halt(status);
+    return -1;
+}
+/*
+ * system_halt:
+ * Description: Halt system call kernel function
+ * Input: Return value to user space
+ * Output: Always -1 because it should not return
+ * Effect: Halt the file
+ */
+int32_t system_internal_halt(uint32_t status){
 	uint32_t pid, phys_addr, virt_addr, parent_pid;
 	pid = current_PCB->pid;
 
