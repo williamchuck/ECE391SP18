@@ -43,48 +43,45 @@ int32_t system_execute(const int8_t* file_name){
     /* Get pid for child */
     child_pid = get_free_pid();
     /* Check if pid is valid */
-    if(child_pid == -1){
+    if(child_pid == -1)
         return -1;
-    }
+    /* Check if file_name is valid */
+    if(file_name == NULL)
+	return -1;
 
-		/* Copy filename to shell buffer */
-		/* Also clears command var. */
-		for (i = 0; i < BUF_SIZE; i++)
-		{
-			shell_buf[i] = file_name[i];
-			command[i] = 0x00;
+    /* Copy filename to shell buffer */
+    /* Also clears command var. */
+	for (i = 0; i < BUF_SIZE; i++)
+	{
+		shell_buf[i] = file_name[i];
+		command[i] = 0x00;
+	}
+
+	/* Extract actual command from entire shell line. */
+	cmd_started = 0;
+	j = 0;
+
+	/* Read command. (First word starting with non-space/null and terminated by space/null */
+	for (i = 0; i < BUF_SIZE; i++)
+	{
+		/* If reaching NULL, break. */
+		if (file_name[i] == 0x00)
+			break;
+
+		/* When reach non-space chars, copy command. */
+		if (file_name[i] != ASCII_SPACE){
+
+			if (cmd_started == 0)
+				cmd_started = 1;
+
+			command[j] = file_name[i];
+			j++;
 		}
 
-		/* Extract actual command from entire shell line. */
-		cmd_started = 0;
-		j = 0;
-
-		/* Read command. (First word starting with non-space/null and terminated by space/null */
-		for (i = 0; i < BUF_SIZE; i++)
-		{
-			/* If reaching NULL, break. */
-			if (file_name[i] == 0x00)
-			{
-				break;
-			}
-
-			/* When reach non-space chars, copy command. */
-			if (file_name[i] != ASCII_SPACE)
-			{
-				if (cmd_started == 0)
-				{
-					cmd_started = 1;
-				}
-				command[j] = file_name[i];
-				j++;
-			}
-
-			/* When encounter space separating command and arg, break. */
-			else if ((file_name[i] == ASCII_SPACE) && (cmd_started == 1))
-			{
-				break;
-			}
-		}
+		/* When encounter space separating command and arg, break. */
+		else if ((file_name[i] == ASCII_SPACE) && (cmd_started == 1))
+			break;
+	}
 
     /* open file */
     fd = system_open(command);
@@ -327,6 +324,10 @@ int32_t system_getargs(uint8_t* buf, int32_t nbytes)
 	arg_startindex = -1;
 	arg_finishindex = -1;
 
+	/* Check if buf is valid */
+	if(buf == NULL)
+		return -1;
+
 	/* Traverse through entire buffer. Shell lines are always NULL terminated. */
 	for (i = 0; i < BUF_SIZE; i++)
 	{
@@ -398,9 +399,7 @@ int32_t system_vidmap(uint8_t** screen_start)
 {
 	/* If user space address is not valid, return error. */
 	if ((screen_start < (uint8_t**)_128MB) || (screen_start >= (uint8_t**)(_128MB + _4MB)))
-	{
 		return -1;
-	}
 
 	/* Map vmem into user space address. */
 	set_4KB(VIDEO_MEM, _128MB + _4MB, 3);
