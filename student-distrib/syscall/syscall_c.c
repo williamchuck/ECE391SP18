@@ -75,7 +75,7 @@ int32_t system_execute(const int8_t* file_name){
         else if((file_name[i] == ASCII_SPACE) && (cmd_started == 1))
             break;
     }
-    
+
     /* open file */
     fd = system_open(command);
     if(fd == -1)
@@ -215,7 +215,8 @@ int32_t system_internal_halt(uint32_t status){
 int32_t system_open(const int8_t* fname){
     dentry_t dentry;
     file_desc_t file;
-
+    //check if provided virtual memory page is present
+    if(!page_present(fname))return -1;
     /* Get dentry of the file */
     read_dentry_by_name(fname, &dentry);
 
@@ -242,6 +243,8 @@ int32_t system_open(const int8_t* fname){
  * Effect: Read the file
  */
 int32_t system_read(int32_t fd, void* buf, uint32_t size){
+    //check if provided virtual memory page is present
+    if(!page_present(buf))return -1;
     //fd range check
     if(fd<FD_MIN||fd>FD_MAX)return -1;
     //check if fd loaded
@@ -259,6 +262,8 @@ int32_t system_read(int32_t fd, void* buf, uint32_t size){
  * Effect: Write the file
  */
 int32_t system_write(int32_t fd, const void* buf, uint32_t size){
+    //check if provided virtual memory page is present
+    if(!page_present(buf))return -1;
     //fd range check
     if(fd<FD_MIN||fd>FD_MAX)return -1;
     //check if fd loaded
@@ -319,10 +324,6 @@ int32_t system_getargs(uint8_t* buf, int32_t nbytes)
     arg_finished = 0;
     arg_startindex = -1;
     arg_finishindex = -1;
-
-    /* Check if buf is valid */
-    if(buf == NULL)
-        return -1;
 
     /* Traverse through entire buffer. Shell lines are always NULL terminated. */
     for (i = 0; i < BUF_SIZE; i++)
