@@ -48,6 +48,9 @@ extern void set_4KB(uint32_t phys_mem, uint32_t virt_mem, uint8_t level);
 extern void free_4KB(uint32_t virt_mem);
 
 extern void free_4MB(uint32_t virt_mem);
+
+extern int32_t page_present(const void* virt_mem);
+
 /* Load in new page directory table addr */
 extern void flush_TLB();
 /* Enable paging */

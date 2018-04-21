@@ -47,44 +47,47 @@ int32_t system_execute(const int8_t* file_name){
         return -1;
     }
 
-		/* Copy filename to shell buffer */
-		/* Also clears command var. */
-		for (i = 0; i < BUF_SIZE; i++)
-		{
-			shell_buf[i] = file_name[i];
-			command[i] = 0x00;
-		}
+    //check if provided virtual memory page is present
+    if(!page_present(file_name))return -1;
 
-		/* Extract actual command from entire shell line. */
-		cmd_started = 0;
-		j = 0;
+    /* Copy filename to shell buffer */
+    /* Also clears command var. */
+    for (i = 0; i < BUF_SIZE; i++)
+    {
+        shell_buf[i] = file_name[i];
+        command[i] = 0x00;
+    }
 
-		/* Read command. (First word starting with non-space/null and terminated by space/null */
-		for (i = 0; i < BUF_SIZE; i++)
-		{
-			/* If reaching NULL, break. */
-			if (file_name[i] == 0x00)
-			{
-				break;
-			}
+    /* Extract actual command from entire shell line. */
+    cmd_started = 0;
+    j = 0;
 
-			/* When reach non-space chars, copy command. */
-			if (file_name[i] != ASCII_SPACE)
-			{
-				if (cmd_started == 0)
-				{
-					cmd_started = 1;
-				}
-				command[j] = file_name[i];
-				j++;
-			}
+    /* Read command. (First word starting with non-space/null and terminated by space/null */
+    for (i = 0; i < BUF_SIZE; i++)
+    {
+        /* If reaching NULL, break. */
+        if (file_name[i] == 0x00)
+        {
+            break;
+        }
 
-			/* When encounter space separating command and arg, break. */
-			else if ((file_name[i] == ASCII_SPACE) && (cmd_started == 1))
-			{
-				break;
-			}
-		}
+        /* When reach non-space chars, copy command. */
+        if (file_name[i] != ASCII_SPACE)
+        {
+            if (cmd_started == 0)
+            {
+                cmd_started = 1;
+            }
+            command[j] = file_name[i];
+            j++;
+        }
+
+        /* When encounter space separating command and arg, break. */
+        else if ((file_name[i] == ASCII_SPACE) && (cmd_started == 1))
+        {
+            break;
+        }
+    }
 
     /* open file */
     fd = system_open(command);
@@ -306,6 +309,9 @@ int32_t system_close(int32_t fd){
  */
 int32_t system_getargs(uint8_t* buf, int32_t nbytes)
 {
+    //check if provided virtual memory page is present
+    if(!page_present(buf))return -1;
+
 	/* Starting and Finising index of argument in buffer. */
 	int arg_startindex;
 	int arg_finishindex;
@@ -396,11 +402,8 @@ int32_t system_getargs(uint8_t* buf, int32_t nbytes)
  */
 int32_t system_vidmap(uint8_t** screen_start)
 {
-	/* If user space address is not valid, return error. */
-	if ((screen_start < (uint8_t**)_128MB) || (screen_start >= (uint8_t**)(_128MB + _4MB)))
-	{
-		return -1;
-	}
+    //check if provided virtual memory page is present
+    if(!page_present(screen_start))return -1;
 
 	/* Map vmem into user space address. */
 	set_4KB(VIDEO_MEM, _128MB + _4MB, 3);

@@ -160,6 +160,22 @@ void free_4MB(uint32_t virt_mem){
     pde_idx = virt_mem >> 22;
     page_dir[pde_idx]=0|EN_PS;//clear page directory entry, but maintaining 4MB page setting
 }
+
+int32_t page_present(const void* virt_mem){
+    uint32_t pde_idx, pte_idx;
+
+    uint32_t vmem=(uint32_t)virt_mem;
+    /* Get first 10-bits of virtual memory as the index into page directory */
+    pde_idx = vmem >> 22;
+    /* Get next 10-bits of virtual memory as the index into page table */
+    pte_idx = (vmem & 0x003FFFFF) >> 12;
+
+    return (page_dir[pde_idx] & EN_P) && //page directory entry present
+           ( (page_dir[pde_idx] & EN_PS) ? //4MB page?
+              1 : //4MB page: if pde present then page present
+             (page_table_arr[pde_idx].entry[pte_idx] & EN_P) );//4KB page: check pte present
+
+}
 /*
  * setup_page:
  * Description: Set up paging for kernel page and video memory
