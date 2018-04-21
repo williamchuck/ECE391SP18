@@ -37,58 +37,45 @@ int32_t system_execute(const int8_t* file_name){
     int fd, size, child_pid, i, j;
     void* entry_addr;
     uint32_t child_kernel_ESP, user_ESP, phys_addr, virt_addr;
-		int8_t command[BUF_SIZE];
-		int8_t cmd_started;
+	int8_t command[BUF_SIZE];
+	int8_t cmd_started;
 
     /* Get pid for child */
     child_pid = get_free_pid();
     /* Check if pid is valid */
-    if(child_pid == -1){
+    if(child_pid == -1)
         return -1;
-    }
-
-    //check if provided virtual memory page is present
+	//check if provided virtual memory page is present
     if(!page_present(file_name))return -1;
 
     /* Copy filename to shell buffer */
     /* Also clears command var. */
-    for (i = 0; i < BUF_SIZE; i++)
-    {
-        shell_buf[i] = file_name[i];
-        command[i] = 0x00;
-    }
+	for(i = 0; i < BUF_SIZE; i++){
+		shell_buf[i] = file_name[i];
+		command[i] = 0x00;
+	}
 
-    /* Extract actual command from entire shell line. */
-    cmd_started = 0;
-    j = 0;
+	/* Extract actual command from entire shell line. */
+	cmd_started = 0;
+	j = 0;
 
-    /* Read command. (First word starting with non-space/null and terminated by space/null */
-    for (i = 0; i < BUF_SIZE; i++)
-    {
-        /* If reaching NULL, break. */
-        if (file_name[i] == 0x00)
-        {
-            break;
-        }
-
-        /* When reach non-space chars, copy command. */
-        if (file_name[i] != ASCII_SPACE)
-        {
-            if (cmd_started == 0)
-            {
-                cmd_started = 1;
-            }
-            command[j] = file_name[i];
-            j++;
-        }
-
-        /* When encounter space separating command and arg, break. */
-        else if ((file_name[i] == ASCII_SPACE) && (cmd_started == 1))
-        {
-            break;
-        }
-    }
-
+	/* Read command. (First word starting with non-space/null and terminated by space/null */
+	for(i = 0; i < BUF_SIZE; i++){
+		/* If reaching NULL, break. */
+		if(file_name[i] == 0x00)
+			break;
+		/* When reach non-space chars, copy command. */
+		if(file_name[i] != ASCII_SPACE){
+			if(cmd_started == 0)
+				cmd_started = 1;
+			command[j] = file_name[i];
+			j++;
+		}
+		/* When encounter space separating command and arg, break. */
+		else if((file_name[i] == ASCII_SPACE) && (cmd_started == 1))
+			break;
+	}
+	
     /* open file */
     fd = system_open(command);
     if(fd == -1)
@@ -332,6 +319,10 @@ int32_t system_getargs(uint8_t* buf, int32_t nbytes)
 	arg_finished = 0;
 	arg_startindex = -1;
 	arg_finishindex = -1;
+
+	/* Check if buf is valid */
+	if(buf == NULL)
+		return -1;
 
 	/* Traverse through entire buffer. Shell lines are always NULL terminated. */
 	for (i = 0; i < BUF_SIZE; i++)
