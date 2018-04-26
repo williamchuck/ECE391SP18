@@ -44,6 +44,9 @@ void entry(unsigned long magic, unsigned long addr) {
     multiboot_info_t *mbi;
 	uint32_t* file_system_addr;
 
+	/* Separate paging for terminals is not ready yet. */
+	term_ready = 0x00;
+
     /* Clear the screen. */
     clear();
 
@@ -187,8 +190,9 @@ void entry(unsigned long magic, unsigned long addr) {
     /* Initialize devices, memory, filesystem, enable device interrupts on the
      * PIC, any other initialization stuff... */
 
-    /* Init keyboard */
+    /* Init keyboard and terminals */
     ps2_keyboard_init();
+
 
     /* Enable rtc periodic interrupt. (Always enable it) */
     rtc_enable_interrupt();
@@ -200,22 +204,6 @@ void entry(unsigned long magic, unsigned long addr) {
 
     //printf("Enabling Interrupts\n");
     sti();
-
-    /* int32_t cnt;
-    uint8_t commandbuf[1024];
-    uint8_t argbuf[1024]; */
-
-    /*while(1)
-    {
-      puts("testOS>");
-      if (-1 == (cnt = stdin_read(0, commandbuf, 1023)))
-      {
-        puts("Error\n");
-        break;
-      }
-      system_getargs((int8_t*)argbuf, 1024);
-      puts(argbuf);
-    }*/
 
 #if RUN_TESTS
     /* Run tests */

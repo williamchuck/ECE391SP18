@@ -28,6 +28,9 @@
  * 0x02000000 (32MB)
  * pid6
  * 0x02400000 (36 MB)
+ * 0x02400000 (Term 0 vmem page)
+ * 0x02401000 (Term 1 vmem page)
+ * 0x02402000 (Term 2 vmem page)
  */
 /* virtual memory layout
  * 0x00000000

@@ -63,7 +63,7 @@ int32_t stdin_read(int32_t fd, void* buf, uint32_t nbytes)
 	int i=0;
 
 	/* Set read flag to on */
-	read_flag = FLAG_ON;
+	read_flag[cur_term] = FLAG_ON;
 
 	/* Cast void* to unsigned char* */
 	buf_ptr = (unsigned char*)buf;
@@ -71,7 +71,7 @@ int32_t stdin_read(int32_t fd, void* buf, uint32_t nbytes)
 	/* If input stream pointer is NULL, return error. */
 	if (buf_ptr == NULL)
 	{
-		read_flag = FLAG_OFF;
+		read_flag[cur_term] = FLAG_OFF;
 		return -1;
 	}
 
@@ -91,14 +91,14 @@ int32_t stdin_read(int32_t fd, void* buf, uint32_t nbytes)
 	for (i = 0; i < BUF_SIZE; i++)
 	{
 		/* If end of file, return. */
-		if (term_buf[i] == TERM_EOF)
+		if (term_buf[cur_term][i] == TERM_EOF)
 		{
 			/* Reset enter flag to avoid potential race conditions. */
 			enter_flag = 0;
 
 			/* Clear buffer and return. */
-			ps2_keyboard_clearbuf();
-			read_flag = FLAG_OFF;
+			ps2_keyboard_clearbuf(cur_term);
+			read_flag[cur_term] = FLAG_OFF;
 			return i;
 		}
 
@@ -109,21 +109,21 @@ int32_t stdin_read(int32_t fd, void* buf, uint32_t nbytes)
 			enter_flag = 0;
 
 			/* Clear buffer and return. */
-			ps2_keyboard_clearbuf();
-			read_flag = FLAG_OFF;
+			ps2_keyboard_clearbuf(cur_term);
+			read_flag[cur_term] = FLAG_OFF;
 			return nbytes;
 		}
 
 		/* Copy terminal buffer into target buffer. */
-		buf_ptr[i] = term_buf[i];
+		buf_ptr[i] = term_buf[cur_term][i];
 	}
 
 	/* Reset enter flag to avoid potential race conditions. */
 	enter_flag = 0;
 
 	/* Clear buffer and return. */
-	ps2_keyboard_clearbuf();
-	read_flag = FLAG_OFF;
+	ps2_keyboard_clearbuf(cur_term);
+	read_flag[cur_term] = FLAG_OFF;
 	return BUF_SIZE;
 }
 

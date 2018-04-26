@@ -39,7 +39,7 @@ unsigned char ps2_keyboard_getchar(unsigned char scancode);
 void ps2_keyboard_processflags(unsigned char scancode);
 
 /* Clear keyboard(terminal) buffer. */
-void ps2_keyboard_clearbuf();
+void ps2_keyboard_clearbuf(int term);
 
 /* Interrupt handler for keyboard */
 extern void int_ps2kbd_c();
@@ -47,7 +47,4 @@ extern void int_ps2kbd_c();
 /* variables for enter key press */
 uint8_t enter_flag;
 
-/* Counter for all char entered after last enter keypress */
-/* This is not index of keyboard buffer. */
-uint32_t afterenter_count;
 #endif

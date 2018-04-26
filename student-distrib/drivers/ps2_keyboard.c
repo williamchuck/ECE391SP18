@@ -52,6 +52,11 @@ static unsigned char set1_code_toggled[89] = {
 #define KBDBKP						  0x0E
 #define KBDENP						  0x1C
 
+/* Keycode value for F1 - F3 */
+#define F1P							  0x3B
+#define F2P							  0x3C
+#define F3P							  0x3D
+
 /* Keycode value for flag keys released */
 #define LSHIFTR                       0xAA
 #define RSHIFTR                       0xB6
@@ -88,14 +93,20 @@ static unsigned char currentchar;
  *   SIDE EFFECTS: Enable keyboard interrupt, reset key toggle flags.
  */
 void ps2_keyboard_init() {
-	/* Initialize terminal (MP3.2 only) */
-	term_init();
+	int i;
 
-	/* Clear buffer. */
-	ps2_keyboard_clearbuf();
+	/* Initialize terminals */
+	for (i = 0; i < TERM_NUM; i++)
+	{
+		term_init(i);
+		ps2_keyboard_clearbuf(i);
+		read_flag[i] = FLAG_OFF;
+	}
 
-	/* Initialize count */
-	afterenter_count = 0;
+	cur_term = 0;
+
+	/* Current terminal is 0. */
+	term_switch(0);
 
 	/* Clear key toggle flags */
 	alt_flag = FLAG_OFF;
@@ -110,11 +121,9 @@ void ps2_keyboard_init() {
 	numpad_flag = FLAG_OFF;
 	enter_flag = FLAG_OFF;
 
-	/* Clear Read flag */
-	read_flag = FLAG_OFF;
+	term_ready = FLAG_ON;
 
 	/* enable_irq unused, use reques_irq for installation and enabling. */
-	//enable_irq(KBD_IRQ);
 	request_irq(KBD_IRQ, &int_ps2kbd_c);
 }
 
@@ -126,7 +135,7 @@ void ps2_keyboard_init() {
  * RETURN VALUE: none.
  * SIDE EFFECTS: none.
  */
-void ps2_keyboard_clearbuf()
+void ps2_keyboard_clearbuf(int term)
 {
 	/* Loop var. */
 	int i;
@@ -134,11 +143,11 @@ void ps2_keyboard_clearbuf()
 	/* Clear terminal buffer. */
 	for (i = 0; i < BUF_SIZE; i++)
 	{
-		term_buf[i] = TERM_EOF;
+		term_buf[term][i] = TERM_EOF;
 	}
 
 	/* Reset index. */
-	term_buf_index = 0;
+	term_buf_index[term] = 0;
 }
 
 /*
@@ -160,13 +169,37 @@ void int_ps2kbd_c() {
 		/* Process toggle flags first */
 		ps2_keyboard_processflags(currentcode);
 
-		/* Special handler for clearing screens */
-		/* If ctrl + L is pressed, clear screen, reset cursor */
-		if ((ctrl_flag != FLAG_OFF) && (currentcode == KBDLP))
+		/* Handler for switching terminal and clearing screens.*/
+		if (ctrl_flag == FLAG_ON)
 		{
-			cursor_reset();
-			clear();
-			return;
+			switch (currentcode)
+			{
+			case F1P:
+			{
+				ctrl_flag = FLAG_OFF;
+				term_switch(0);
+				return;
+			}
+			case F2P:
+			{
+				ctrl_flag = FLAG_OFF;
+				term_switch(1);
+				return;
+			}
+			case F3P:
+			{
+				ctrl_flag = FLAG_OFF;
+				term_switch(2);
+				return;
+			}
+			case KBDLP:
+			{
+				ctrl_flag = FLAG_OFF;
+				cursor_reset(cur_term);
+				clear();
+				return;
+			}
+			}
 		}
 
 		/* Keyboard input only has real effect when stdin_read is in use. */
@@ -181,8 +214,8 @@ void int_ps2kbd_c() {
 		 */
 		if (currentcode == KBDBKP)
 		{
-			term_del();
-			cursor_update();
+			term_del(cur_term);
+			cursor_update(cur_term);
 			return;
 		}
 
@@ -194,18 +227,11 @@ void int_ps2kbd_c() {
 	{
 		/* Add char into terminal(keyboard) buffer. */
 		/* If current buffer is full, do nothing. */
-		if (term_buf_index < BUF_SIZE - 1 || currentchar == ASCII_NL)
+		if (term_buf_index[cur_term] < BUF_SIZE - 1 || currentchar == ASCII_NL)
 		{
 			/* Add char into buffer and increment index */
-			term_buf[term_buf_index] = currentchar;
-			term_buf_index++;
-
-			/* Enter key does not count as key count. */
-			if (currentchar != ASCII_NL)
-			{
-				/* Increment keypress count */
-				afterenter_count++;
-			}
+			term_buf[cur_term][term_buf_index[cur_term]] = currentchar;
+			term_buf_index[cur_term]++;
 
 			/* Echo character using putc. */
 			putc(currentchar);
@@ -213,13 +239,10 @@ void int_ps2kbd_c() {
 			/* If enter key is pressed, toggle enter flag on. */
 			if (currentchar == ASCII_NL)
 			{
-				afterenter_count = 0;
 				enter_flag = FLAG_ON;
 			}
 		}
 	}
-	/* EOI is handled by general irq handler. Hence send_eoi is NOT needed */
-	//send_eoi(KBD_IRQ);
 }
 
 /*

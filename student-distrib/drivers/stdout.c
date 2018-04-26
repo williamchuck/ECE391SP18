@@ -5,6 +5,8 @@
  */
 #include "stdout.h"
 #include "../fs/fs.h"
+#include "../page/page.h"
+#include "../lib.h"
 
 /* Standard output file operation structure. */
 static file_op_t stdout_file_op = {
@@ -16,6 +18,11 @@ static file_op_t stdout_file_op = {
 
 /* Pointer to file operation structure. */
 file_op_t* stdout_op = &stdout_file_op;
+
+/* Paging address for video mem. */
+static uint32_t video_term[TERM_NUM] = {
+	(_4MB * 9), (_4MB * 9 + _4KB), (_4MB * 9 + 2 * _4KB)
+};
 
  /*
   * stdout_open
@@ -116,7 +123,7 @@ int32_t stdout_write(int32_t fd, const void* buf, uint32_t nbytes)
  * RETURN VALUE: none.
  * SIDE EFFECTS: Resets cursor of the terminal to position (0, 0)
  */
-void cursor_reset()
+void cursor_reset(int term)
 {
 	/* Vars. for x, y coords. and overall position. */
 	int x;
@@ -131,7 +138,7 @@ void cursor_reset()
 	pos = y * VGA_WIDTH + x;
 
 	/* Set "Real" cursor position for putc (in lib.c) */
-	set_xy(x, y);
+	set_xy(x, y, term);
 
 	/* Write new cursor position to Cursor location low and high registers */
 	outb(CURSOR_LOW, TEXT_IN_ADDR);
@@ -148,15 +155,22 @@ void cursor_reset()
  * RETURN VALUE: none.
  * SIDE EFFECTS: Initialize terminal by clearing screen, resetting cursor and clearning buffer.
  */
-void term_init()
+void term_init(int term)
 {
 	/* Loop var */
 	int i;
 
 	/* Reset cursor */
-	cursor_reset();
+	cursor_reset(term);
 
-	/* Clear screen */
+	/* Map memory */
+	set_4KB(video_term[term], video_term[term], 0);
+	set_4KB(VIDEO, VIDEO, 0);
+
+	/* Clear termimal pages */
+	clear_term(term);
+
+	/* Clear video memory */
 	clear();
 
 	/* 
@@ -165,11 +179,11 @@ void term_init()
 	 */
 	for (i = 0; i < BUF_SIZE; i++)
 	{
-		term_buf[i] = TERM_EOF;
+		term_buf[term][i] = TERM_EOF;
 	}
 
 	/* Reset buffer index to 0 */
-	term_buf_index = 0;
+	term_buf_index[term] = 0;
 }
 
 /*
@@ -180,10 +194,10 @@ void term_init()
  * RETURN VALUE: none.
  * SIDE EFFECTS: Erases a char from screen (and buffer).
  */
-void term_del()
+void term_del(int term)
 {
 	/* If keyboard buffer is empty, do nothing. */
-	if (term_buf_index == 0)
+	if (term_buf_index[term] == 0)
 	{
 		return;
 	}
@@ -194,8 +208,8 @@ void term_del()
 	uint16_t pos;
 
 	/* Get current cursor coordinates and calculate position */
-	x = get_x();
-	y = get_y();
+	x = get_x(term);
+	y = get_y(term);
 	pos = y * VGA_WIDTH + x;
 
 	/* Cursor manipulation is separated from buffer manipulation. */
@@ -208,29 +222,18 @@ void term_del()
 		y = pos / VGA_WIDTH;
 
 		/* Set new cursor position to write over (delete) char on screen. */
-		set_xy(x, y);
+		set_xy(x, y, term);
 
 		/* Use NULL character to erase character to be deleted */
 		putc(0x00);
 
 		/* Set coordinates to decremented position again. */
-		set_xy(x, y);
-	}
-
-	
-
-	/* If user has exceeded maximum buffer size. Do not modify buffer. */
-	/* Only decrement keypress count. */
-	if (afterenter_count > BUF_SIZE - 1)
-	{
-		afterenter_count--;
-		return;
+		set_xy(x, y, term);
 	}
 
 	/* Delete current char in buffer and decrement count and index. */
-	term_buf[term_buf_index - 1] = TERM_EOF;
-	term_buf_index--;
-	afterenter_count--;
+	term_buf[term][term_buf_index[term] - 1] = TERM_EOF;
+	term_buf_index[term]--;
 	return;
 }
 
@@ -242,7 +245,7 @@ void term_del()
  * RETURN VALUE: none.
  * SIDE EFFECTS: updates cursor on screen. 
  */
-void cursor_update()
+void cursor_update(int term)
 {
 	/* Coordinates and position of cursors. */
 	int x;
@@ -250,8 +253,8 @@ void cursor_update()
 	uint16_t pos;
 
 	/* Get real cursor positions and calculate corresponding cursor position. */
-	x = get_x();
-	y = get_y();
+	x = get_x(term);
+	y = get_y(term);
 	pos = y * VGA_WIDTH + x;
 
 	/* Write new cursor position to Cursor location low and high registers */
@@ -259,4 +262,39 @@ void cursor_update()
 	outb((uint8_t)(pos & TERM_EOF), TEXT_IN_DATA);
 	outb(CURSOR_HIGH, TEXT_IN_ADDR);
 	outb((uint8_t)((pos >> 8) & TERM_EOF), TEXT_IN_DATA);
+}
+
+void term_switch(int term)
+{
+	int old_term;
+	int i;
+
+	if ((term < 0) || (term >= TERM_NUM))
+	{
+		return;
+	}
+
+	/* Always remap everything before switching to avoid accidents. */
+	for (i = 0; i < TERM_NUM; i++)
+	{
+		set_4KB(video_term[i], video_term[i], 0);
+	}
+
+	set_4KB(VIDEO, VIDEO, 0);
+
+	old_term = cur_term;
+	cur_term = term;
+
+	if ((old_term >= 0) && (old_term < TERM_NUM))
+	{
+		memcpy((void*)video_term[old_term], (void*)VIDEO, _4KB);
+	}
+
+	memcpy((void*)VIDEO, (void*)video_term[cur_term], _4KB);
+
+	/* Cross map memory addresses. */
+	set_4KB(video_term[cur_term], VIDEO, 0);
+	set_4KB(VIDEO, video_term[cur_term], 0);
+
+	cursor_update(cur_term);
 }

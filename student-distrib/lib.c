@@ -8,15 +8,21 @@
 #define NUM_COLS    80
 #define NUM_ROWS    25
 #define ATTRIB      0x7
+#define TERM_NUM	3
 
-static int screen_x;
-static int screen_y;
+static int screen_x[TERM_NUM];
+static int screen_y[TERM_NUM];
 static char* video_mem = (char *)VIDEO;
 
 /* self-defined variables */
 int RTC_STATUS = 0;       // for test use
 /* initial current pid */
 int32_t current_pid = 0;
+
+/* Paging address for video mem. */
+static uint32_t video_term[TERM_NUM] = {
+	(_4MB * 9), (_4MB * 9 + _4KB), (_4MB * 9 + 2 * _4KB)
+};
 
 
 /* void clear(void);
@@ -28,6 +34,20 @@ void clear(void) {
 	for (i = 0; i < NUM_ROWS * NUM_COLS; i++) {
 		*(uint8_t *)(video_mem + (i << 1)) = 0x00;
 		*(uint8_t *)(video_mem + (i << 1) + 1) = ATTRIB;
+		if ((cur_term >= 0) && (cur_term < TERM_NUM) && term_ready)
+		{
+			*(uint8_t *)(video_term[cur_term] + (i << 1)) = 0x00;
+			*(uint8_t *)(video_term[cur_term] + (i << 1) + 1) = ATTRIB;
+		}
+	}
+}
+
+void clear_term(int term)
+{
+	int32_t i;
+	for (i = 0; i < NUM_ROWS * NUM_COLS; i++) {
+		*(uint8_t *)(video_term[term] + (i << 1)) = 0x00;
+		*(uint8_t *)(video_term[term] + (i << 1) + 1) = ATTRIB;
 	}
 }
 
@@ -49,21 +69,32 @@ void scroll_down()
 	for (i = 1; i < NUM_ROWS; i++)
 	{
 		memmove(video_mem + (i - 1) * 2 * NUM_COLS, video_mem + i * 2 * NUM_COLS, NUM_COLS * 2);
+
+		if ((cur_term >= 0) && (cur_term < TERM_NUM) && term_ready)
+		{
+			memmove((char*)video_term[cur_term] + (i - 1) * 2 * NUM_COLS, (char*)video_term[cur_term] + i * 2 * NUM_COLS, NUM_COLS * 2);
+		}
 	}
 
 	/* Reset cursor value to buttom of terminal because prog. only scroll when needed. */
-	screen_y = NUM_ROWS - 1;
+	screen_y[cur_term] = NUM_ROWS - 1;
 
 	/* Clear video memory of row 79 (buttom row) */
 	for (i = 0; i < NUM_COLS; i++)
 	{
-		*(uint8_t *)(video_mem + ((NUM_COLS * screen_y + i) << 1)) = 0x00;
-		*(uint8_t *)(video_mem + ((NUM_COLS * screen_y + i) << 1) + 1) = ATTRIB;
+		*(uint8_t *)(video_mem + ((NUM_COLS * screen_y[cur_term] + i) << 1)) = 0x00;
+		*(uint8_t *)(video_mem + ((NUM_COLS * screen_y[cur_term] + i) << 1) + 1) = ATTRIB;
+
+		if ((cur_term >= 0) && (cur_term < TERM_NUM) && term_ready)
+		{
+			*(uint8_t *)(video_term[cur_term] + ((NUM_COLS * screen_y[cur_term] + i) << 1)) = 0x00;
+			*(uint8_t *)(video_term[cur_term] + ((NUM_COLS * screen_y[cur_term] + i) << 1) + 1) = ATTRIB;
+		}
 	}
 
 	/* Reset cursor to first column of buttom of the terminal */
-	screen_x = 0;
-	screen_y = NUM_ROWS - 1;
+	screen_x[cur_term] = 0;
+	screen_y[cur_term] = NUM_ROWS - 1;
 	return;
 }
 
@@ -75,8 +106,8 @@ void scroll_down()
  * RETURN VALUE: x coordinate of the cursor.
  * SIDE EFFECT: none.
  */
-int get_x() {
-	return screen_x;
+int get_x(int term) {
+	return screen_x[term];
 }
 
 /*
@@ -87,8 +118,8 @@ int get_x() {
  * RETURN VALUE: y coordinate of the cursor.
  * SIDE EFFECT: none.
  */
-int get_y() {
-	return screen_y;
+int get_y(int term) {
+	return screen_y[term];
 }
 
 /*
@@ -100,9 +131,9 @@ int get_y() {
  * RETURN VALUE: none.
  * SIDE EFFECT: none.
  */
-void set_xy(int x, int y) {
-	screen_x = x;
-	screen_y = y;
+void set_xy(int x, int y, int term) {
+	screen_x[term] = x;
+	screen_y[term] = y;
 }
 
 /* Standard printf().
@@ -230,7 +261,7 @@ int32_t printf(int8_t *format, ...) {
 		}
 		buf++;
 	}
-	cursor_update();
+	cursor_update(cur_term);
 	return (buf - format);
 }
 
@@ -255,81 +286,99 @@ void putc(uint8_t c) {
 	/* If a newline or carriage return is encountered, change new line. */
 	if (c == '\n' || c == '\r') {
 		/* If current cursor is at the bottom of terminal, scroll down. */
-		if (screen_y == (NUM_ROWS - 1))
+		if (screen_y[cur_term] == (NUM_ROWS - 1))
 		{
 			scroll_down();
 
 			/* Update cursor */
-			cursor_update();
+			cursor_update(cur_term);
 			return;
 		}
 		/* Else, increment cursor y coord. */
 		else
 		{
-			screen_y++;
-			screen_x = 0;
+			screen_y[cur_term]++;
+			screen_x[cur_term] = 0;
 
 			/* Update cursor */
-			cursor_update();
+			cursor_update(cur_term);
 			return;
 		}
 	}
 
 	/* If the current string is longer than a line in terminal, change new line and display the char. */
-	if (screen_x == NUM_COLS)
+	if (screen_x[cur_term] == NUM_COLS)
 	{
 		/* If current cursor is at the bottom of terminal, scroll down. */
-		if (screen_y == (NUM_ROWS - 1))
+		if (screen_y[cur_term] == (NUM_ROWS - 1))
 		{
 			scroll_down();
 
 			/* Copy char into video memory */
-			*(uint8_t *)(video_mem + ((NUM_COLS * screen_y + screen_x) << 1)) = c;
-			*(uint8_t *)(video_mem + ((NUM_COLS * screen_y + screen_x) << 1) + 1) = ATTRIB;
+			*(uint8_t *)(video_mem + ((NUM_COLS * screen_y[cur_term] + screen_x[cur_term]) << 1)) = c;
+			*(uint8_t *)(video_mem + ((NUM_COLS * screen_y[cur_term] + screen_x[cur_term]) << 1) + 1) = ATTRIB;
+
+			if ((cur_term >= 0) && (cur_term < TERM_NUM) && term_ready)
+			{
+				*(uint8_t *)(video_term[cur_term] + ((NUM_COLS * screen_y[cur_term] + screen_x[cur_term]) << 1)) = c;
+				*(uint8_t *)(video_term[cur_term] + ((NUM_COLS * screen_y[cur_term] + screen_x[cur_term]) << 1) + 1) = ATTRIB;
+			}
 
 			/* Increment cursor coords. */
-			screen_x++;
-			screen_x %= (NUM_COLS + 1);
-			screen_y = (screen_y + (screen_x / (NUM_COLS + 1))) % NUM_ROWS;
+			screen_x[cur_term]++;
+			screen_x[cur_term] %= (NUM_COLS + 1);
+			screen_y[cur_term] = (screen_y[cur_term] + (screen_x[cur_term] / (NUM_COLS + 1))) % NUM_ROWS;
 
 			/* Update cursor */
-			cursor_update();
+			cursor_update(cur_term);
 			return;
 		}
 		/* Else, change line. */
 		else
 		{
 			/* Increment y coord. of cursor. */
-			screen_y++;
+			screen_y[cur_term]++;
 			/* Reset x coord to 0. */
-			screen_x = 0;
+			screen_x[cur_term] = 0;
 
 			/* Copy char into video memory */
-			*(uint8_t *)(video_mem + ((NUM_COLS * screen_y + screen_x) << 1)) = c;
-			*(uint8_t *)(video_mem + ((NUM_COLS * screen_y + screen_x) << 1) + 1) = ATTRIB;
+			*(uint8_t *)(video_mem + ((NUM_COLS * screen_y[cur_term] + screen_x[cur_term]) << 1)) = c;
+			*(uint8_t *)(video_mem + ((NUM_COLS * screen_y[cur_term] + screen_x[cur_term]) << 1) + 1) = ATTRIB;
+
+			if ((cur_term >= 0) && (cur_term < TERM_NUM) && term_ready)
+			{
+				*(uint8_t *)(video_term[cur_term] + ((NUM_COLS * screen_y[cur_term] + screen_x[cur_term]) << 1)) = c;
+				*(uint8_t *)(video_term[cur_term] + ((NUM_COLS * screen_y[cur_term] + screen_x[cur_term]) << 1) + 1) = ATTRIB;
+			}
 
 			/* Increment cursor coords. */
-			screen_x++;
-			screen_x %= (NUM_COLS + 1);
-			screen_y = (screen_y + (screen_x / (NUM_COLS + 1))) % NUM_ROWS;
+			screen_x[cur_term]++;
+			screen_x[cur_term] %= (NUM_COLS + 1);
+			screen_y[cur_term] = (screen_y[cur_term] + (screen_x[cur_term] / (NUM_COLS + 1))) % NUM_ROWS;
 
 			/* Update cursor */
-			cursor_update();
+			cursor_update(cur_term);
 			return;
 		}
 	}
 	else {
 		/* Copy char into video memory */
-		*(uint8_t *)(video_mem + ((NUM_COLS * screen_y + screen_x) << 1)) = c;
-		*(uint8_t *)(video_mem + ((NUM_COLS * screen_y + screen_x) << 1) + 1) = ATTRIB;
+		*(uint8_t *)(video_mem + ((NUM_COLS * screen_y[cur_term] + screen_x[cur_term]) << 1)) = c;
+		*(uint8_t *)(video_mem + ((NUM_COLS * screen_y[cur_term] + screen_x[cur_term]) << 1) + 1) = ATTRIB;
+
+		if ((cur_term >= 0) && (cur_term < TERM_NUM) && term_ready)
+		{
+			*(uint8_t *)(video_term[cur_term] + ((NUM_COLS * screen_y[cur_term] + screen_x[cur_term]) << 1)) = c;
+			*(uint8_t *)(video_term[cur_term] + ((NUM_COLS * screen_y[cur_term] + screen_x[cur_term]) << 1) + 1) = ATTRIB;
+		}
 
 		/* Increment cursor coords. */
-		screen_x++;
-		screen_x %= (NUM_COLS + 1);
-		screen_y = (screen_y + (screen_x / (NUM_COLS + 1))) % NUM_ROWS;
+		screen_x[cur_term]++;
+		screen_x[cur_term] %= (NUM_COLS + 1);
+		screen_y[cur_term] = (screen_y[cur_term] + (screen_x[cur_term] / (NUM_COLS + 1))) % NUM_ROWS;
 
 		/* Update cursor */
-		cursor_update();
+		cursor_update(cur_term);
 		return;
 	}
 }

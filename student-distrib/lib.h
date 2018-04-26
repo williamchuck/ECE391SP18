@@ -8,6 +8,13 @@
 #include "types.h"
 #include "i8259.h"
 #include "drivers/rtc.h"
+#include "page/page.h"
+
+#define VIDEO       0xB8000
+#define NUM_COLS    80
+#define NUM_ROWS    25
+#define ATTRIB      0x7
+#define TERM_NUM	3
 
 int32_t printf(int8_t *format, ...);
 void putc(uint8_t c);
@@ -21,13 +28,16 @@ void clear(void);
 void scroll_down();
 
 /* Get current x coordinate of cursor */
-int get_x();
+int get_x(int term);
 
 /* Get current y coordinate of cursor */
-int get_y();
+int get_y(int term);
 
 /* Set current cursor coordinates */
-void set_xy(int x, int y);
+void set_xy(int x, int y, int term);
+
+/* Clear terminal page. */
+void clear_term(int term);
 
 void* memset(void* s, int32_t c, uint32_t n);
 void* memset_word(void* s, int32_t c, uint32_t n);
@@ -42,6 +52,9 @@ int8_t* strncpy(int8_t* dest, const int8_t*src, uint32_t n);
 /* Userspace address-check functions */
 int32_t bad_userspace_addr(const void* addr, int32_t len);
 int32_t safe_strncpy(int8_t* dest, const int8_t* src, int32_t n);
+
+/* Flag to check whether terminal pages has been initialized. 0 for not ready. */
+uint32_t term_ready;
 
 /* Port read functions */
 /* Inb reads a byte and returns its value as a zero-extended 32-bit
