@@ -170,7 +170,7 @@ void int_ps2kbd_c() {
 		ps2_keyboard_processflags(currentcode);
 
 		/* Handler for switching terminal and clearing screens.*/
-		if (ctrl_flag == FLAG_ON)
+		if (alt_flag == FLAG_ON)
 		{
 			switch (currentcode)
 			{
@@ -192,8 +192,15 @@ void int_ps2kbd_c() {
 				term_switch(2);
 				return;
 			}
-			case KBDLP:
+			}
+		}
+
+		if(ctrl_flag == FLAG_ON)
+		{
+			switch (currentcode)
 			{
+			case KBDLP:
+			{	
 				ctrl_flag = FLAG_OFF;
 				cursor_reset(cur_term);
 				clear();
