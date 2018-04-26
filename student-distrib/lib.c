@@ -32,9 +32,12 @@ static uint32_t video_term[TERM_NUM] = {
 void clear(void) {
 	int32_t i;
 	for (i = 0; i < NUM_ROWS * NUM_COLS; i++) {
-		*(uint8_t *)(video_mem + (i << 1)) = 0x00;
-		*(uint8_t *)(video_mem + (i << 1) + 1) = ATTRIB;
-		if ((cur_term >= 0) && (cur_term < TERM_NUM) && term_ready)
+		if (!term_ready)
+		{
+			*(uint8_t *)(video_mem + (i << 1)) = 0x00;
+			*(uint8_t *)(video_mem + (i << 1) + 1) = ATTRIB;
+		}
+		else if ((cur_term >= 0) && (cur_term < TERM_NUM) && term_ready)
 		{
 			*(uint8_t *)(video_term[cur_term] + (i << 1)) = 0x00;
 			*(uint8_t *)(video_term[cur_term] + (i << 1) + 1) = ATTRIB;
@@ -68,9 +71,11 @@ void scroll_down()
 	/* Until row 1 to 79's vmem has moved to row 0 to 78 */
 	for (i = 1; i < NUM_ROWS; i++)
 	{
-		memmove(video_mem + (i - 1) * 2 * NUM_COLS, video_mem + i * 2 * NUM_COLS, NUM_COLS * 2);
-
-		if ((cur_term >= 0) && (cur_term < TERM_NUM) && term_ready)
+		if (!term_ready)
+		{
+			memmove(video_mem + (i - 1) * 2 * NUM_COLS, video_mem + i * 2 * NUM_COLS, NUM_COLS * 2);
+		}
+		else if ((cur_term >= 0) && (cur_term < TERM_NUM) && term_ready)
 		{
 			memmove((char*)video_term[cur_term] + (i - 1) * 2 * NUM_COLS, (char*)video_term[cur_term] + i * 2 * NUM_COLS, NUM_COLS * 2);
 		}
@@ -82,10 +87,12 @@ void scroll_down()
 	/* Clear video memory of row 79 (buttom row) */
 	for (i = 0; i < NUM_COLS; i++)
 	{
-		*(uint8_t *)(video_mem + ((NUM_COLS * screen_y[cur_term] + i) << 1)) = 0x00;
-		*(uint8_t *)(video_mem + ((NUM_COLS * screen_y[cur_term] + i) << 1) + 1) = ATTRIB;
-
-		if ((cur_term >= 0) && (cur_term < TERM_NUM) && term_ready)
+		if (!term_ready)
+		{
+			*(uint8_t *)(video_mem + ((NUM_COLS * screen_y[cur_term] + i) << 1)) = 0x00;
+			*(uint8_t *)(video_mem + ((NUM_COLS * screen_y[cur_term] + i) << 1) + 1) = ATTRIB;
+		}
+		else if ((cur_term >= 0) && (cur_term < TERM_NUM) && term_ready)
 		{
 			*(uint8_t *)(video_term[cur_term] + ((NUM_COLS * screen_y[cur_term] + i) << 1)) = 0x00;
 			*(uint8_t *)(video_term[cur_term] + ((NUM_COLS * screen_y[cur_term] + i) << 1) + 1) = ATTRIB;
@@ -315,10 +322,12 @@ void putc(uint8_t c) {
 			scroll_down();
 
 			/* Copy char into video memory */
-			*(uint8_t *)(video_mem + ((NUM_COLS * screen_y[cur_term] + screen_x[cur_term]) << 1)) = c;
-			*(uint8_t *)(video_mem + ((NUM_COLS * screen_y[cur_term] + screen_x[cur_term]) << 1) + 1) = ATTRIB;
-
-			if ((cur_term >= 0) && (cur_term < TERM_NUM) && term_ready)
+			if (!term_ready)
+			{
+				*(uint8_t *)(video_mem + ((NUM_COLS * screen_y[cur_term] + screen_x[cur_term]) << 1)) = c;
+				*(uint8_t *)(video_mem + ((NUM_COLS * screen_y[cur_term] + screen_x[cur_term]) << 1) + 1) = ATTRIB;
+			}
+			else if ((cur_term >= 0) && (cur_term < TERM_NUM) && term_ready)
 			{
 				*(uint8_t *)(video_term[cur_term] + ((NUM_COLS * screen_y[cur_term] + screen_x[cur_term]) << 1)) = c;
 				*(uint8_t *)(video_term[cur_term] + ((NUM_COLS * screen_y[cur_term] + screen_x[cur_term]) << 1) + 1) = ATTRIB;
@@ -342,10 +351,12 @@ void putc(uint8_t c) {
 			screen_x[cur_term] = 0;
 
 			/* Copy char into video memory */
-			*(uint8_t *)(video_mem + ((NUM_COLS * screen_y[cur_term] + screen_x[cur_term]) << 1)) = c;
-			*(uint8_t *)(video_mem + ((NUM_COLS * screen_y[cur_term] + screen_x[cur_term]) << 1) + 1) = ATTRIB;
-
-			if ((cur_term >= 0) && (cur_term < TERM_NUM) && term_ready)
+			if (!term_ready)
+			{
+				*(uint8_t *)(video_mem + ((NUM_COLS * screen_y[cur_term] + screen_x[cur_term]) << 1)) = c;
+				*(uint8_t *)(video_mem + ((NUM_COLS * screen_y[cur_term] + screen_x[cur_term]) << 1) + 1) = ATTRIB;
+			}
+			else if ((cur_term >= 0) && (cur_term < TERM_NUM) && term_ready)
 			{
 				*(uint8_t *)(video_term[cur_term] + ((NUM_COLS * screen_y[cur_term] + screen_x[cur_term]) << 1)) = c;
 				*(uint8_t *)(video_term[cur_term] + ((NUM_COLS * screen_y[cur_term] + screen_x[cur_term]) << 1) + 1) = ATTRIB;
@@ -363,10 +374,12 @@ void putc(uint8_t c) {
 	}
 	else {
 		/* Copy char into video memory */
-		*(uint8_t *)(video_mem + ((NUM_COLS * screen_y[cur_term] + screen_x[cur_term]) << 1)) = c;
-		*(uint8_t *)(video_mem + ((NUM_COLS * screen_y[cur_term] + screen_x[cur_term]) << 1) + 1) = ATTRIB;
-
-		if ((cur_term >= 0) && (cur_term < TERM_NUM) && term_ready)
+		if (!term_ready)
+		{
+			*(uint8_t *)(video_mem + ((NUM_COLS * screen_y[cur_term] + screen_x[cur_term]) << 1)) = c;
+			*(uint8_t *)(video_mem + ((NUM_COLS * screen_y[cur_term] + screen_x[cur_term]) << 1) + 1) = ATTRIB;
+		}
+		else if ((cur_term >= 0) && (cur_term < TERM_NUM) && term_ready)
 		{
 			*(uint8_t *)(video_term[cur_term] + ((NUM_COLS * screen_y[cur_term] + screen_x[cur_term]) << 1)) = c;
 			*(uint8_t *)(video_term[cur_term] + ((NUM_COLS * screen_y[cur_term] + screen_x[cur_term]) << 1) + 1) = ATTRIB;
