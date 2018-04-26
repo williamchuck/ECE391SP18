@@ -100,7 +100,7 @@ int32_t system_execute(const int8_t* file_name){
     /* Load user program */
     uint8_t* buf=(uint8_t*)(virt_addr + OFFSET);
     system_read(fd, buf, size);
-    //close file as we have finished loading the contents
+    /* close file as we have finished loading the contents */
     system_close(fd);
 
     /* Check if file is executable */

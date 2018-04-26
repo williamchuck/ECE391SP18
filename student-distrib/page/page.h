@@ -44,11 +44,11 @@ extern void fill_page_table();
 extern void set_4MB(uint32_t phys_mem, uint32_t virt_mem, uint8_t level);
 /* Set a 4KB page */
 extern void set_4KB(uint32_t phys_mem, uint32_t virt_mem, uint8_t level);
-
+/* Free 4 KB page */
 extern void free_4KB(uint32_t virt_mem);
-
+/* Free 4 MB page*/
 extern void free_4MB(uint32_t virt_mem);
-
+/* Check if a page is present */
 extern int32_t page_present(const void* virt_mem);
 
 /* Load in new page directory table addr */
