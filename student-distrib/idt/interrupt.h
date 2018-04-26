@@ -10,6 +10,7 @@
 #define NUM_IRQ 16
 #ifndef ASM
 
+#include "../regs.h"
 /*
  * Until MP3.1, only handler is in the struct.
  * More members pending.
@@ -21,10 +22,8 @@ typedef struct irq_struct{
 
 /*
  * IRQ handler implementation.
- * For MP3.1, all IRQ initially uses the SAME handler.
- * However, handler address can be passed in and set using request_irq.
  */
-unsigned int do_IRQ();
+unsigned int do_IRQ(regs_t* regs);
 
 /*
  * Setup IRQ handler for specific IRQ number.

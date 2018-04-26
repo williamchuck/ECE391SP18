@@ -7,6 +7,31 @@
 #include "../drivers/stdin.h"
 #include "../drivers/stdout.h"
 
+
+/*
+ * do_sys:
+ *
+ *
+ */
+void do_sys(regs_t* regs){
+	int32_t syscall_num;
+	syscall_num = regs->orig_eax;
+
+	current_PCB->hw_context = regs;
+
+	asm volatile(
+		"pushl %%edx\n"
+		"pushl %%ecx\n"
+		"pushl %%ebx\n"
+		"call *syscall_table(, %%esi, 4)\n"
+		"movl %%eax, (%%edi)\n"
+		"addl $12, %%esp\n"
+		:
+		: "d"(regs->edx), "c"(regs->ecx), "b"(regs->ebx), "S"(regs->orig_eax), "D"(&regs->eax)
+	);
+}
+
+
 /*
  * get_free_pid:
  * Description: Get a free pid for child process
@@ -152,7 +177,7 @@ int32_t system_execute(const int8_t* file_name){
     child_PCB->pid = child_pid;
 
     /* Jump to user space */
-    return jump_to_user(entry_addr, (uint32_t*)user_ESP, &(child_PCB->halt_back_ESP));
+    return jump_to_user(entry_addr, (uint32_t*)user_ESP);
 }
 
 /*
@@ -190,7 +215,13 @@ int32_t system_internal_halt(uint32_t status){
         set_4MB(phys_addr, virt_addr, 3);
     }
     else{//if no more user program running
-        free_4MB(_128MB);//free the 4MB page at 128MB
+        //free_4MB(_128MB);//free the 4MB page at 128MB
+	asm volatile(
+		"movl $0x7ffffc, %%esp\n"
+		:
+		:
+	);
+	system_execute("shell");
     }
 
     free_4KB(_128MB+_4MB);//free the vidmap for user program
@@ -198,8 +229,17 @@ int32_t system_internal_halt(uint32_t status){
     /* Set up parent kernel stack addr for TSS */
     tss.esp0 = (uint32_t)(_8MB - (parent_pid * _8KB));
 
+    current_PCB->parent_PCB->hw_context->eax = status;
+
     /* Jump to return from execute */
-    halt_ret_exec(current_PCB->halt_back_ESP, status);
+    //halt_ret_exec(current_PCB->halt_back_ESP, status);
+
+    asm volatile(
+	"movl %0, %%esp\n"
+        "jmp return_to_user\n"
+	:
+	: "g"(current_PCB->parent_PCB->hw_context)
+    );
 
     /* Dummy return */
     return -1;

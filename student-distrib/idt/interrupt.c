@@ -21,7 +21,10 @@ irq_struct_t irqs[NUM_IRQ]={{0}};
  *                  0 on success.
  *   SIDE EFFECTS: handle irq interrupts by executing corresponding handler, and send eoi to PIC.
  */
-unsigned int do_IRQ(unsigned int irq){
+unsigned int do_IRQ(regs_t* regs){
+    unsigned int irq;
+    irq = regs->orig_eax;
+
     if(irqs[irq].handler==NULL){
         /* Error handling for non-existant irq handler */
         printf("do_IRQ: no handler installed for IRQ%d",irq);
