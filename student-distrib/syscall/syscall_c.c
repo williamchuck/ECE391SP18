@@ -10,15 +10,24 @@
 
 /*
  * do_sys:
- *
- *
+ * Descriptoin: Dispatcher for system calls
+ * Input: A pointer to all registers on stack
+ * Output: None
+ * Effect: Call corresponding syscall
  */
 void do_sys(regs_t* regs){
+	/* Get system call number from stack */
 	int32_t syscall_num;
+	cli();
 	syscall_num = regs->orig_eax;
 
+	if(syscall_num != 1 && syscall_num != 2)
+		sti();
+
+	/* Set current PCB hardware context */
 	current_PCB->hw_context = regs;
 
+	/* Call corresponding system call */
 	asm volatile(
 		"pushl %%edx\n"
 		"pushl %%ecx\n"
@@ -61,7 +70,7 @@ int32_t get_free_pid(){
 int32_t system_execute(const int8_t* file_name){
     int fd, size, child_pid, i, j;
     void* entry_addr;
-    uint32_t child_kernel_ESP, user_ESP, phys_addr, virt_addr;
+    uint32_t child_kernel_ESP, user_ESP, phys_addr, virt_addr, term_num;
     int8_t command[BUF_SIZE];
     int8_t cmd_started;
 
@@ -122,6 +131,17 @@ int32_t system_execute(const int8_t* file_name){
     virt_addr = _128MB;
     set_4MB(phys_addr, virt_addr, 3);
 
+    if(current_PCB->pid == 0){
+    	    term_num = child_pid - 1;
+    }
+    else
+	    term_num = current_PCB->term_num;
+
+    if(term_num == cur_term)
+	    set_4KB(VIDEO_MEM, _128MB + _4MB, 0);
+    else
+	    set_4KB(video_term[term_num], _128MB + _4MB, 0);
+
     /* Load user program */
     uint8_t* buf=(uint8_t*)(virt_addr + OFFSET);
     system_read(fd, buf, size);
@@ -136,6 +156,18 @@ int32_t system_execute(const int8_t* file_name){
     }
 
     /* Mark child pid as used */
+    terminal[term_num] = 1;
+
+    if(current_PCB->pid == 0){
+	    for(i = 1; i < 4; i++){
+        	if(process_desc_arr[i].flag == 0)
+			process_desc_arr[i].flag = 3;
+
+		else if(process_desc_arr[i].flag == 1)
+			process_desc_arr[i].flag = 2;
+	    }
+    }
+
     process_desc_arr[child_pid].flag = 1;
 
     /* Get the entry addr:
@@ -175,6 +207,7 @@ int32_t system_execute(const int8_t* file_name){
 
     child_PCB->parent_PCB = current_PCB;
     child_PCB->pid = child_pid;
+    child_PCB->term_num = term_num;
 
     /* Jump to user space */
     return jump_to_user(entry_addr, (uint32_t*)user_ESP);
@@ -208,6 +241,8 @@ int32_t system_internal_halt(uint32_t status){
     /* Get parent pid */
     parent_pid = current_PCB->parent_PCB->pid;
 
+    process_desc_arr[parent_pid].flag = 1;
+
     if(parent_pid!=0){//if parent process is a user program
         /* Get parent's userspace mem addr to remap */
         phys_addr = _8MB + (parent_pid * _4MB);
@@ -215,7 +250,7 @@ int32_t system_internal_halt(uint32_t status){
         set_4MB(phys_addr, virt_addr, 3);
     }
     else{//if no more user program running
-        //free_4MB(_128MB);//free the 4MB page at 128MB
+	/* Move esp back to pid 0 and start a new shell */
 	asm volatile(
 		"movl $0x7ffffc, %%esp\n"
 		:
@@ -224,16 +259,14 @@ int32_t system_internal_halt(uint32_t status){
 	system_execute("shell");
     }
 
-    free_4KB(_128MB+_4MB);//free the vidmap for user program
+    //set_4KB(current_PCB->,_128MB+_4MB);//free the vidmap for user program
 
     /* Set up parent kernel stack addr for TSS */
     tss.esp0 = (uint32_t)(_8MB - (parent_pid * _8KB));
 
     current_PCB->parent_PCB->hw_context->eax = status;
 
-    /* Jump to return from execute */
-    //halt_ret_exec(current_PCB->halt_back_ESP, status);
-
+    /* Return to user */
     asm volatile(
 	"movl %0, %%esp\n"
         "jmp return_to_user\n"

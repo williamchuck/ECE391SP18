@@ -7,6 +7,7 @@
 #include "../fs/fs.h"
 #include "../page/page.h"
 #include "../lib.h"
+#include "../process/process.h"
 
 /* Standard output file operation structure. */
 static file_op_t stdout_file_op = {
@@ -19,10 +20,7 @@ static file_op_t stdout_file_op = {
 /* Pointer to file operation structure. */
 file_op_t* stdout_op = &stdout_file_op;
 
-/* Paging address for video mem. */
-static uint32_t video_term[TERM_NUM] = {
-	(_4MB * 9), (_4MB * 9 + _4KB), (_4MB * 9 + 2 * _4KB)
-};
+int cur_term;
 
  /*
   * stdout_open
@@ -198,9 +196,7 @@ void term_del(int term)
 {
 	/* If keyboard buffer is empty, do nothing. */
 	if (term_buf_index[term] == 0)
-	{
 		return;
-	}
 
 	/* Coordinates and location var. */
 	int x;
@@ -225,7 +221,7 @@ void term_del(int term)
 		set_xy(x, y, term);
 
 		/* Use NULL character to erase character to be deleted */
-		putc(0x00);
+		kbd_putc(0x00);
 
 		/* Set coordinates to decremented position again. */
 		set_xy(x, y, term);
@@ -252,6 +248,9 @@ void cursor_update(int term)
 	int y;
 	uint16_t pos;
 
+	if(term != cur_term)
+		return;
+
 	/* Get real cursor positions and calculate corresponding cursor position. */
 	x = get_x(term);
 	y = get_y(term);
@@ -270,15 +269,11 @@ void term_switch(int term)
 	int i;
 
 	if ((term < 0) || (term >= TERM_NUM))
-	{
 		return;
-	}
 
 	/* Always remap everything before switching to avoid accidents. */
-	for (i = 0; i < TERM_NUM; i++)
-	{
-		set_4KB(video_term[i], video_term[i], 0);
-	}
+	//for (i = 0; i < TERM_NUM; i++)
+	//	set_4KB(video_term[i], video_term[i], 0);
 
 	set_4KB(VIDEO, VIDEO, 0);
 
@@ -286,15 +281,36 @@ void term_switch(int term)
 	cur_term = term;
 
 	if ((old_term >= 0) && (old_term < TERM_NUM))
-	{
 		memcpy((void*)video_term[old_term], (void*)VIDEO, _4KB);
-	}
 
 	memcpy((void*)VIDEO, (void*)video_term[cur_term], _4KB);
 
-	/* Cross map memory addresses. */
-	set_4KB(video_term[cur_term], VIDEO, 0);
-	set_4KB(VIDEO, video_term[cur_term], 0);
+	if(current_PCB->term_num == cur_term)
+		set_4KB(VIDEO, _128MB + _4MB, 3);
+	else
+		set_4KB(video_term[current_PCB->term_num], _128MB + _4MB, 3);
+
+	if(!terminal[term]){
+		process_desc_arr[term + 1].flag = 0;
+		asm volatile(
+			"movl $0x7ffffc, %%esp\n"
+			:
+			:
+		);
+
+		system_execute("shell");
+	}
 
 	cursor_update(cur_term);
 }
+
+
+
+
+
+
+
+
+
+
+

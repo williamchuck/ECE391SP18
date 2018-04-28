@@ -46,7 +46,7 @@ unsigned char term_buf[TERM_NUM][BUF_SIZE];
 int term_buf_index[TERM_NUM];
 
 /* Current terminal. */
-int cur_term;
+extern int cur_term;
 
 /* Open sys. call handler for standard output */
 extern int32_t stdout_open(const int8_t* filename);

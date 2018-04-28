@@ -6,6 +6,7 @@
 /* Global address of irq interrupt handling */
 .global common_interrupt
 .global return_to_user
+
 common_interrupt:
 	#Save registers for linkage
 	pushl $0

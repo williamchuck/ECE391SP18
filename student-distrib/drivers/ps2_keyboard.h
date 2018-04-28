@@ -45,6 +45,7 @@ void ps2_keyboard_clearbuf(int term);
 extern void int_ps2kbd_c();
 
 /* variables for enter key press */
-uint8_t enter_flag;
+//uint8_t enter_flag;
 
+uint32_t enter_flag_arr[3];
 #endif

@@ -18,6 +18,7 @@
 
 int32_t printf(int8_t *format, ...);
 void putc(uint8_t c);
+void kbd_putc(uint8_t c);
 int32_t puts(int8_t *s);
 int8_t *itoa(uint32_t value, int8_t* buf, int32_t radix);
 int8_t *strrev(int8_t* s);
@@ -26,6 +27,8 @@ void clear(void);
 
 /* Function for scrolling down a line. */
 void scroll_down();
+
+void kbd_scroll_down();
 
 /* Get current x coordinate of cursor */
 int get_x(int term);
@@ -55,6 +58,10 @@ int32_t safe_strncpy(int8_t* dest, const int8_t* src, int32_t n);
 
 /* Flag to check whether terminal pages has been initialized. 0 for not ready. */
 uint32_t term_ready;
+
+extern uint32_t video_term[TERM_NUM];
+
+extern uint32_t terminal[TERM_NUM];
 
 /* Port read functions */
 /* Inb reads a byte and returns its value as a zero-extended 32-bit

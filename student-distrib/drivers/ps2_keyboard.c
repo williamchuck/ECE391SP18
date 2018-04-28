@@ -4,6 +4,11 @@
  * Author: Canlin Zhang
  */
 #include "ps2_keyboard.h"
+#include "stdout.h"
+#include "../page/page.h"
+#include "../process/process.h"
+
+uint32_t enter_flag_arr[3] = {0, 0, 0};
 
  /* Keycode set 1. Only for displaying the asciis. */
 static unsigned char set1_code[89] = {
@@ -106,7 +111,7 @@ void ps2_keyboard_init() {
 	cur_term = 0;
 
 	/* Current terminal is 0. */
-	term_switch(0);
+	//term_switch(0);
 
 	/* Clear key toggle flags */
 	alt_flag = FLAG_OFF;
@@ -119,7 +124,9 @@ void ps2_keyboard_init() {
 	/* Clear current keycode flags */
 	alpha_flag = FLAG_OFF;
 	numpad_flag = FLAG_OFF;
-	enter_flag = FLAG_OFF;
+	enter_flag_arr[0] = FLAG_OFF;
+	enter_flag_arr[1] = FLAG_OFF;
+	enter_flag_arr[2] = FLAG_OFF;
 
 	term_ready = FLAG_ON;
 
@@ -241,12 +248,13 @@ void int_ps2kbd_c() {
 			term_buf_index[cur_term]++;
 
 			/* Echo character using putc. */
-			putc(currentchar);
+			kbd_putc(currentchar);
+			cursor_update(cur_term);
 
 			/* If enter key is pressed, toggle enter flag on. */
 			if (currentchar == ASCII_NL)
 			{
-				enter_flag = FLAG_ON;
+				enter_flag_arr[cur_term] = FLAG_ON;
 			}
 		}
 	}

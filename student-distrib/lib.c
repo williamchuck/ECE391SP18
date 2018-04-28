@@ -1,8 +1,9 @@
-/* lib.c - Some basic library functions (printf, strlen, etc.)
- * vim:ts=4 noexpandtab */
-
+/* lib.c - Some basic library functions (printf, strlen, etc.) 
+vim:ts=4 noexpandtab
+*/
 #include "lib.h"
 #include "drivers/stdout.h"
+#include "process/process.h"
 
 #define VIDEO       0xB8000
 #define NUM_COLS    80
@@ -20,9 +21,11 @@ int RTC_STATUS = 0;       // for test use
 int32_t current_pid = 0;
 
 /* Paging address for video mem. */
-static uint32_t video_term[TERM_NUM] = {
+uint32_t video_term[TERM_NUM] = {
 	(_4MB * 9), (_4MB * 9 + _4KB), (_4MB * 9 + 2 * _4KB)
 };
+
+uint32_t terminal[TERM_NUM] = {0, 0, 0};
 
 
 /* void clear(void);
@@ -32,16 +35,16 @@ static uint32_t video_term[TERM_NUM] = {
 void clear(void) {
 	int32_t i;
 	for (i = 0; i < NUM_ROWS * NUM_COLS; i++) {
-		if (!term_ready)
-		{
+		//if (!term_ready)
+		//{
 			*(uint8_t *)(video_mem + (i << 1)) = 0x00;
 			*(uint8_t *)(video_mem + (i << 1) + 1) = ATTRIB;
-		}
-		else if ((cur_term >= 0) && (cur_term < TERM_NUM) && term_ready)
-		{
-			*(uint8_t *)(video_term[cur_term] + (i << 1)) = 0x00;
-			*(uint8_t *)(video_term[cur_term] + (i << 1) + 1) = ATTRIB;
-		}
+		//}
+		//else if ((cur_term >= 0) && (cur_term < TERM_NUM) && term_ready)
+		//{
+		//	*(uint8_t *)(video_mem + (i << 1)) = 0x00;
+		//	*(uint8_t *)(video_mem + (i << 1) + 1) = ATTRIB;
+		//}
 	}
 }
 
@@ -49,8 +52,8 @@ void clear_term(int term)
 {
 	int32_t i;
 	for (i = 0; i < NUM_ROWS * NUM_COLS; i++) {
-		*(uint8_t *)(video_term[term] + (i << 1)) = 0x00;
-		*(uint8_t *)(video_term[term] + (i << 1) + 1) = ATTRIB;
+		*(uint8_t *)(video_mem + (i << 1)) = 0x00;
+		*(uint8_t *)(video_mem + (i << 1) + 1) = ATTRIB;
 	}
 }
 
@@ -71,14 +74,44 @@ void scroll_down()
 	/* Until row 1 to 79's vmem has moved to row 0 to 78 */
 	for (i = 1; i < NUM_ROWS; i++)
 	{
-		if (!term_ready)
-		{
-			memmove(video_mem + (i - 1) * 2 * NUM_COLS, video_mem + i * 2 * NUM_COLS, NUM_COLS * 2);
-		}
-		else if ((cur_term >= 0) && (cur_term < TERM_NUM) && term_ready)
-		{
-			memmove((char*)video_term[cur_term] + (i - 1) * 2 * NUM_COLS, (char*)video_term[cur_term] + i * 2 * NUM_COLS, NUM_COLS * 2);
-		}
+			memmove((char*)(_128MB + _4MB) + (i - 1) * 2 * NUM_COLS, (char*)(_128MB + _4MB) + i * 2 * NUM_COLS, NUM_COLS * 2);
+	}
+
+	/* Reset cursor value to buttom of terminal because prog. only scroll when needed. */
+	screen_y[current_PCB->term_num] = NUM_ROWS - 1;
+
+	/* Clear video memory of row 79 (buttom row) */
+	for (i = 0; i < NUM_COLS; i++)
+	{
+			*(uint8_t *)(_128MB + _4MB + ((NUM_COLS * screen_y[current_PCB->term_num] + i) << 1)) = 0x00;
+			*(uint8_t *)(_128MB + _4MB + ((NUM_COLS * screen_y[current_PCB->term_num] + i) << 1) + 1) = ATTRIB;
+	}
+
+	/* Reset cursor to first column of buttom of the terminal */
+	screen_x[current_PCB->term_num] = 0;
+	screen_y[current_PCB->term_num] = NUM_ROWS - 1;
+	return;
+}
+
+
+/*
+ * scroll_down
+ * DESCRIPTION: scroll down the terminal screen by 1 line
+ * INPUT: none.
+ * OUTPUT: none.
+ * RETURN VALUE: none.
+ * SIDE EFFECTS: terminal screen will scroll down by 1 line.
+ */
+void kbd_scroll_down()
+{
+	/* Loop var. */
+	int i;
+
+	/* Move row 1's vmem to row 0, row 2 to row 1, etc... */
+	/* Until row 1 to 79's vmem has moved to row 0 to 78 */
+	for (i = 1; i < NUM_ROWS; i++)
+	{
+			memmove((char*)video_mem + (i - 1) * 2 * NUM_COLS, (char*)video_mem + i * 2 * NUM_COLS, NUM_COLS * 2);
 	}
 
 	/* Reset cursor value to buttom of terminal because prog. only scroll when needed. */
@@ -87,16 +120,8 @@ void scroll_down()
 	/* Clear video memory of row 79 (buttom row) */
 	for (i = 0; i < NUM_COLS; i++)
 	{
-		if (!term_ready)
-		{
 			*(uint8_t *)(video_mem + ((NUM_COLS * screen_y[cur_term] + i) << 1)) = 0x00;
-			*(uint8_t *)(video_mem + ((NUM_COLS * screen_y[cur_term] + i) << 1) + 1) = ATTRIB;
-		}
-		else if ((cur_term >= 0) && (cur_term < TERM_NUM) && term_ready)
-		{
-			*(uint8_t *)(video_term[cur_term] + ((NUM_COLS * screen_y[cur_term] + i) << 1)) = 0x00;
-			*(uint8_t *)(video_term[cur_term] + ((NUM_COLS * screen_y[cur_term] + i) << 1) + 1) = ATTRIB;
-		}
+			*(uint8_t *)(video_mem + _4MB + ((NUM_COLS * screen_y[cur_term] + i) << 1) + 1) = ATTRIB;
 	}
 
 	/* Reset cursor to first column of buttom of the terminal */
@@ -181,7 +206,7 @@ int32_t printf(int8_t *format, ...) {
 			switch (*buf) {
 				/* Print a literal '%' character */
 			case '%':
-				putc('%');
+				kbd_putc('%');
 				break;
 
 				/* Use alternate formatting */
@@ -245,7 +270,7 @@ int32_t printf(int8_t *format, ...) {
 
 			/* Print a single character */
 			case 'c':
-				putc((uint8_t) *((int32_t *)esp));
+				kbd_putc((uint8_t) *((int32_t *)esp));
 				esp++;
 				break;
 
@@ -263,7 +288,7 @@ int32_t printf(int8_t *format, ...) {
 		break;
 
 		default:
-			putc(*buf);
+			kbd_putc(*buf);
 			break;
 		}
 		buf++;
@@ -279,7 +304,7 @@ int32_t printf(int8_t *format, ...) {
 int32_t puts(int8_t* s) {
 	register int32_t index = 0;
 	while (s[index] != '\0') {
-		putc(s[index]);
+		kbd_putc(s[index]);
 		index++;
 	}
 	return index;
@@ -293,9 +318,96 @@ void putc(uint8_t c) {
 	/* If a newline or carriage return is encountered, change new line. */
 	if (c == '\n' || c == '\r') {
 		/* If current cursor is at the bottom of terminal, scroll down. */
-		if (screen_y[cur_term] == (NUM_ROWS - 1))
+		if (screen_y[current_PCB->term_num] == (NUM_ROWS - 1))
 		{
 			scroll_down();
+
+			/* Update cursor */
+			cursor_update(current_PCB->term_num);
+			return;
+		}
+		/* Else, increment cursor y coord. */
+		else
+		{
+			screen_y[current_PCB->term_num]++;
+			screen_x[current_PCB->term_num] = 0;
+
+			/* Update cursor */
+			cursor_update(current_PCB->term_num);
+			return;
+		}
+	}
+
+	/* If the current string is longer than a line in terminal, change new line and display the char. */
+	if (screen_x[current_PCB->term_num] == NUM_COLS)
+	{
+		/* If current cursor is at the bottom of terminal, scroll down. */
+		if (screen_y[current_PCB->term_num] == (NUM_ROWS - 1))
+		{
+			scroll_down();
+
+			/* Copy char into video memory */
+				*(uint8_t *)(_128MB + _4MB + ((NUM_COLS * screen_y[current_PCB->term_num] + screen_x[current_PCB->term_num]) << 1)) = c;
+				*(uint8_t *)(_128MB + _4MB + ((NUM_COLS * screen_y[current_PCB->term_num] + screen_x[current_PCB->term_num]) << 1) + 1) = ATTRIB;
+
+			/* Increment cursor coords. */
+			screen_x[current_PCB->term_num]++;
+			screen_x[current_PCB->term_num] %= (NUM_COLS + 1);
+			screen_y[current_PCB->term_num] = (screen_y[current_PCB->term_num] + (screen_x[current_PCB->term_num] / (NUM_COLS + 1))) % NUM_ROWS;
+
+			/* Update cursor */
+			cursor_update(current_PCB->term_num);
+			return;
+		}
+		/* Else, change line. */
+		else
+		{
+			/* Increment y coord. of cursor. */
+			screen_y[current_PCB->term_num]++;
+			/* Reset x coord to 0. */
+			screen_x[current_PCB->term_num] = 0;
+
+			/* Copy char into video memory */
+				*(uint8_t *)(_128MB + _4MB + ((NUM_COLS * screen_y[current_PCB->term_num] + screen_x[current_PCB->term_num]) << 1)) = c;
+				*(uint8_t *)(_128MB + _4MB + ((NUM_COLS * screen_y[current_PCB->term_num] + screen_x[current_PCB->term_num]) << 1) + 1) = ATTRIB;
+
+			/* Increment cursor coords. */
+			screen_x[current_PCB->term_num]++;
+			screen_x[current_PCB->term_num] %= (NUM_COLS + 1);
+			screen_y[current_PCB->term_num] = (screen_y[current_PCB->term_num] + (screen_x[current_PCB->term_num] / (NUM_COLS + 1))) % NUM_ROWS;
+
+			/* Update cursor */
+			cursor_update(current_PCB->term_num);
+			return;
+		}
+	}
+	else {
+		/* Copy char into video memory */
+			*(uint8_t *)(_128MB + _4MB + ((NUM_COLS * screen_y[current_PCB->term_num] + screen_x[current_PCB->term_num]) << 1)) = c;
+			*(uint8_t *)(_128MB + _4MB + ((NUM_COLS * screen_y[current_PCB->term_num] + screen_x[current_PCB->term_num]) << 1) + 1) = ATTRIB;
+
+		/* Increment cursor coords. */
+		screen_x[current_PCB->term_num]++;
+		screen_x[current_PCB->term_num] %= (NUM_COLS + 1);
+		screen_y[current_PCB->term_num] = (screen_y[current_PCB->term_num] + (screen_x[current_PCB->term_num] / (NUM_COLS + 1))) % NUM_ROWS;
+
+		/* Update cursor */
+		cursor_update(current_PCB->term_num);
+		return;
+	}
+}
+
+/* void putc(uint8_t c);
+ * Inputs: uint_8* c = character to print
+ * Return Value: void
+ *  Function: Output a character to the console */
+void kbd_putc(uint8_t c) {
+	/* If a newline or carriage return is encountered, change new line. */
+	if (c == '\n' || c == '\r') {
+		/* If current cursor is at the bottom of terminal, scroll down. */
+		if (screen_y[cur_term] == (NUM_ROWS - 1))
+		{
+			kbd_scroll_down();
 
 			/* Update cursor */
 			cursor_update(cur_term);
@@ -319,20 +431,12 @@ void putc(uint8_t c) {
 		/* If current cursor is at the bottom of terminal, scroll down. */
 		if (screen_y[cur_term] == (NUM_ROWS - 1))
 		{
-			scroll_down();
+			kbd_scroll_down();
 
 			/* Copy char into video memory */
-			if (!term_ready)
-			{
 				*(uint8_t *)(video_mem + ((NUM_COLS * screen_y[cur_term] + screen_x[cur_term]) << 1)) = c;
 				*(uint8_t *)(video_mem + ((NUM_COLS * screen_y[cur_term] + screen_x[cur_term]) << 1) + 1) = ATTRIB;
-			}
-			else if ((cur_term >= 0) && (cur_term < TERM_NUM) && term_ready)
-			{
-				*(uint8_t *)(video_term[cur_term] + ((NUM_COLS * screen_y[cur_term] + screen_x[cur_term]) << 1)) = c;
-				*(uint8_t *)(video_term[cur_term] + ((NUM_COLS * screen_y[cur_term] + screen_x[cur_term]) << 1) + 1) = ATTRIB;
-			}
-
+			
 			/* Increment cursor coords. */
 			screen_x[cur_term]++;
 			screen_x[cur_term] %= (NUM_COLS + 1);
@@ -351,16 +455,8 @@ void putc(uint8_t c) {
 			screen_x[cur_term] = 0;
 
 			/* Copy char into video memory */
-			if (!term_ready)
-			{
 				*(uint8_t *)(video_mem + ((NUM_COLS * screen_y[cur_term] + screen_x[cur_term]) << 1)) = c;
 				*(uint8_t *)(video_mem + ((NUM_COLS * screen_y[cur_term] + screen_x[cur_term]) << 1) + 1) = ATTRIB;
-			}
-			else if ((cur_term >= 0) && (cur_term < TERM_NUM) && term_ready)
-			{
-				*(uint8_t *)(video_term[cur_term] + ((NUM_COLS * screen_y[cur_term] + screen_x[cur_term]) << 1)) = c;
-				*(uint8_t *)(video_term[cur_term] + ((NUM_COLS * screen_y[cur_term] + screen_x[cur_term]) << 1) + 1) = ATTRIB;
-			}
 
 			/* Increment cursor coords. */
 			screen_x[cur_term]++;
@@ -374,16 +470,8 @@ void putc(uint8_t c) {
 	}
 	else {
 		/* Copy char into video memory */
-		if (!term_ready)
-		{
 			*(uint8_t *)(video_mem + ((NUM_COLS * screen_y[cur_term] + screen_x[cur_term]) << 1)) = c;
 			*(uint8_t *)(video_mem + ((NUM_COLS * screen_y[cur_term] + screen_x[cur_term]) << 1) + 1) = ATTRIB;
-		}
-		else if ((cur_term >= 0) && (cur_term < TERM_NUM) && term_ready)
-		{
-			*(uint8_t *)(video_term[cur_term] + ((NUM_COLS * screen_y[cur_term] + screen_x[cur_term]) << 1)) = c;
-			*(uint8_t *)(video_term[cur_term] + ((NUM_COLS * screen_y[cur_term] + screen_x[cur_term]) << 1) + 1) = ATTRIB;
-		}
 
 		/* Increment cursor coords. */
 		screen_x[cur_term]++;
@@ -395,7 +483,6 @@ void putc(uint8_t c) {
 		return;
 	}
 }
-
 /* int8_t* itoa(uint32_t value, int8_t* buf, int32_t radix);
  * Inputs: uint32_t value = number to convert
  *            int8_t* buf = allocated buffer to place string in

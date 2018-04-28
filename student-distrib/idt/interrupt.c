@@ -8,6 +8,7 @@
 #include "interrupt.h"
 #include "../lib.h"
 #include "../i8259.h"
+#include "../process/process.h"
 
 /* Initialize irq handler address array to NULL. */
 irq_struct_t irqs[NUM_IRQ]={{0}};
@@ -15,15 +16,18 @@ irq_struct_t irqs[NUM_IRQ]={{0}};
 /*
  * do_IRQ
  *   DESCRIPTION: execute irq handler given irq number.
- *   INPUT: irq - irq number.
+ *   INPUT: pointer to register values on stack
  *   OUTPUT: none.
  *   RETURN VALUE: -1 on failure. (No handler present.)
  *                  0 on success.
  *   SIDE EFFECTS: handle irq interrupts by executing corresponding handler, and send eoi to PIC.
  */
 unsigned int do_IRQ(regs_t* regs){
+    /* Get IRQ number */
     unsigned int irq;
     irq = regs->orig_eax;
+
+    current_PCB->hw_context = regs;
 
     if(irqs[irq].handler==NULL){
         /* Error handling for non-existant irq handler */
@@ -33,9 +37,9 @@ unsigned int do_IRQ(regs_t* regs){
         return -1;
     }
     /* Call Handler */
+    send_eoi(irq);
     (*(irqs[irq].handler))();
     /* Send EOI to PIC. Return 0 for success. */
-    send_eoi(irq);
     return 0;
 }
 

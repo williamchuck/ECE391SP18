@@ -24,8 +24,7 @@
 #include "drivers/rtc.h"
 #include "drivers/stdin.h"
 #include "drivers/stdout.h"
-
-#include "syscall/syscall_user.h"
+#include "drivers/pit.h"
 
 /* File system */
 #include "fs/fs.h"
@@ -197,13 +196,15 @@ void entry(unsigned long magic, unsigned long addr) {
     /* Enable rtc periodic interrupt. (Always enable it) */
     rtc_enable_interrupt();
 
+	/* Enble PIT interrupt for scheduling */
+	init_pit();
+
     /* Enable interrupts */
     /* Do not enable the following until after you have set up your
      * IDT correctly otherwise QEMU will triple fault and simple close
      * without showing you any output */
 
     //printf("Enabling Interrupts\n");
-    sti();
 
 #if RUN_TESTS
     /* Run tests */

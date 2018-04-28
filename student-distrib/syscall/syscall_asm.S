@@ -5,43 +5,8 @@
  *      Author: Dennis
  */
 
-
 #define ASM
-//syscall numbers
 #include "ece391sysnum.h"
-//generate userland function for syscall
-//referred to ece391syscall.S
-/*stack:
-  ret addr
-  arg1
-  arg2
-  arg3
- */
-/*
-//doesn't seem like we can link user programs for now so leaving these commented out
-#define GEN_CALL(func, num)\
-.GLOBAL func;\
-func:\
-pushl %ebx;\
-movl $num, %eax;\
-movl 4(%esp), %ebx;\
-movl 8(%esp), %ecx;\
-movl 12(%esp), %edx;\
-int $0x80;\
-popl %ebx;\
-ret
-
-GEN_CALL(ece391_execute,SYS_EXECUTE)
-GEN_CALL(ece391_halt,SYS_HALT)
-GEN_CALL(ece391_read,SYS_READ)
-GEN_CALL(ece391_write,SYS_WRITE)
-GEN_CALL(ece391_open,SYS_OPEN)
-GEN_CALL(ece391_close,SYS_CLOSE)
-GEN_CALL(ece391_getargs, SYS_GETARGS)
-GEN_CALL(ece391_vidmap, SYS_VIDMAP)
- */
-
-//segment descriptors include
 #include "../x86_desc.h"
 
 /* EFLAGS
@@ -49,12 +14,15 @@ GEN_CALL(ece391_vidmap, SYS_VIDMAP)
 0x00     0x20     0x30     0x02
 00000000 00100000 00110000 00000010
  */
+
 #define EXEC_FLAG 0x00203202
-	//take 2 stack argument of EIP and ESP for user program
+	
+//take 2 stack argument of EIP and ESP for user program
 .GLOBAL jump_to_user
-	jump_to_user:
+jump_to_user:
 	movl 4(%esp),%eax 	//get user program entry point address into eax
 	movl 8(%esp),%edx 	//get user program stack pointer into edx
+
 	/*http://www.c-jump.com/CIS77/ASM/Memory/M77_0290_segment_registers_protected.htm
 	  segment selector format:
 	  15:3  2  1:0
@@ -94,12 +62,13 @@ GEN_CALL(ece391_vidmap, SYS_VIDMAP)
 
 	iret
 
-	//the largest syscall number
+//the largest syscall number
 #define MAXSYSCALL SYS_VIDMAP
-	//system call linkage
-	/* Interrupt 128 - System Call */
+//system call linkage
+/* Interrupt 128 - System Call */
+
 .GLOBAL syscall_asm
-	syscall_asm:
+syscall_asm:
 	cmpl $MAXSYSCALL,%eax //check within range
 	ja 1f
 	cmpl $SYS_HALT,%eax
@@ -110,9 +79,9 @@ GEN_CALL(ece391_vidmap, SYS_VIDMAP)
 	iret
 
 	2: //proceed to call
-#Save orig_eax
+	#Save orig_eax
 	pushl %eax
-#Save registers for linkage
+	#Save registers for linkage
 	pushl $0
 	movw %fs, (%esp)
 	pushl $0
@@ -127,7 +96,7 @@ GEN_CALL(ece391_vidmap, SYS_VIDMAP)
 	pushl %ecx
 	pushl %ebx
 
-#Call do_sys
+	#Call do_sys
 	pushl %esp
 	call do_sys
 	popl %esp
