@@ -17,15 +17,15 @@
 #define TERM_NUM	3
 
 int32_t printf(int8_t *format, ...);
-void putc(uint8_t c);
-int32_t puts(int8_t *s);
+void putc(uint32_t term, uint8_t c);
+int32_t puts(uint32_t term, int8_t *s);
 int8_t *itoa(uint32_t value, int8_t* buf, int32_t radix);
 int8_t *strrev(int8_t* s);
 uint32_t strlen(const int8_t* s);
 void clear(void);
 
 /* Function for scrolling down a line. */
-void scroll_down();
+void scroll_down(uint32_t term);
 
 /* Get current x coordinate of cursor */
 int get_x(int term);

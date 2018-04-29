@@ -7,6 +7,7 @@
 #include "../fs/fs.h"
 #include "../page/page.h"
 #include "../lib.h"
+#include "../process/process.h"
 
 /* Standard output file operation structure. */
 static file_op_t stdout_file_op = {
@@ -82,7 +83,10 @@ int32_t stdout_read(int32_t fd, void* buf, uint32_t nbytes)
 int32_t stdout_write(int32_t fd, const void* buf, uint32_t nbytes)
 {
 	/* Loop var. */
-	int i;
+	int i, term;
+
+	term = (int)current_PCB;
+
 	/* Pointer to buffer (for type casting) */
 	unsigned char* buf_ptr;
 
@@ -109,7 +113,7 @@ int32_t stdout_write(int32_t fd, const void* buf, uint32_t nbytes)
 			return i;
 		}
 		/* Display data onto terminal */
-		putc(buf_ptr[i]);
+		putc(0, buf_ptr[i]);
 	}
 	/* If we displayed all the data successfully, return nbytes */
 	return nbytes;
@@ -225,7 +229,7 @@ void term_del(int term)
 		set_xy(x, y, term);
 
 		/* Use NULL character to erase character to be deleted */
-		putc(0x00);
+		putc(term, 0x00);
 
 		/* Set coordinates to decremented position again. */
 		set_xy(x, y, term);
