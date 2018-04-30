@@ -38,11 +38,13 @@ void i8259_init(void) {
 
 /* Enable (unmask) the specified IRQ */
 void enable_irq(uint32_t irq_num) {
+  /* Sanity Check */
   if (irq_num >= 0x00 && irq_num <= 0x07)
   {
     master_mask = master_mask & (~(0x01 << irq_num));
     outb(master_mask, MASTER_8259_DATA);
   }
+  /* Sanity Check */
   else if (irq_num >= 0x08 && irq_num <= 0x0F)
   {
     irq_num = irq_num - 0x08;
@@ -53,11 +55,13 @@ void enable_irq(uint32_t irq_num) {
 
 /* Disable (mask) the specified IRQ */
 void disable_irq(uint32_t irq_num) {
+  /* Sanity Check */
   if (irq_num >= 0x00 && irq_num <= 0x07)
   {
     master_mask = master_mask | (0x01 << irq_num);
     outb(master_mask, MASTER_8259_DATA);
   }
+  /* Sanity Check */
   else if (irq_num >= 0x08 && irq_num <= 0x0F)
   {
     irq_num = irq_num - 0x08;
@@ -68,10 +72,12 @@ void disable_irq(uint32_t irq_num) {
 
 /* Send end-of-interrupt signal for the specified IRQ */
 void send_eoi(uint32_t irq_num) {
+  /* Sanity Check */
   if (irq_num >= 0x00 && irq_num <= 0x07)
   {
     outb(EOI + irq_num, MASTER_8259_PORT);
   }
+  /* Sanity Check */
   else if (irq_num >= 0x08 && irq_num <= 0x0F)
   {
     outb(EOI + irq_num - 0x08, SLAVE_8259_PORT);
