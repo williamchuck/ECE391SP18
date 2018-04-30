@@ -1,6 +1,7 @@
 Bug log
 Group 19: Caffeine_Theanine
 
+2018/03/10
 ********************************************************************
 Issue: Triple Fault occurs when paging is enabled
 Cause: The order of moving values into CR3, CR4, and CR0 registers
@@ -9,6 +10,22 @@ Fix:   Use the correct order (CR3 -> CR4 -> CR0)
 ********************************************************************
 
 ********************************************************************
+Issue: System crashes after interrupts on slave PIC are serviced
+Cause: send_eoi didn't send eoi signal to master PIC after sending
+	   eoi signal to slave PIC
+Fix:   Modify send_eoi function to send eoi signal to master PIC
+	   when dealing with the slave interrupts
+********************************************************************
+
+********************************************************************
+Issue: Interrupt handler crashes on exit
+Cause: Not all registers are saved / leave is used in the interrupt
+	   handlers
+Fix:   Use pushal and popal in all the interrupt handlers
+********************************************************************
+
+2018/03/22
+********************************************************************
 Issue: Data is lost when a large data file is being read
 Cause: When read operation exceeds one data bock, it doesn't go to
 	   the next data block
@@ -16,6 +33,16 @@ Fix:   When read operation reaches the end of a data block, jump
        to the next data block
 ********************************************************************
 
+********************************************************************
+Issue: The first keypress at a new line can't be stored into the
+	   text buffer
+Cause: The tracking and handling of the buffer index are functioned
+ 	   improperly when the enter key is pressed
+Fix:   Add a check of dealing with enter key press in the interrupt
+	   handler
+********************************************************************
+
+2018/03/26
 ********************************************************************
 Issue: Uncompleted commands can be executed
 Cause: String Compare function only compares the content
@@ -32,6 +59,13 @@ Fix:   Check if the input filename exceeds 32-byte constraint
 ********************************************************************
 
 ********************************************************************
+Issue: The cursor displays at wrong position of a new line
+Cause: The cursor wasn't updated properly on the screen
+Fix:   Update the cursor's position after every putc
+********************************************************************
+
+2018/04/16
+********************************************************************
 Issue: A new shell is unable to restart when the last shell is
 	   exited (the same shell is exited twice)
 Cause: When the system tries to restart a new shell, pid is not at
@@ -41,6 +75,21 @@ Fix:   Put ESP on the kernel stack (where the pid0 is) so the shell
 	   will be restarted when the last shell is exited
 ********************************************************************
 
+********************************************************************
+Issue: The terminal still echoes character after the text  buffer
+	   is full
+Cause: No relevant check in the keyboard interrupt handler
+Fix:   Check if the text buffer is full in the keyboard interrupt
+	   handler. (If full, then no more characters echoed on screen)
+********************************************************************
+
+********************************************************************
+Issue: When user programming is running, Ctrl + L doesn't clear screen
+Cause: ece391_read has associated flag blocking Ctrl + L handler
+Fix:   Raise the priority of Ctrl + L in the interrupt handler.
+********************************************************************
+
+2018/04/29
 ********************************************************************
 Issue: Display is skewed when the scheduling is on
 Cause: putc and scrolling uses video memory for the current terminal,
@@ -62,13 +111,24 @@ Fix:   Clear video memory when a new shell is started on the terminal
 ********************************************************************
 
 ********************************************************************
-Issue: Cursor is not showing on terminal 2 and 3
+Issue: Cursor doesn't show on other terminals
 Cause: Video memory is not initialized properly
-Fix: Clear video memory whenever we start a new shell on a new terminal
+Fix:   Clear video memory when a new shell is started on the terminal
 ********************************************************************
 
 ********************************************************************
 Issue: Passing syserr number 6: err_vidmap with kernel is failed
 Cause: vidmap doesn't check if the required page is at kernel level
 Fix:   Implement a kernel page check in vidmap
+********************************************************************
+
+********************************************************************
+Issue: User programs are running slow (i.e. fish, pingpong) when
+	   there are multiple user programs running in the background
+Cause: PIC switches between processes, but the RTC interrupts occurred
+       in one of the processes don't affect other processes
+	   (i.e. the RTC timer at background doesn't sync with others)
+Fix:   Use another counter to reflect each process's RTC time for
+	   rtc_read. Counters for all processes will be updated when a
+	   RTC interrupt occurs
 ********************************************************************
