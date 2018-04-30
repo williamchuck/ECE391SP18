@@ -106,7 +106,7 @@ void idt_set_all() {
     /* Present flag = 1, size = 1 (32-bit), previlege = 3 (user) */
     idt_set_entry(0x80, TRAP_GATE_MODE, idt_system_call_addr, KERNEL_CS, 3, 1, 1);
 
-    /* entries 0x80 to 0xFF will not be used. Set their present flag to 0. */
+    /* entries 0x81 to 0xFF will not be used. Set their present flag to 0. */
     for (i = 0x81; i <= 0xFF; i++) {
         idt[i].present = 0;
     }
