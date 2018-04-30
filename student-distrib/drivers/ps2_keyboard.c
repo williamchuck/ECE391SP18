@@ -171,7 +171,7 @@ void int_ps2kbd_c() {
 	/* Get current scan code and initialize current char */
 	currentcode = ps2_keyboard_getscancode();
 
-	/* If a key IS pressed, get its ascii code */
+	/* If a key is pressed, get its ascii code */
 	if (currentcode != 0)
 	{
 		/* Process toggle flags first */
@@ -208,7 +208,7 @@ void int_ps2kbd_c() {
 			switch (currentcode)
 			{
 			case KBDLP:
-			{	
+			{
 				ctrl_flag = FLAG_OFF;
 				cursor_reset(cur_term);
 				clear();
