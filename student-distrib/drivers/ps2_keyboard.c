@@ -234,7 +234,7 @@ void int_ps2kbd_c() {
 			term_buf_index[cur_term]++;
 
 			/* Echo character using putc. */
-			putc(cur_term, currentchar);
+			putc(currentchar);
 
 			/* If enter key is pressed, toggle enter flag on. */
 			if (currentchar == ASCII_NL)

@@ -1,7 +1,6 @@
 #include "tests.h"
 #include "x86_desc.h"
 #include "lib.h"
-#include "drivers/stdout.h"
 
 #define PASS 1
 #define FAIL 0
@@ -198,7 +197,7 @@ int test_file_by_name(const int8_t* fname){
 
 	/* Print out first 10 bytes */
 	for(i = 0; i < 10; i++)
-		putc(cur_term, buf[i]);
+		putc(buf[i]);
 
 	/* Read the rest of text file */
 	if(data_read(fd, (int8_t*)buf, size - 10) != (size - 10))
@@ -206,7 +205,7 @@ int test_file_by_name(const int8_t* fname){
 
 	/* Print out rest of text file */
 	for(i = 0; i < (size - 10); i++)
-		putc(cur_term, buf[i]);
+		putc(buf[i]);
 
 	/* Anymore read should return 0 for EOF */
 	if(data_read(fd, (int8_t*)buf, 1) != 0)
@@ -296,7 +295,7 @@ int test_file_by_index(uint32_t index){
 
 	/* Print out first 10 bytes */
 	for(i = 0; i < 10; i++)
-		putc(cur_term, buf[i]);
+		putc(buf[i]);
 
 	/* Read the rest of text file */
 	if(data_read(fd, (int8_t*)buf, size - 10) != (size - 10))
@@ -304,7 +303,7 @@ int test_file_by_index(uint32_t index){
 
 	/* Print out rest of text file */
 	for(i = 0; i < (size - 10); i++)
-		putc(cur_term, buf[i]);
+		putc(buf[i]);
 
 	/* Anymore read should return 0 for EOF */
 	if(data_read(fd, (int8_t*)buf, 1) != 0)
@@ -478,12 +477,12 @@ int test_head_tail_data_file(const int8_t* fname){
 	/* Print out first 24B for check */
 	printf("\nStart: ");
 	for(i = 0; i < FILE_HEAD_LENGTH; i++)
-		putc(cur_term, start[i]);
+		putc(start[i]);
 	
 	/* Print out last 50B for check */
 	printf("\nEnd: ");
 	for(i = 0; i < FILE_END_LENGTH; i++)
-		putc(cur_term, end[i]);
+		putc(end[i]);
 	printf("\n");
 
 	/* Close the binary file */
@@ -511,12 +510,12 @@ int RTC_test(){
     for(i = 0; i < 10; i++){
         for(j = 0; j < 40; j++){
             output = ('0'+i);
-            putc(cur_term, output);
+            putc(output);
             rtc_read(0,0,0);
         }
         freq <<= 1;
         rtc_write(0, (void*) ptr, 4);
-        putc(cur_term, '\n');
+        putc('\n');
     }
 
     //test invalid frequencies
@@ -529,7 +528,7 @@ int RTC_test(){
 
     rtc_close(0);
 
-    puts(cur_term, "\nRTC TEST COMPLETE\n");
+    puts("\nRTC TEST COMPLETE\n");
     return PASS;
 
 }
@@ -546,7 +545,7 @@ int stdin_read_test(){
         printf("size: %d\n",nchar);
         int i;
         printf("stdin_read:\n");
-        for(i=0;i<nchar;i++)putc(cur_term, buffer[i]);
+        for(i=0;i<nchar;i++)putc(buffer[i]);
         if(buffer[nchar-1]!='\n'){
             stdin_close(0);
             return FAIL;
@@ -576,28 +575,28 @@ int long_printf_test(){
 
 
 
-    puts(cur_term, "\n1the quick brown fox jumps over the lazy dog 1234567890-=");
+    puts("\n1the quick brown fox jumps over the lazy dog 1234567890-=");
     PAUSE;
-    puts(cur_term, "\n2the quick brown fox jumps over the lazy dog 1234567890-=");
+    puts("\n2the quick brown fox jumps over the lazy dog 1234567890-=");
     PAUSE;
-    puts(cur_term, "\n3the quick brown fox jumps over the lazy dog 1234567890-=");
+    puts("\n3the quick brown fox jumps over the lazy dog 1234567890-=");
     PAUSE;
-    puts(cur_term, "\n4the quick brown fox jumps over the lazy dog 1234567890-=");
+    puts("\n4the quick brown fox jumps over the lazy dog 1234567890-=");
     PAUSE;
     rtc_close(0);
-    putc(cur_term, '\n');
+    putc('\n');
 
     printf("non printable char\n");
     int c=0;
     for(c=0;c<' ';c++){
-        putc(cur_term, c);
+        putc(c);
     }
     printf("\nextended ascii\n");
     for(c=0x80;c<0xFF;c++){
-        putc(cur_term, c);
+        putc(c);
     }
-    putc(cur_term, c);
-    putc(cur_term, '\n');
+    putc(c);
+    putc('\n');
     return PASS;
 }
 /* Checkpoint 3 tests */
