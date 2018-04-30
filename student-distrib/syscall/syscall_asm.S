@@ -101,6 +101,7 @@ syscall_asm:
 	call do_sys
 	popl %esp
 
+	#Context switch to user
 	jmp return_to_user
 
 .GLOBAL syscall_table

@@ -8,6 +8,7 @@
 #include "../page/page.h"
 #include "../process/process.h"
 
+/* Three enter flags for three terminals */
 uint32_t enter_flag_arr[3] = {0, 0, 0};
 
  /* Keycode set 1. Only for displaying the asciis. */

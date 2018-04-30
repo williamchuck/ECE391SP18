@@ -3,6 +3,8 @@
 
 #include "types.h"
 
+
+//Struct to save hardware context
 typedef struct regs{
 	uint32_t ebx;
 	uint32_t ecx;

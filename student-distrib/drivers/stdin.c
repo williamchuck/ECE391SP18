@@ -85,9 +85,7 @@ int32_t stdin_read(int32_t fd, void* buf, uint32_t nbytes)
 
 	/* Always clear target buffer with NULL */
 	for (i = 0; i < nbytes; i++)
-	{
 		buf_ptr[i] = 0x00;
-	}
 
 	/* Read from internal buffer. */
 	for (i = 0; i < BUF_SIZE; i++)

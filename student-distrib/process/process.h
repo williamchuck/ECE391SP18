@@ -7,8 +7,9 @@
 
 //0 is not used for user process, so actually only 6 proc can be ran
 #define NUM_PROC 7
-
 #define _8KB_MASK 0xFFFFE000
+
+//Struct for PCB block
 typedef struct PCB_block
  {
     regs_t* hw_context;

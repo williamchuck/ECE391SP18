@@ -7,19 +7,38 @@
 /* Process_desc_arr to contorl processes */
 process_desc_t process_desc_arr[NUM_PROC];
 
+
+/*
+ * get_next_schedule:
+ * Description: Get the pid of the next schedulable process
+ * Input: None
+ * Output: pid of the next process to schedule, -1 on fail
+ * Effect: None
+ */
 int32_t get_next_schedule(){
 	int i;
+	/* Start from the next pid to current pid, search for pid with flag 2 */
 	for(i = current_PCB->pid + 1; i != current_PCB->pid; i = (i + 1) % NUM_PROC){
+		/* Ignore the pid0 for safe */
 		if(i == 0)
 			continue;
 
+		/* If we find it, return pid */
 		if(process_desc_arr[i].flag == 2)
 			return i;
 	}
 
+	/* Cannot find a process to schedule, return -1 */
 	return -1;
 }
 
+/*
+ * init_process:
+ * Description: Initialize the process_desc_arr for furture use
+ * Input: None
+ * Output: None
+ * Effect: Initialize the process_desc_arr
+ */
 void init_process(){
 	/* Initilize process_desc_arr */
 	int i;
@@ -47,15 +66,24 @@ void init_process(){
     	current_PCB->file_desc_arr[1].flag = 1;
 }
 
+/*
+ * schedule:
+ * Description: Schedule the next process
+ * Input: None
+ * Output: None
+ * Effect: Schedule the next process to run
+ */
 void schedule(){
 	/* Initialize variables */
 	uint32_t phys_addr, virt_addr, next_ESP, next_pid;
 	PCB_block_t* next_PCB;
 	
+	/* Get pid of next process to schedule, return on fail */
 	next_pid = get_next_schedule();
 	if(next_pid == -1)
 		return;
 
+	/* Get PCB of the next process and set TSS */
 	next_ESP = _8MB - (next_pid * _8KB);
 	next_PCB = (PCB_block_t*)((next_ESP - 1) & _8KB_MASK);
 	tss.esp0 = (uint32_t)(_8MB - (next_pid * _8KB));
@@ -72,10 +100,11 @@ void schedule(){
 	else 
 		set_4KB(video_term[next_PCB->term_num], _128MB + _4MB, 3);	
 
+	/* Mark process_desc_arr flags */
 	process_desc_arr[current_PCB->pid].flag = 2;
 	process_desc_arr[next_pid].flag = 1;
 
-    	/* Return to user */
+    	/* Context switch to user */
     	asm volatile(
 		"movl %0, %%esp\n"
         	"jmp return_to_user\n"

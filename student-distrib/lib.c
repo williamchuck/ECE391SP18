@@ -35,16 +35,8 @@ uint32_t terminal[TERM_NUM] = {0, 0, 0};
 void clear(void) {
 	int32_t i;
 	for (i = 0; i < NUM_ROWS * NUM_COLS; i++) {
-		//if (!term_ready)
-		//{
 			*(uint8_t *)(video_mem + (i << 1)) = 0x00;
 			*(uint8_t *)(video_mem + (i << 1) + 1) = ATTRIB;
-		//}
-		//else if ((cur_term >= 0) && (cur_term < TERM_NUM) && term_ready)
-		//{
-		//	*(uint8_t *)(video_mem + (i << 1)) = 0x00;
-		//	*(uint8_t *)(video_mem + (i << 1) + 1) = ATTRIB;
-		//}
 	}
 }
 
@@ -59,7 +51,7 @@ void clear_term(int term)
 
 /*
  * scroll_down
- * DESCRIPTION: scroll down the terminal screen by 1 line
+ * DESCRIPTION: scroll down the terminal screen by 1 line that is caused by programs
  * INPUT: none.
  * OUTPUT: none.
  * RETURN VALUE: none.
@@ -95,8 +87,8 @@ void scroll_down()
 
 
 /*
- * scroll_down
- * DESCRIPTION: scroll down the terminal screen by 1 line
+ * kbd_scroll_down
+ * DESCRIPTION: scroll down the terminal screen by 1 line that is caused by keyboard
  * INPUT: none.
  * OUTPUT: none.
  * RETURN VALUE: none.
@@ -311,6 +303,7 @@ int32_t puts(int8_t* s) {
 }
 
 /* void putc(uint8_t c);
+ * Description: Put a char on terminal caused by a program
  * Inputs: uint_8* c = character to print
  * Return Value: void
  *  Function: Output a character to the console */
@@ -398,6 +391,7 @@ void putc(uint8_t c) {
 }
 
 /* void putc(uint8_t c);
+ * Description: Put a char on terminal caused by keyboard
  * Inputs: uint_8* c = character to print
  * Return Value: void
  *  Function: Output a character to the console */

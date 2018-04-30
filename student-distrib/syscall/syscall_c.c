@@ -18,13 +18,18 @@
 void do_sys(regs_t* regs){
 	/* Get system call number from stack */
 	int32_t syscall_num;
+
+	/* Critical section for execute and halt */
 	cli();
+
+	/* Save hardware context */
 	syscall_num = regs->orig_eax;
 
+	/* If not execute or halt, enable interrupt */
 	if(syscall_num != 1 && syscall_num != 2)
 		sti();
 
-	/* Set current PCB hardware context */
+	/* Save current PCB hardware context */
 	current_PCB->hw_context = regs;
 
 	/* Call corresponding system call */
@@ -45,17 +50,19 @@ void do_sys(regs_t* regs){
  * get_free_pid:
  * Description: Get a free pid for child process
  * Input: None
- * Output: pid for child process
+ * Output: pid for child process, -1 on fail
  * Effect: None
  */
 int32_t get_free_pid(){
     int i;
     for(i = 0; i < NUM_PROC; i++){
+	/* If a pid is free, return it */
         if(process_desc_arr[i].flag == 0){
             return i;
         }
     }
 
+    /* If no more space to new process, return -1 */
     return -1;
 }
 
@@ -130,13 +137,17 @@ int32_t system_execute(const int8_t* file_name){
     virt_addr = _128MB;
     set_4MB(phys_addr, virt_addr, 3);
 
+    /* If we are starting from ground, assign a term_num according to pid */
     if(current_PCB->pid == 0)
     	    term_num = child_pid - 1;
+    /* Otherwise restore the term_num */
     else
 	    term_num = current_PCB->term_num;
 
+    /* If the process is running on current terminal, direct map video memory */
     if(term_num == cur_term)
 	    set_4KB(VIDEO_MEM, _128MB + _4MB, 0);
+    /* Otherwise, map dump memory instead */
     else
 	    set_4KB(video_term[term_num], _128MB + _4MB, 0);
 
@@ -153,23 +164,28 @@ int32_t system_execute(const int8_t* file_name){
         return -1;
     }
 
-    /* Mark child pid as used */
+    /* Mark the terminal as having a shell running */
     terminal[term_num] = 1;
 
+    /* Mark current chell as cannot be scheduled and not running */
     process_desc_arr[current_PCB->pid].flag = 3;
 
+    /* If we are starting at ground up */
     if(current_PCB->pid == 0){
         for(i = 1; i < NUM_PROC; i++){
+	    /* If it is a shell, change none exist to cannot be scheduled and running to can be scheduled */
 	    if(i < 4){
     		if(process_desc_arr[i].flag == 0)
 		    process_desc_arr[i].flag = 3;
             }
 
+	    /* If it is not a shell, only change running to can be scheduled */
 	    if(process_desc_arr[i].flag == 1)
 	        process_desc_arr[i].flag = 2;
 	}
     }
 
+    /* Mark the child process as running */
     process_desc_arr[child_pid].flag = 1;
 
     /* Get the entry addr:
@@ -244,8 +260,10 @@ int32_t system_internal_halt(uint32_t status){
     parent_pid = current_PCB->parent_PCB->pid;
 
     if(parent_pid != 0){//if parent process is a user program
+	/* If parent process is running on current shell, mark it as running */
 	if(current_PCB->parent_PCB->term_num == cur_term)
     	    process_desc_arr[parent_pid].flag = 1;
+	/* Otherwise mark it as can be scheduled */
     	else
 	    process_desc_arr[parent_pid].flag = 2;
 
@@ -264,11 +282,10 @@ int32_t system_internal_halt(uint32_t status){
 	system_execute("shell");
     }
 
-    //set_4KB(current_PCB->,_128MB+_4MB);//free the vidmap for user program
-
     /* Set up parent kernel stack addr for TSS */
     tss.esp0 = (uint32_t)(_8MB - (parent_pid * _8KB));
 
+    /* Set up status */
     current_PCB->parent_PCB->hw_context->eax = status;
 
     /* Return to user */

@@ -12,11 +12,25 @@
 #define MAX_DIV 1
 #define MIN_DIV 65535
 
+/* 
+ * pit_isr:
+ * Description: Service function for pit interrupt 
+ * Input: None
+ * Output: None
+ * Effect: Schedule on every pit interrupt
+ */
 void pit_isr(){
 	/* Schedule next process */
 	schedule();
 }
 
+/*
+ * init_pit:
+ * Description: Initialize pit
+ * Input: None
+ * Output: None
+ * Effect: Initialize pit for interrupt
+ */
 void init_pit(){
 	/* Install handler */
 	request_irq(0, &pit_isr);
@@ -28,10 +42,17 @@ void init_pit(){
 	enable_irq(0);
 }
 
-
+/*
+ * change_freq:
+ * Description: Change frequency of pit
+ * Input: New frequency
+ * Output: None
+ * Effect: Change frequency of pit to new frequency
+ * */
 void change_freq(uint32_t new_freq){
 	uint16_t div;
 
+	/* Calculate divisor based on new_freq */
 	if(new_freq <= MIN_PIT_FREQ) 
 		div = MIN_DIV;
 	else if(new_freq >= MAX_PIT_FREQ)
@@ -39,6 +60,7 @@ void change_freq(uint32_t new_freq){
 	else
 		div = MAX_PIT_FREQ/new_freq;
 
+	/* Send signals to pit */
 	outb(RATE_COMMAND, PIT_COMMAND_PORT);
 	outb(div & 0x00FF, PIT_DATA_PORT);
 	outb(div >> 8, PIT_DATA_PORT);

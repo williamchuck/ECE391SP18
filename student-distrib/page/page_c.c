@@ -145,6 +145,13 @@ void set_4KB(uint32_t phys_mem, uint32_t virt_mem, uint8_t level){
 	flush_TLB();
 }
 
+/*
+ * free_4KB:
+ * Description: Free a 4KB page
+ * Input: virtual memory in that page
+ * Output: None
+ * Effect: Page contains the virtual memory is freed
+ */
 void free_4KB(uint32_t virt_mem){
     uint32_t pde_idx, pte_idx;
 
@@ -156,6 +163,15 @@ void free_4KB(uint32_t virt_mem){
     page_table_arr[pde_idx].entry[pte_idx]=0;
 
 }
+
+
+/*
+ * free_4MB:
+ * Description: Free a 4MB page
+ * Input: virtual memory in that page
+ * Output: None
+ * Effect: Page contains the virtual memory is freed
+ */
 void free_4MB(uint32_t virt_mem){
     uint32_t pde_idx;
 
@@ -164,6 +180,13 @@ void free_4MB(uint32_t virt_mem){
     page_dir[pde_idx]=0|EN_PS;//clear page directory entry, but maintaining 4MB page setting
 }
 
+/*
+ * page_present:
+ * Description: Decide if a page is present
+ * Input: virtual memory in that page
+ * Output: 1 for page is present, 0 for page not present
+ * Effect: None
+ */
 int32_t page_present(const void* virt_mem){
     uint32_t pde_idx, pte_idx;
 
@@ -181,6 +204,13 @@ int32_t page_present(const void* virt_mem){
 }
 
 
+/*
+ * page_user:
+ * Description: Decide if a page is in user mode
+ * Input: virtual memory in that page
+ * Output: 1 for page is in user mode, 0 for page not in user mode
+ * Effect: None
+ */
 int32_t page_user(const void* virt_mem){
     uint32_t pde_idx, pte_idx;
 
@@ -200,6 +230,7 @@ int32_t page_user(const void* virt_mem){
              (page_table_arr[pde_idx].entry[pte_idx] & EN_US) );//4KB page: check pte is in user mode
 
 }
+
 /*
  * setup_page:
  * Description: Set up paging for kernel page and video memory

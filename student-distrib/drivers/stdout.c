@@ -173,9 +173,7 @@ void term_init(int term)
 	 * (Not to NULL because NULL can be displayed) 
 	 */
 	for (i = 0; i < BUF_SIZE; i++)
-	{
 		term_buf[term][i] = TERM_EOF;
-	}
 
 	/* Reset buffer index to 0 */
 	term_buf_index[term] = 0;
@@ -260,49 +258,57 @@ void cursor_update(int term)
 	outb((uint8_t)((pos >> 8) & TERM_EOF), TEXT_IN_DATA);
 }
 
+/*
+ * term_switch:
+ * Description: Switch to a new terminal
+ * Input: Next terminal to switch to 
+ * Output: None
+ * Effect: Switch to another terminal
+ */
 void term_switch(int term)
 {
 	int old_term;
 
+	/* Check if terminal exist */
 	if ((term < 0) || (term >= TERM_NUM))
 		return;
 
+	/* Remap video memory for safe */
 	set_4KB(VIDEO, VIDEO, 0);
 
+	/* Switch terminal */
 	old_term = cur_term;
 	cur_term = term;
 
+	/* Copy video memory content into dump */
 	if ((old_term >= 0) && (old_term < TERM_NUM))
 		memcpy((void*)video_term[old_term], (void*)VIDEO, _4KB);
 
+	/* Copy dump of next terminal onto video memory */
 	memcpy((void*)VIDEO, (void*)video_term[cur_term], _4KB);
 
+	/* If current process is running on current terminal, directly map video memory */
 	if(current_PCB->term_num == cur_term)
 		set_4KB(VIDEO, _128MB + _4MB, 3);
+	/* Otherwise, map the dump instead */
 	else
 		set_4KB(video_term[current_PCB->term_num], _128MB + _4MB, 3);
 
+	/* If there is no shell on the next terminal, start a new one */
 	if(!terminal[term]){
+		/* Clear for safe */
 		clear();
+		/* Clear up a space for the next shell */
 		process_desc_arr[term + 1].flag = 0;
+		/* Put ESP to pid0 and start up a new shell */
 		asm volatile(
 			"movl $0x7ffffc, %%esp\n"
 			:
 			:
 		);
+
 		system_execute("shell");
 	}
-
+	/* Update cursor */
 	cursor_update(cur_term);
 }
-
-
-
-
-
-
-
-
-
-
-

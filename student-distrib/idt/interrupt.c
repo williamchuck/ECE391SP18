@@ -27,6 +27,7 @@ unsigned int do_IRQ(regs_t* regs){
     unsigned int irq;
     irq = regs->orig_eax;
 
+    /* Save hardware context */
     current_PCB->hw_context = regs;
 
     if(irqs[irq].handler==NULL){
