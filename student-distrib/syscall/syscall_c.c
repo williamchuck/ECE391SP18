@@ -256,6 +256,14 @@ int32_t system_internal_halt(uint32_t status){
     /* Unset flag for current pid */
     process_desc_arr[pid].flag = 0;
 
+    //close all open files except stdin and out
+    int32_t fd;
+    for(fd=2;fd<=FD_MAX;fd++){
+        if(current_PCB->file_desc_arr[fd].flag){
+            system_close(fd);
+        }
+    }
+
     /* Get parent pid */
     parent_pid = current_PCB->parent_PCB->pid;
 
