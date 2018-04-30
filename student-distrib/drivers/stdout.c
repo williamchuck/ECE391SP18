@@ -283,6 +283,7 @@ void term_switch(int term)
 		set_4KB(video_term[current_PCB->term_num], _128MB + _4MB, 3);
 
 	if(!terminal[term]){
+		clear();
 		process_desc_arr[term + 1].flag = 0;
 		asm volatile(
 			"movl $0x7ffffc, %%esp\n"

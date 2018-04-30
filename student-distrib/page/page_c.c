@@ -179,6 +179,27 @@ int32_t page_present(const void* virt_mem){
              (page_table_arr[pde_idx].entry[pte_idx] & EN_P) );//4KB page: check pte present
 
 }
+
+
+int32_t page_user(const void* virt_mem){
+    uint32_t pde_idx, pte_idx;
+
+    /* Check if the page is present first */
+    if(!page_present(virt_mem))
+        return 0;
+
+    uint32_t vmem=(uint32_t)virt_mem;
+    /* Get first 10-bits of virtual memory as the index into page directory */
+    pde_idx = vmem >> 22;
+    /* Get next 10-bits of virtual memory as the index into page table */
+    pte_idx = (vmem & 0x003FFFFF) >> 12;
+
+    return (page_dir[pde_idx] & EN_US) && //page directory entry for user
+           ( (page_dir[pde_idx] & EN_PS) ? //4MB page?
+              1 : //4MB page: if pde is in user than it is in user
+             (page_table_arr[pde_idx].entry[pte_idx] & EN_US) );//4KB page: check pte is in user mode
+
+}
 /*
  * setup_page:
  * Description: Set up paging for kernel page and video memory

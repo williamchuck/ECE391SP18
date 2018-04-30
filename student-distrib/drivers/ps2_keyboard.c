@@ -183,19 +183,19 @@ void int_ps2kbd_c() {
 			{
 			case F1P:
 			{
-				ctrl_flag = FLAG_OFF;
+				//alt_flag = FLAG_OFF;
 				term_switch(0);
 				return;
 			}
 			case F2P:
 			{
-				ctrl_flag = FLAG_OFF;
+				//alt_flag = FLAG_OFF;
 				term_switch(1);
 				return;
 			}
 			case F3P:
 			{
-				ctrl_flag = FLAG_OFF;
+				//alt_flag = FLAG_OFF;
 				term_switch(2);
 				return;
 			}
@@ -218,9 +218,7 @@ void int_ps2kbd_c() {
 
 		/* Keyboard input only has real effect when stdin_read is in use. */
 		if (read_flag == FLAG_OFF)
-		{
 			return;
-		}
 
 		/*
 		 * If backspace is pressed, delete current char before cursor
@@ -253,9 +251,7 @@ void int_ps2kbd_c() {
 
 			/* If enter key is pressed, toggle enter flag on. */
 			if (currentchar == ASCII_NL)
-			{
 				enter_flag_arr[cur_term] = FLAG_ON;
-			}
 		}
 	}
 }

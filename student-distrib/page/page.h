@@ -50,6 +50,8 @@ extern void free_4KB(uint32_t virt_mem);
 extern void free_4MB(uint32_t virt_mem);
 /* Check if a page is present */
 extern int32_t page_present(const void* virt_mem);
+//Check if a virtual memory is in user mode
+extern int32_t page_user(const void* virt_mem);
 
 /* Load in new page directory table addr */
 extern void flush_TLB();

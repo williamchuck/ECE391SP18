@@ -472,14 +472,17 @@ int32_t system_getargs(uint8_t* buf, int32_t nbytes)
  */
 int32_t system_vidmap(uint8_t** screen_start)
 {
+    
     //check if provided virtual memory page is present
-    if(!page_present(screen_start))return -1;
+    if(!page_present(screen_start))
+	    return -1;
+
+    //check if provided virtual memory is in user mode
+    if(!page_user(screen_start))
+	    return -1;
 
     /* Map vmem into user space address. */
-    if(current_PCB->term_num == cur_term)
-    	set_4KB(VIDEO_MEM, _128MB + _4MB, 3);
-    else
-	set_4KB(video_term[current_PCB->term_num], _128MB + _4MB, 3);
+    set_4KB(VIDEO_MEM, _128MB + _4MB, 3);
 
     *screen_start = (uint8_t*)(_128MB + _4MB);
     return 0;

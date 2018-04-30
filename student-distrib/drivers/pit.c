@@ -39,7 +39,7 @@ void change_freq(uint32_t new_freq){
 	else
 		div = MAX_PIT_FREQ/new_freq;
 
-	outb(0x34, 0x43);
-	outb(div & 0x00FF, 0x40);
-	outb(div >> 8, 0x40);
+	outb(RATE_COMMAND, PIT_COMMAND_PORT);
+	outb(div & 0x00FF, PIT_DATA_PORT);
+	outb(div >> 8, PIT_DATA_PORT);
 }
