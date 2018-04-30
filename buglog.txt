@@ -24,6 +24,28 @@ Cause: Not all registers are saved / leave is used in the interrupt
 Fix:   Use pushal and popal in all the interrupt handlers
 ********************************************************************
 
+2018/03/11
+********************************************************************
+Issue: PIC keeps raising irq0
+Cause: The local PIC mask state is not presented
+Fix:   Add local PIC mask state back
+********************************************************************
+
+2018/03/12
+********************************************************************
+Issue: Adding RTC interrupt causes irq0 to launch the exception
+	   of division by 0
+Cause: The parameter order for in and out macro is wrong
+Fix:   Correct the parameter order
+********************************************************************
+
+2018/03/16
+********************************************************************
+Issue: RTC interrupt keeps being blocked
+Cause: rtc_read doesn't received signal from another RTC interrupt
+Fix:   Use a variable to check if another RTC interrupt is occured
+********************************************************************
+
 2018/03/22
 ********************************************************************
 Issue: Data is lost when a large data file is being read
@@ -62,6 +84,46 @@ Fix:   Check if the input filename exceeds 32-byte constraint
 Issue: The cursor displays at wrong position of a new line
 Cause: The cursor wasn't updated properly on the screen
 Fix:   Update the cursor's position after every putc
+********************************************************************
+
+2018/03/27
+********************************************************************
+Issue: stdin_read doesn't read into user-provided buffer correctly
+Cause: stdin_read only reads into term_buffer
+Fix:   Poll keyboard driver in a loop, so user-provided buffer is
+	   read properly
+********************************************************************
+
+2018/04/08
+********************************************************************
+Issue: Calling out of range system call causes the page fault
+Cause: Range check in the assembly code doesn't match right range
+Fix:   Correct the range check logic
+********************************************************************
+
+2018/04/09
+********************************************************************
+Issue: Loading a large user program binary file causes page fault
+Cause: Kernel stack overflow (the binary file was first loaded on
+	   the stack and then was copied to the user memory page)
+Fix:   Copy binary file directly to user memory page first
+********************************************************************
+
+********************************************************************
+Issue: Halting and loading non-binary file causes the following bugs
+	   1) Unable to run additional programs
+	   2) Invalid opcode exception
+Cause: pid is not properly reseted when the non-binary file is not
+	   executable
+Fix:   Reset pid for the above situations
+********************************************************************
+
+2018/04/15
+********************************************************************
+Issue: User program page fault causes kernel crash
+Cause: Incorrect handling of page fault in the handler
+Fix:   Call halt for the user process rather than directly jumping
+	   back to execute return
 ********************************************************************
 
 2018/04/16
