@@ -1,6 +1,6 @@
 /*
  * rtc.h
- *  RTC device driver stuff
+ *  RTC device driver
  *  Created on: Mar 11, 2018
  *  Author: Hongxuan Li, Linz Chiang
  */
