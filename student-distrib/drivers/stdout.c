@@ -308,7 +308,7 @@ void term_switch(int term)
 			:
 			:
 		);
-
+		terminal[term] = FLAG_ON;
 		system_execute("shell");
 	}
 

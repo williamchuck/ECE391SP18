@@ -25,8 +25,14 @@
 
 // Constants for frequency calculation
 #define MAX_FREQ            1024
+#define MIN_FREQ			2
 #define FREQ_RATE_CALC      32768
-#define RTC_DEF_FREQ        2
+#define RTC_DEF_FREQ        1024
+#define RTC_DEF_USR			2
+
+static uint32_t proc_freq[NUM_PROC];
+volatile uint32_t proc_freq_counter[NUM_PROC];
+static uint32_t phys_freq = MIN_FREQ;
 
 //flag to indicate interrupt for read function
 volatile int interrupt_occured = 0;
@@ -92,7 +98,7 @@ int32_t rtc_changeFreq(uint32_t freq){
 	if( (freq & (freq-1)) != 0)
 		return -1;
 	// the freq is not allowed to be higher than 1024 or lower than 2
-	if(freq < RTC_DEF_FREQ || freq > MAX_FREQ)
+	if(freq < MIN_FREQ || freq > MAX_FREQ)
 		return -1;
 	while((FREQ_RATE_CALC>>(rate-1)) != freq){
 		rate++;
@@ -124,6 +130,7 @@ int32_t rtc_changeFreq(uint32_t freq){
 int32_t rtc_open(const int8_t* fname){
 	/* Initialize varaibles */
 	int i;
+	uint32_t pid;
 	dentry_t dentry;
 
 	/* Fill in dentry */
@@ -142,7 +149,9 @@ int32_t rtc_open(const int8_t* fname){
 			current_PCB->file_desc_arr[i].inode = 0;
 			current_PCB->file_desc_arr[i].f_pos = 0;
 			current_PCB->file_desc_arr[i].flag = 1;
-			rtc_changeFreq(RTC_DEF_FREQ);
+			rtc_changeFreq(phys_freq);
+			pid = current_PCB->pid;
+			proc_freq[pid] = MIN_FREQ;
 			return i;
 		}
 	}
@@ -158,15 +167,34 @@ int32_t rtc_open(const int8_t* fname){
  */
 int32_t rtc_read(int32_t fd, void* buf, uint32_t nbytes){
     unsigned long flags;
+	uint32_t freq, pid, time, i;
+
     cli_and_save(flags);
 	// clear the flag (set interrupt occured to false)
 	interrupt_occured = 0;
 	restore_flags(flags);
 
-	// wait for another RTC interrupt
-	while(!interrupt_occured){
-		// do nothing
+	pid = current_PCB->pid;
+	freq = proc_freq[pid];
+
+	if (freq < MIN_FREQ || freq > MAX_FREQ)
+	{
+		return -1;
 	}
+
+	time = phys_freq / freq;
+	proc_freq_counter[pid] = 0;
+	// wait for another RTC interrupt
+	do {
+		if (interrupt_occured)
+		{
+			interrupt_occured = 0;
+			for (i = 0; i < NUM_PROC; i++)
+			{
+				proc_freq_counter[i]++;
+			}
+		}
+	} while (proc_freq_counter[pid] < time);
 	return 0;
 }
 
@@ -178,16 +206,37 @@ int32_t rtc_read(int32_t fd, void* buf, uint32_t nbytes){
  *			-1 -- Fail
  */
 int32_t rtc_write(int32_t fd, const void* buf, uint32_t nbytes){
-    int32_t err;
+	uint32_t pid, frequency;
     // check error conditions
 	if(buf == NULL || nbytes != sizeof(uint32_t))
 		return -1;
 	else{
 	    //TODO: use userspace address-check after being implemented.
-		uint32_t frequency = *((uint32_t*)buf);			//get frequency
-		err = rtc_changeFreq(frequency);
+		frequency = *((uint32_t*)buf);			//get frequency
 	}
-	if(err)return -1;
+	
+	if (frequency < MIN_FREQ || frequency > MAX_FREQ)
+	{
+		return -1;
+	}
+
+	pid = current_PCB->pid;
+
+	if (pid >= NUM_PROC)
+	{
+		return -1;
+	}
+	else
+	{
+		proc_freq[pid] = frequency;
+	}
+
+	if (phys_freq < frequency)
+	{
+		phys_freq = frequency;
+		rtc_changeFreq(phys_freq);
+	}
+
 	return nbytes;
 }
 
@@ -210,6 +259,7 @@ int32_t rtc_close(int32_t fd){
 	current_PCB->file_desc_arr[fd].inode = 0;
 	current_PCB->file_desc_arr[fd].f_pos = 0;
 	current_PCB->file_desc_arr[fd].flag = 0;
+	proc_freq[current_PCB->pid] = 0;
 
 	/* Return 0 on success */
 	return 0;	
