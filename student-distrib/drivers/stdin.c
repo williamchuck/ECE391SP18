@@ -62,7 +62,7 @@ int32_t stdin_read(int32_t fd, void* buf, uint32_t nbytes)
 	unsigned char* buf_ptr;
 
 	/* Loop var. */
-	int i=0;
+	int i = 0;
 
 	/* Set read flag to on */
 	read_flag[current_PCB->term_num] = FLAG_ON;
