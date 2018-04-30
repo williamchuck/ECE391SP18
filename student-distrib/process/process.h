@@ -12,15 +12,11 @@
 //Struct for PCB block
 typedef struct PCB_block
  {
-    regs_t* hw_context;
-    file_desc_t file_desc_arr[8];
-    struct PCB_block* parent_PCB;
-    uint32_t pid;
-    uint32_t term_num;
-    uint8_t* k_stack;
-    uint8_t* u_stack;
-    
-    uint8_t padding [0];
+    regs_t* hw_context;           //saved registers for halt and process switch
+    file_desc_t file_desc_arr[8]; //file descriptors for this process
+    struct PCB_block* parent_PCB; //parent process's PCB
+    uint32_t pid;      //process id for indexing into process_desc_arr
+    uint32_t term_num; //the terminal the process is using
 } PCB_block_t;
 
 typedef struct process_desc{
@@ -32,7 +28,7 @@ typedef struct process_desc{
 #define current_PCB \
 	((PCB_block_t *)get_current_PCB())
 
-/* Get 8KB block starting address */
+/* Get 8KB block starting address (which is where the current PCB is located) */
 static inline uint32_t get_current_PCB() {
 	uint32_t i, mask;
 	mask = _8KB_MASK;
