@@ -11,8 +11,8 @@ vim:ts=4 noexpandtab
 #define ATTRIB      0x7
 #define TERM_NUM	3
 
-static int screen_x[TERM_NUM];
-static int screen_y[TERM_NUM];
+static int screen_x[TERM_NUM] = { 0, 0, 0 };
+static int screen_y[TERM_NUM] = { 0, 0, 0 };
 static char* video_mem = (char *)VIDEO;
 
 /* self-defined variables */
@@ -65,9 +65,7 @@ void scroll_down()
 	/* Move row 1's vmem to row 0, row 2 to row 1, etc... */
 	/* Until row 1 to 79's vmem has moved to row 0 to 78 */
 	for (i = 1; i < NUM_ROWS; i++)
-	{
 			memmove((char*)(_128MB + _4MB) + (i - 1) * 2 * NUM_COLS, (char*)(_128MB + _4MB) + i * 2 * NUM_COLS, NUM_COLS * 2);
-	}
 
 	/* Reset cursor value to buttom of terminal because prog. only scroll when needed. */
 	screen_y[current_PCB->term_num] = NUM_ROWS - 1;
@@ -102,9 +100,7 @@ void kbd_scroll_down()
 	/* Move row 1's vmem to row 0, row 2 to row 1, etc... */
 	/* Until row 1 to 79's vmem has moved to row 0 to 78 */
 	for (i = 1; i < NUM_ROWS; i++)
-	{
 			memmove((char*)video_mem + (i - 1) * 2 * NUM_COLS, (char*)video_mem + i * 2 * NUM_COLS, NUM_COLS * 2);
-	}
 
 	/* Reset cursor value to buttom of terminal because prog. only scroll when needed. */
 	screen_y[cur_term] = NUM_ROWS - 1;
