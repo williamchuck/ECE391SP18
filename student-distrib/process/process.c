@@ -27,7 +27,7 @@ void init_process(){
 		process_desc_arr[i].flag = 0;
 
 	/* use pid 0 as sentinel process */
-	process_desc_arr[0].flag = 1;
+	process_desc_arr[0].flag = 3;
 
 	/* Clear up file desc array for the first process */
 	for(i = 0; i < 8; i++)

@@ -89,9 +89,7 @@ int32_t stdout_write(int32_t fd, const void* buf, uint32_t nbytes)
 
 	/* If pointer to buffer is NULL, return error. */
 	if (buf_ptr == NULL)
-	{
 		return -1;
-	}
 
 	/* Loop through bytes to display the data onto terminal */
 	/*
@@ -103,9 +101,8 @@ int32_t stdout_write(int32_t fd, const void* buf, uint32_t nbytes)
 	{
 		/* If we have reached the end of file, return number of bytes displayed */
 		if (buf_ptr[i] == TERM_EOF)
-		{
 			return i;
-		}
+
 		/* Display data onto terminal */
 		putc(buf_ptr[i]);
 	}
@@ -266,14 +263,9 @@ void cursor_update(int term)
 void term_switch(int term)
 {
 	int old_term;
-	int i;
 
 	if ((term < 0) || (term >= TERM_NUM))
 		return;
-
-	/* Always remap everything before switching to avoid accidents. */
-	//for (i = 0; i < TERM_NUM; i++)
-	//	set_4KB(video_term[i], video_term[i], 0);
 
 	set_4KB(VIDEO, VIDEO, 0);
 
@@ -297,7 +289,6 @@ void term_switch(int term)
 			:
 			:
 		);
-
 		system_execute("shell");
 	}
 

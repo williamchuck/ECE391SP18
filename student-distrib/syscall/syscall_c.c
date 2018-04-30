@@ -52,7 +52,6 @@ int32_t get_free_pid(){
     int i;
     for(i = 0; i < NUM_PROC; i++){
         if(process_desc_arr[i].flag == 0){
-            //process_desc_arr[i].flag = 1;
             return i;
         }
     }
@@ -131,9 +130,8 @@ int32_t system_execute(const int8_t* file_name){
     virt_addr = _128MB;
     set_4MB(phys_addr, virt_addr, 3);
 
-    if(current_PCB->pid == 0){
+    if(current_PCB->pid == 0)
     	    term_num = child_pid - 1;
-    }
     else
 	    term_num = current_PCB->term_num;
 
@@ -158,14 +156,18 @@ int32_t system_execute(const int8_t* file_name){
     /* Mark child pid as used */
     terminal[term_num] = 1;
 
-    if(current_PCB->pid == 0){
-	    for(i = 1; i < 4; i++){
-        	if(process_desc_arr[i].flag == 0)
-			process_desc_arr[i].flag = 3;
+    process_desc_arr[current_PCB->pid].flag = 3;
 
-		else if(process_desc_arr[i].flag == 1)
-			process_desc_arr[i].flag = 2;
-	    }
+    if(current_PCB->pid == 0){
+        for(i = 1; i < NUM_PROC; i++){
+	    if(i < 4){
+    		if(process_desc_arr[i].flag == 0)
+		    process_desc_arr[i].flag = 3;
+            }
+
+	    if(process_desc_arr[i].flag == 1)
+	        process_desc_arr[i].flag = 2;
+	}
     }
 
     process_desc_arr[child_pid].flag = 1;
@@ -241,9 +243,12 @@ int32_t system_internal_halt(uint32_t status){
     /* Get parent pid */
     parent_pid = current_PCB->parent_PCB->pid;
 
-    process_desc_arr[parent_pid].flag = 1;
+    if(parent_pid != 0){//if parent process is a user program
+	if(current_PCB->parent_PCB->term_num == cur_term)
+    	    process_desc_arr[parent_pid].flag = 1;
+    	else
+	    process_desc_arr[parent_pid].flag = 2;
 
-    if(parent_pid!=0){//if parent process is a user program
         /* Get parent's userspace mem addr to remap */
         phys_addr = _8MB + (parent_pid * _4MB);
         virt_addr = _128MB;
@@ -471,7 +476,11 @@ int32_t system_vidmap(uint8_t** screen_start)
     if(!page_present(screen_start))return -1;
 
     /* Map vmem into user space address. */
-    set_4KB(VIDEO_MEM, _128MB + _4MB, 3);
+    if(current_PCB->term_num == cur_term)
+    	set_4KB(VIDEO_MEM, _128MB + _4MB, 3);
+    else
+	set_4KB(video_term[current_PCB->term_num], _128MB + _4MB, 3);
+
     *screen_start = (uint8_t*)(_128MB + _4MB);
     return 0;
 }
