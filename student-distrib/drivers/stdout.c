@@ -163,9 +163,8 @@ void term_init(int term)
 	/* Reset cursor */
 	cursor_reset(term);
 
-	/* Map memory */
+	/* Map memory - May not be necessary. */
 	set_4KB(video_term[term], video_term[term], 0);
-	set_4KB(VIDEO, VIDEO, 0);
 
 	/* Clear termimal pages */
 	clear_term(term);
@@ -258,43 +257,22 @@ void cursor_update(int term)
 	pos = y * VGA_WIDTH + x;
 
 	/* Write new cursor position to Cursor location low and high registers */
-	outb(CURSOR_LOW, TEXT_IN_ADDR);
-	outb((uint8_t)(pos & TERM_EOF), TEXT_IN_DATA);
-	outb(CURSOR_HIGH, TEXT_IN_ADDR);
-	outb((uint8_t)((pos >> 8) & TERM_EOF), TEXT_IN_DATA);
+	if (term == cur_term)
+	{
+		outb(CURSOR_LOW, TEXT_IN_ADDR);
+		outb((uint8_t)(pos & TERM_EOF), TEXT_IN_DATA);
+		outb(CURSOR_HIGH, TEXT_IN_ADDR);
+		outb((uint8_t)((pos >> 8) & TERM_EOF), TEXT_IN_DATA);
+	}
 }
 
 void term_switch(int term)
 {
-	int old_term;
-	int i;
+	memcpy((void*)video_term[cur_term], (void*)VIDEO, VMEM_SIZE);
 
-	if ((term < 0) || (term >= TERM_NUM))
-	{
-		return;
-	}
-
-	/* Always remap everything before switching to avoid accidents. */
-	for (i = 0; i < TERM_NUM; i++)
-	{
-		set_4KB(video_term[i], video_term[i], 0);
-	}
-
-	set_4KB(VIDEO, VIDEO, 0);
-
-	old_term = cur_term;
 	cur_term = term;
 
-	if ((old_term >= 0) && (old_term < TERM_NUM))
-	{
-		memcpy((void*)video_term[old_term], (void*)VIDEO, _4KB);
-	}
-
-	memcpy((void*)VIDEO, (void*)video_term[cur_term], _4KB);
-
-	/* Cross map memory addresses. */
-	set_4KB(video_term[cur_term], VIDEO, 0);
-	set_4KB(VIDEO, video_term[cur_term], 0);
+	memcpy((void*)VIDEO, (void*)video_term[cur_term], VMEM_SIZE);
 
 	cursor_update(cur_term);
 }
