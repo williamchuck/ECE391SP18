@@ -1,0 +1,74 @@
+Bug log
+Group 19: Caffeine_Theanine
+
+********************************************************************
+Issue: Triple Fault occurs when paging is enabled
+Cause: The order of moving values into CR3, CR4, and CR0 registers
+	   is wrong
+Fix:   Use the correct order (CR3 -> CR4 -> CR0)
+********************************************************************
+
+********************************************************************
+Issue: Data is lost when a large data file is being read
+Cause: When read operation exceeds one data bock, it doesn't go to
+	   the next data block
+Fix:   When read operation reaches the end of a data block, jump
+       to the next data block
+********************************************************************
+
+********************************************************************
+Issue: Uncompleted commands can be executed
+Cause: String Compare function only compares the content
+Fix:   Compare the lengths of two strings before comparing their
+	   contents to avoid uncompleted commands
+********************************************************************
+
+********************************************************************
+Issue: verylargetextwithverylongname.txt can be opened with the
+	   exact name (the filename is too long to be read completely)
+Cause: Comparison of filename doesn't check if the filename exceeds
+	   32-byte constraint
+Fix:   Check if the input filename exceeds 32-byte constraint
+********************************************************************
+
+********************************************************************
+Issue: A new shell is unable to restart when the last shell is
+	   exited (the same shell is exited twice)
+Cause: When the system tries to restart a new shell, pid is not at
+	   0, so when the shell exits again, kernel doesn't realize it
+	   as the last running user program.
+Fix:   Put ESP on the kernel stack (where the pid0 is) so the shell
+	   will be restarted when the last shell is exited
+********************************************************************
+
+********************************************************************
+Issue: Display is skewed when the scheduling is on
+Cause: putc and scrolling uses video memory for the current terminal,
+	   but the video memory should no longer be in use
+Fix:   Use virtual memory for scrolling and putc (remap if needed)
+********************************************************************
+
+********************************************************************
+Issue: Program terminates abnormally in the middle of executing
+Cause: Shell is scheduled when the child process is running
+Fix:   Disable shell from being scheduled when a child process is
+	   running
+********************************************************************
+
+********************************************************************
+Issue: User program is unable to manipulate video memory by vidmap
+Cause: Video memory is not initialized properly
+Fix:   Clear video memory when a new shell is started on the terminal
+********************************************************************
+
+********************************************************************
+Issue: Cursor is not showing on terminal 2 and 3
+Cause: Video memory is not initialized properly
+Fix: Clear video memory whenever we start a new shell on a new terminal
+********************************************************************
+
+********************************************************************
+Issue: Passing syserr number 6: err_vidmap with kernel is failed
+Cause: vidmap doesn't check if the required page is at kernel level
+Fix:   Implement a kernel page check in vidmap
+********************************************************************
